@@ -603,3 +603,56 @@ def create_prescription(data: PrescriptionIn):
         },
         status_code=201,
     )
+
+@app.put("/prescriptions/{pid}")
+def update_prescription(pid: int, data: PrescriptionIn):
+    conn = get_db()
+    p=conn.execute('''
+    SELECT id from prescriptions
+    WHERE id = ?
+    ''', (pid,)).fetchone()
+    if p is None:
+        conn.close()
+        return JSONResponse({"error":f"方剂{pid}不存在"}, status_code=404)
+
+    conn.execute('''UPDATE prescriptions 
+                 SET name =?,category=?, source=?, symptoms=?
+                 WHERE id=?''',(data.name, data.category, data.source, data.symptoms, pid))
+
+    conn.commit()
+    conn.close()
+    return JSONResponse(
+        {
+            "id": pid,
+            "name": data.name,
+            "category": data.category,
+            "source": data.source,
+            "symptoms": data.symptoms,
+        },
+        status_code=200,
+    )
+
+@app.delete("/prescriptions/{pid}")
+def delete_prescription(pid: int,data: PrescriptionIn):
+    conn = get_db()
+    p = conn.execute('''
+                     SELECT id
+                     from prescriptions
+                     WHERE id = ?
+                   ''', (pid,)).fetchone()
+    if p is None:
+        conn.close()
+        return JSONResponse({"error": f"方剂{pid}不存在"}, status_code=404)
+    conn.execute('''DELETE FROM prescription_ingredients
+                  WHERE prescription_id=?''', (pid,))
+    conn.execute('''DELETE FROM prescriptions
+                 WHERE id=?''', (pid,))
+    conn.commit()
+    conn.close()
+    return JSONResponse({
+            "id": pid,
+            "name": data.name,
+            "category": data.category,
+            "source": data.source,
+            "symptoms": data.symptoms,
+        },status_code=200)
