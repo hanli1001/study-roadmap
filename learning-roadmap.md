@@ -43,25 +43,27 @@
 
 ## 三、修正后的学习路线
 
-### 大一暑假（当前：2026.07-09）—— 地基
+### 大一暑假（当前：2026.07-09）—— 地基（提前超额完成）
 
-| 主题 | 目标 | 验证 |
+| 主题 | 目标 | 验证 | 状态 |
+|------|------|------|------|
+| Git + GitHub | 熟练 commit/PR/rebase | 给开源项目提一个 PR | ✅ 已完成 |
+| Linux 基础 | 文件系统/权限/Shell/进程 | 命令行操作自如 | 🔄 日常积累 |
+| SQL | SELECT/JOIN/GROUP/索引 | 设计方剂数据库并查询 | ✅ 已完成 |
+| **AI 编排入门** | 理解 Claude Code 工作方式 | 用 AI 完成完整功能 | 🔄 贯穿始终 |
+
+**产出**：`prescription_db.py`（8首方剂×37味药材×48条关联）+ `sql-notes.md` + `git-notes.md`
+
+### 大二上（2026.09-2027.01）—— 后端（已提前启动）
+
+| 主题 | 目标 | 状态 |
 |------|------|------|
-| Git + GitHub | 熟练 commit/PR/rebase | 给开源项目提一个 PR |
-| Linux 基础 | 文件系统/权限/Shell/进程 | 命令行操作自如 |
-| SQL | SELECT/JOIN/GROUP/索引 | 设计方剂数据库并查询 |
-| **AI 编排入门** | 理解你现在的 Claude Code 是怎么工作的——它如何 spawn Explore/Plan/Task agent，如何调用 skill | 用 AI 完成一个完整功能 |
+| **FastAPI** | 路由/校验/JWT/中间件/异常处理 | ✅ CRUD 完成（8 个接口） |
+| 数据库深入 | SQLAlchemy + PostgreSQL + Migration | ⬜ 待开始 |
+| 测试 | pytest + 接口测试 | ⬜ 待开始 |
+| Docker | docker-compose 容器化 | ⬜ 待开始 |
 
-**产出**：一个中医方剂数据库 + SQL 查询能力 + 第一个 PR
-
-### 大二上（2026.09-2027.01）—— 后端
-
-| 主题 | 目标 |
-|------|------|
-| FastAPI | 路由/校验/JWT/中间件/异常处理 |
-| 数据库深入 | SQLAlchemy + PostgreSQL + Migration |
-| 测试 | pytest + 接口测试 |
-| Docker | docker-compose 容器化 |
+**已完成产出**：`api.py`（GET/POST/PUT/DELETE + 模糊搜索 + Pydantic 校验 + Swagger 文档）
 
 **产出**：FastAPI 中医方剂查询 API，Docker 部署到云
 
