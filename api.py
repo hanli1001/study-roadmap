@@ -321,6 +321,20 @@ def list_prescriptions(
 # ║  路由 2：GET /prescriptions/{pid}                       ║
 # ║           "第3号方剂的完整信息，包括药材组成"             ║
 # ╚══════════════════════════════════════════════════════════╝
+@app.get("/prescriptions/search")
+def prescriptions_search(keyword: str = Query(None)):
+    conn = get_db()
+    query=conn.execute('''
+                    SELECT id, name, category, source, symptoms
+                    FROM prescriptions
+                    WHERE name LIKE ? OR category LIKE ? OR symptoms LIKE ?'''
+                    ,(f"%{keyword}%",f"%{keyword}%",f"%{keyword}%")).fetchall()
+    if query is None:
+        conn.close()
+        return []
+    else:
+        conn.close()
+        return [dict(r) for r in query]
 
 @app.get("/prescriptions/{pid}")
 def get_prescription(pid: int):
@@ -633,7 +647,7 @@ def update_prescription(pid: int, data: PrescriptionIn):
     )
 
 @app.delete("/prescriptions/{pid}")
-def delete_prescription(pid: int,data: PrescriptionIn):
+def delete_prescription(pid: int):
     conn = get_db()
     p = conn.execute('''
                      SELECT id
@@ -650,9 +664,5 @@ def delete_prescription(pid: int,data: PrescriptionIn):
     conn.commit()
     conn.close()
     return JSONResponse({
-            "id": pid,
-            "name": data.name,
-            "category": data.category,
-            "source": data.source,
-            "symptoms": data.symptoms,
         },status_code=200)
+
