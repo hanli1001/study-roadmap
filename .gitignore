@@ -1,1 +1,4 @@
 .claude/
+.idea/
+__pycache__/
+.playwright-mcp/
