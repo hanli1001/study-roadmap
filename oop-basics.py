@@ -148,11 +148,46 @@ print(len(f))  # 3                ← 自动调了 __len__
 
 
 # ═══════════════════════════════════════════════════════════
-# 练习题：改造 prescription_db.py 的 link() 函数为类
+# 练习题 —— 分两个台阶，从易到难
 # ═══════════════════════════════════════════════════════════
 
-# 你现在 prescription_db.py 里 link() 是个函数。
-# 挑战：把它改成一个 Database 类，把 connect/execute/close 封装进去。
+# ── 台阶 1：热身练习 —— Book 类（不碰数据库、不碰中药）──
+#
+# 图书馆有一批书，每本书：书名、作者、是否被借出。
+# 你来亲手写一个 Book 类，要求：
+#
+#   1. __init__(self, title, author)
+#      把 title、author 存成属性，再设 self.borrowed = False（初始都在馆）
+#
+#   2. borrow(self)          → 借书
+#      已被借走 → 返回 "已被借出"
+#      没被借走 → 标记 borrowed = True，返回 "借出成功"
+#
+#   3. return_book(self)     → 还书
+#      borrowed 改回 False，返回 "已归还"
+#
+#   4. info(self)            → 返回一句话介绍
+#      例：info() 应返回 "《伤寒论》- 张仲景，状态：在馆"
+#      （借出后状态变成 "已借出"）
+#
+# 提示（允许你看，但请自己敲，别复制）：
+#   - self.xxx = 值  就是给对象存属性
+#   - 方法里想读属性，直接写 self.xxx
+#   - return 一个字符串，调用方就能 print 出来
+#
+# 写完用下面这段验证（不用改，直接复制到文件末尾跑）：
+#
+#   b = Book("伤寒论", "张仲景")
+#   print(b.info())        # 《伤寒论》- 张仲景，状态：在馆
+#   print(b.borrow())      # 借出成功
+#   print(b.info())        # 《伤寒论》- 张仲景，状态：已借出
+#   print(b.borrow())      # 已被借出
+#   print(b.return_book()) # 已归还
+#   print(b.info())        # 《伤寒论》- 张仲景，状态：在馆
+
+
+# ── 台阶 2：改造 prescription_db.py 的 link() 函数为类 ──
+#（做完台阶 1 再来，SQL 部分就是 api.py 里你手写的 POST/DELETE）
 
 # 框架：
 class PrescriptionDB:
@@ -175,17 +210,47 @@ class PrescriptionDB:
         return dict(row)
 
     # 你的作业：实现下面两个方法
-    # def add_prescription(self, name, category, source, symptoms):
+    def add_prescription(self, name, category, source, symptoms):
     #     """新增方剂，返回新 id"""
-    #     pass
+        row = self.conn.execute('''
+            INSERT INTO prescriptions (name, category, source, symptoms) VALUES (?,?,?,?)'''
+                              ,(name, category, source, symptoms))
+        self.conn.commit()
+        pid = row.lastrowid
+        return pid
 
-    # def delete_prescription(self, pid):
+    def delete_prescription(self, pid):
     #     """删除方剂（先删关联表再删主表），返回是否成功"""
-    #     pass
+       cur = self.conn.execute("SELECT * FROM prescriptions WHERE id = ?",
+                               (pid,)).fetchone()
+       if cur is None:
+           return False
+       else:
+           self.conn.execute("DELETE FROM prescription_ingredients WHERE prescription_id = ?",
+                             (pid,))
+           self.conn.execute("DELETE FROM prescriptions WHERE id = ?"
+                             ,(pid,))
+           self.conn.commit()
+           return True
+
+    def delete_test(self,name):
+        cur = self.conn.execute("DELETE FROM prescriptions WHERE name = ?",(name,))
+        count = cur.rowcount
+        self.conn.commit()
+        return True,count
 
 
 # 使用：
-# db = PrescriptionDB("prescriptions.db")
-# info = db.get_prescription(1)
-# print(info)
-# db.close()
+db = PrescriptionDB("prescriptions.db")
+info = db.get_prescription(1)
+print(info)
+new_id = db.add_prescription("测试方剂",
+  "测试剂", "测试书", "测试")
+print("新增成功，id =", new_id)
+print("删除成功？",
+  db.delete_prescription(new_id))
+print("再删一次？",
+  db.delete_prescription(new_id))
+test = db.delete_test("测试方剂")
+print(test)
+db.close()
