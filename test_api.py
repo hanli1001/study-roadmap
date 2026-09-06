@@ -29,7 +29,8 @@ def test_list_herbs():
     assert response.json()[0]["id"] == 10
 
 def test_create():
-    response = client.post("/prescriptions", json={"name":"001","category":"002","source":"0","symptoms":"003","herbs":[]})
+    response = client.post("/prescriptions",
+                           json={"name":"001","category":"002","source":"0","symptoms":"003","herbs":[]})
     assert response.status_code == 201
     new_id = response.json()["id"]
     cleanup = client.delete(f"/prescriptions/{new_id}")
