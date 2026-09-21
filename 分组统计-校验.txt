@@ -1,0 +1,20 @@
+
+### 按 category 分组 + 计数  (5 行)
+    ('解表剂', 3)
+    ('补益剂', 2)
+    ('祛湿剂', 1)
+    ('清热剂', 1)
+    ('和解剂', 1)
+
+### WHERE 先筛(解表剂) 再分组  (1 行)
+    ('解表剂', 3)
+
+### HAVING 筛组(药材数>=5)  (4 行)
+    ('藿香正气散', 12)
+    ('银翘散', 9)
+    ('小柴胡汤', 7)
+    ('桂枝汤', 5)
+Traceback (most recent call last):
+  File "<stdin>", line 11, in <module>
+  File "<stdin>", line 4, in q
+sqlite3.OperationalError: misuse of aggregate: COUNT()

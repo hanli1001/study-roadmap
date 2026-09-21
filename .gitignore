@@ -2,3 +2,18 @@
 .idea/
 __pycache__/
 .playwright-mcp/
+
+# ── 验证证据 / 截图（不进仓库：占空间，且随时可重新生成）──
+_shot-*.png
+交互演示/_shot-*.png
+打印资料/_预览-*.png
+
+# ── 改前备份（有历史价值但不该进仓库：需要时看本地 _备份/ 目录）──
+_备份/
+*.bak-*
+*.bak
+
+# ── 运行产物 ──
+.pytest_cache/
+rag/_run-*.txt
+样例代码库/_run-*.txt

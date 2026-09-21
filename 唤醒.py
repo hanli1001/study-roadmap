@@ -1,7 +1,16 @@
-a = [1,2,3,4,5]
-b = [i**2 for i in a if i%2==0]
-print(b)
+from fastapi import FastAPI
+import sqlite3
 
-dosages = ["三两", "", "五两", "", "一两"]
-c = [i for i in dosages if i!=""]
-print(c)
+app = FastAPI(title="prescription AND ingredients",version="1.0",description="prescription AND ingredients table")
+
+def get_db():
+    conn = sqlite3.connect("prescriptions.db")
+    conn.row_factory=sqlite3.Row
+    return conn
+
+@app.get("/prescriptions/herbs")
+def reback_all_list():
+    conn=get_db()
+    rows = conn.execute("select * from ingredients").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
