@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG ① 为什么需要检索（字面 / 倒排 / 语义 三档对比）</title>
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#2a2f3a;--txt:#e6e8ee;--dim:#98a0b3;
+        --ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--accent:#60a5fa;--purple:#c084fc;--hl:#1e3a5f}
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:1020px;background:var(--bg);color:var(--txt);
+    font:15px/1.75 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:21px;margin:0 0 4px}
+  h2{font-size:16.5px;margin:28px 0 9px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;font-size:13px}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;line-height:1.65;margin:8px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.6px;margin:6px 0}
+  th,td{border:1px solid var(--line);padding:5px 8px;vertical-align:top;text-align:left}
+  th{background:#1d2129;color:var(--dim);font-size:12.4px;font-weight:600}
+  button{background:#232833;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+    padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#06121f;font-weight:600}
+  button.on{background:var(--hl);border-color:var(--accent)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  input[type=text]{background:#0d1017;color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:7px 10px;font:inherit;font-size:14px;flex:1;min-width:180px}
+  .kw{color:var(--purple)}.fn{color:var(--accent)}.strc{color:#86efac}.cm{color:#5c6577}
+  .hint{color:var(--dim);font-size:12.8px}
+  .step{border-left:3px solid var(--warn);padding:5px 10px;margin:5px 0;font-size:13.6px;background:#1d1a12}
+  .step.ok{border-color:var(--ok);background:#12251a;color:#c9f5d8}
+  .step.bad{border-color:var(--bad);background:#2a1414;color:#f7c9c9}
+  .vs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(max-width:820px){.vs{grid-template-columns:1fr}}
+  .hit{border:1px solid var(--line);border-radius:8px;padding:7px 9px;margin:5px 0;background:#0b0e13;font-size:13.4px}
+  .hit b{color:var(--ok)}
+  .hit .score{float:right;color:var(--numc);font-family:Consolas,monospace}
+  .flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13.2px}
+  .flow span{border:1px solid var(--line);border-radius:7px;padding:4px 9px;background:#0b0e13}
+  .flow i{color:var(--accent);font-style:normal}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+
+<h1>RAG ① · 为什么需要检索</h1>
+<div class="sub">方向 3 起步 · 用你自己的方剂库当知识库 · 三档检索对比：字面 → 倒排 → 语义（向量）</div>
+
+<!-- ① 痛点 -->
+<h2>① 先看你现在这套（字面匹配）的盲区 —— 实测</h2>
+<div class="card">
+  <p style="margin:4px 0">你现在的搜索大概是 <code>WHERE symptoms LIKE '%关键词%'</code>。在你的 8 首真实数据上实测：</p>
+  <table>
+    <tr><th style="width:14%">搜索词</th><th style="width:14%">命中</th><th>问题</th></tr>
+    <tr><td><code>表</code></td><td>2 首</td><td>还行（"表实证/表虚证"里确实有"表"）</td></tr>
+    <tr><td><code>热</code></td><td>6 首</td><td class="bad"><b>过度命中</b>："恶寒发热"里有"热"字，但它不是"清热"的意思 —— 字面像、语义不对</td></tr>
+    <tr><td><code>气虚</code></td><td>1 首</td><td>对</td></tr>
+    <tr><td><code>免疫</code></td><td class="bad">0 首</td><td class="bad"><b>完全查不到</b>：库里根本没"免疫"这两个字，但它和"气虚"在语义上是有关系的</td></tr>
+    <tr><td><code>炎症</code></td><td class="bad">0 首</td><td class="bad">同上 —— 用户不会用你库里的原词提问</td></tr>
+  </table>
+  <div class="step bad"><b>两头都错</b>：字面像的（热）乱命中；字面不像的（免疫/炎症）完全找不到。<br>
+    而<b>用户提问永远用他自己的词</b>，不会迁就你的数据里写了什么。</div>
+  <div class="hint">💡 这就是"检索"这一层要解决的核心问题，也是 RAG 里 <b>R</b>（Retrieval）存在的理由 —— 不是"把文档喂给模型"那么简单。</div>
+</div>
+
+<!-- ② 三档 -->
+<h2>② 三档做法（从你现在的位置出发，一级一级升）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:16%">档位</th><th style="width:24%">怎么做</th><th style="width:16%">复杂度</th><th>缺陷</th></tr>
+    <tr><td><b>① 逐条扫描</b><br>（你现在）</td><td>每个问题，把 N 条内容全看一遍，看关键词在不在</td><td>O(N) 每次</td><td>数据一大就慢；<b>只会字面匹配</b>（见①）</td></tr>
+    <tr><td><b>② 倒排索引</b><br>（关键词检索）</td><td>事先建"词 → 出现在哪几条"的表；查词直接跳过去</td><td>建表一次，查询 O(1)~O(词频)</td><td>仍然只认字面：同义词、近义词、换个说法就查不到</td></tr>
+    <tr><td><b>③ 向量检索</b><br>（语义检索）</td><td>把每条内容和问题都变成一个"意思坐标"（向量），找距离最近的</td><td>要算向量（有成本），查询快</td><td>要模型/embedding 服务；结果需要评估（可能"像但不对"）</td></tr>
+  </table>
+  <div class="hint">💡 真实系统常常<b>混着用</b>：关键词（②）保准 + 向量（③）保语义 → 这就是 hybrid search。第 3 档不是取代前两档，而是补盲区。</div>
+</div>
+
+<!-- ③ 交互 -->
+<h2>③ 拧参数：三档并排查同一个问题</h2>
+<div class="card">
+  <div class="row">
+    <span>你的问题：</span>
+    <input type="text" id="q" value="想找补气、增强体质的方子">
+    <button class="pri" id="run">▶ 三档一起查</button>
+  </div>
+  <div class="row">
+    <button class="ex" data-q="想找补气、增强体质的方子">语义型提问</button>
+    <button class="ex" data-q="气虚">原词提问</button>
+    <button class="ex" data-q="热">容易过度命中的词</button>
+    <button class="ex" data-q="发汗">同义词（库里没这词）</button>
+  </div>
+  <div class="vs">
+    <div class="card" style="margin:0">
+      <b>① 逐条扫描</b>
+      <div class="hint">关键词在不在（字面）</div>
+      <div id="r1"></div>
+    </div>
+    <div class="card" style="margin:0">
+      <b>② 倒排索引</b>
+      <div class="hint">先建"词→条目"，再查</div>
+      <div id="r2"></div>
+    </div>
+    <div class="card" style="margin:0">
+      <b>③ 向量检索</b>
+      <div class="hint">比字面更像"意思"（本页用预设的近似值演示）</div>
+      <div id="r3"></div>
+    </div>
+  </div>
+  <div id="conclusion" style="margin-top:10px"></div>
+  <div class="hint">⚠️ 诚实说明：第 ③ 档的相似度是**本页预设的近似值**（浏览器里没跑真模型），用来演示"语义检索会命中字面完全不同但意思相近的条目"。真实项目里这一步由 embedding 模型算。</div>
+</div>
+
+<!-- ④ 流程 -->
+<h2>④ RAG 完整流程（你在哪一步）</h2>
+<div class="card">
+  <div class="flow">
+    <span>文档/数据</span><i>→</i><span>切片 chunk</span><i>→</i><span>算向量 embedding</span><i>→</i><span>存进向量库</span>
+  </div>
+  <div class="flow" style="margin-top:8px">
+    <span>用户提问</span><i>→</i><span>也算成向量</span><i>→</i><span><b>检索 top-k</b></span><i>→</i>
+    <span>拼进提示词</span><i>→</i><span>大模型生成回答</span><i>→</i><span>附上引用来源</span>
+  </div>
+  <table>
+    <tr><th style="width:22%">阶段</th><th style="width:26%">你现在有什么</th><th>要补什么</th></tr>
+    <tr><td>数据</td><td>✅ 8 首方剂 / 33 味药材 / 49 条关联（SQLite）</td><td>把"一条关系"整理成一段可检索的文字</td></tr>
+    <tr><td>切片 chunk</td><td>—</td><td>按方剂切（8 条）还是按关联切（49 条）？切太碎会丢上下文</td></tr>
+    <tr><td>embedding</td><td>❌ 没有</td><td>本地 Ollama 跑中文 embedding 模型（阶段 A 预热项）</td></tr>
+    <tr><td>向量库</td><td>❌ 没有</td><td>小数据用 numpy 存矩阵就够；大了再上 Chroma/FAISS</td></tr>
+    <tr><td>检索</td><td>🟡 只有字面 LIKE</td><td>本页 ③ 讲的就是这一步</td></tr>
+    <tr><td>生成</td><td>❌ 没有</td><td>后面接星火/本地模型</td></tr>
+    <tr><td><b>评估</b></td><td>❌ 没有</td><td class="bad">⚠️ 路线 v3 特别强调：<b>评估与可观测要从 MVP 就带上</b>，别后补（Ragas / Langfuse）</td></tr>
+  </table>
+</div>
+
+<!-- ⑤ 模型只看到你给的 -->
+<h2>⑤ 一个必须建立的心智模型：模型只看到你塞给它的东西</h2>
+<div class="card">
+  <div class="step">大模型自己<b>不知道</b>你的方剂库。它回答得好不好，取决于你从库里<b>检索了哪几段</b>塞给它。</div>
+  <table>
+    <tr><th style="width:30%">检索给什么</th><th>模型只能据此回答</th></tr>
+    <tr><td>检索到"四君子汤 · 脾胃气虚…"</td><td>围绕这条回答，可引用来源 ✅</td></tr>
+    <tr><td>检索到 0 条（字面匹配的盲区）</td><td class="bad">要么说"没有相关信息"，要么<b>开始编</b>（幻觉）</td></tr>
+    <tr><td>检索到一大堆不相关的</td><td class="bad">答案被带偏；还浪费 token</td></tr>
+  </table>
+  <div class="step ok">👉 所以 RAG 的功夫<b>八成在检索质量</b>上，不在"换个更强的模型"。<br>
+    这也是为什么下一步要学<b>怎么量检索好不好</b>（召回率：该找到的找到了吗；准确率：找到的对不对）。</div>
+</div>
+
+<!-- ⑥ 自己写 -->
+<h2>⑥ 你先自己写</h2>
+<div class="card">
+  <div class="hint">任务①：用 SQL 写一个"倒排索引"的雏形 —— 建一张表记录"每个症状词出现在哪些方剂里"（提示：先拆词/或用 LIKE 反向统计）。<br>
+    任务②：用 Python 算两个句子的"字面相似度"（共有词数 / 总词数），观察"免疫"和"气虚"算出来是几分 —— 体会为什么字面相似度不够用。</div>
+  <pre><span class="cm"># 任务②的骨架</span>
+<span class="kw">def</span> <span class="fn">literal_similarity</span>(a, b):
+    <span class="strc">"""返回 0~1：两个字符串共有多少字（最粗的相似度）"""</span>
+    sa, sb = <span class="fn">set</span>(a), <span class="fn">set</span>(b)
+    <span class="kw">return</span> <span class="fn">len</span>(sa &amp; sb) / <span class="fn">len</span>(sa | sb)   <span class="cm"># 交并比</span>
+
+<span class="fn">print</span>(literal_similarity(<span class="strc">"气虚"</span>, <span class="strc">"免疫"</span>))     <span class="cm"># 先猜，再看结果</span>
+<span class="fn">print</span>(literal_similarity(<span class="strc">"气虚"</span>, <span class="strc">"气虚"</span>))</pre>
+  <div class="hint">跑完你会得到一个"0"—— <b>这就是向量检索存在的理由</b>：意思相近的两个词，字面相似度是 0。</div>
+</div>
+
+<div class="foot">
+  RAG ① · 2026.09.21 · 方向 3（AI 应用）起步卡 · 数据实测自学员的 prescriptions.db<br>
+  下一步建议：RAG ② 切片与检索质量（怎么量召回率）｜或动手：本地 Ollama 跑中文 embedding
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+
+/* 你的 8 首方剂当"知识库"（症状文本取自真实数据） */
+const DOCS = [
+  {id: 1, name: '麻黄汤', text: '外感风寒表实证：恶寒发热、无汗而喘'},
+  {id: 2, name: '桂枝汤', text: '外感风寒表虚证：头痛发热、汗出恶风'},
+  {id: 3, name: '小柴胡汤', text: '少阳证：往来寒热、胸胁苦满、不欲饮食'},
+  {id: 4, name: '白虎汤', text: '阳明气分热盛：大热、大汗、大渴、脉洪大'},
+  {id: 5, name: '四君子汤', text: '脾胃气虚：面色萎白、四肢无力'},
+  {id: 6, name: '银翘散', text: '温病初起：发热无汗、头痛口渴、咳嗽咽痛'},
+  {id: 7, name: '四物汤', text: '营血虚滞：心悸失眠、头晕目眩、面色无华'},
+  {id: 8, name: '藿香正气散', text: '外感风寒、内伤湿滞：恶寒发热、头痛、胸膈满闷、腹痛呕吐'}
+];
+
+/* 倒排索引：把每条文本拆成 2 字词，建 词→[文档id] */
+const INVERTED = (() => {
+  const idx = {};
+  for(const d of DOCS){
+    const t = d.text + d.name;
+    for(let i = 0; i < t.length - 1; i++){
+      const w = t.slice(i, i + 2);
+      (idx[w] = idx[w] || []).push(d.id);
+    }
+  }
+  return idx;
+})();
+
+/* ③ 语义相似度：本页用"预设主题"近似（浏览器里不跑真模型，页面上已注明） */
+const THEMES = {
+  1: ['受寒', '怕冷', '无汗', '感冒'],
+  2: ['受寒', '出汗', '头痛', '感冒'],
+  3: ['忽冷忽热', '胸闷', '没胃口'],
+  4: ['高热', '口渴', '出大汗'],
+  5: ['没力气', '体质弱', '补气', '免疫', '增强体质'],
+  6: ['发热', '嗓子痛', '咳嗽', '感冒'],
+  7: ['血虚', '失眠', '头晕', '面色差'],
+  8: ['受寒', '湿气', '肚子不舒服', '呕吐']
+};
+function semanticScore(q, id){
+  // 把问题拆成词，再和该条的"主题词"做「字符重叠度」比较
+  // （真实项目里这一步是 embedding 模型算的，本页用近似值演示"语义档能命中字面完全不同的条目"）
+  const qs = q.split(/[\s、，,。？?的]+/).filter(Boolean);
+  let best = 0;
+  for(const t of THEMES[id] || []){
+    for(const w of qs){
+      let share = 0;
+      for(const ch of new Set(w)) if(t.includes(ch)) share++;
+      const denom = Math.max(2, Math.min(t.length, w.length));
+      best = Math.max(best, share / denom);
+    }
+  }
+  return Math.min(1, best);
+}
+
+function literalHits(q){
+  const out = [];
+  for(const d of DOCS){
+    const full = d.name + d.text;
+    if(full.includes(q)) out.push({d, why: '整串出现'});
+    else {
+      // 退化：按 2 字词逐词匹配（这正是倒排索引做的事）
+      const ws = [];
+      for(let i = 0; i < q.length - 1; i++) ws.push(q.slice(i, i + 2));
+      const hitW = ws.filter(w => full.includes(w));
+      if(hitW.length) out.push({d, why: `命中词：${hitW.join('/')}`});
+    }
+  }
+  return out;
+}
+function invertedHits(q){
+  const ws = [];
+  for(let i = 0; i < q.length - 1; i++) ws.push(q.slice(i, i + 2));
+  const score = {};
+  for(const w of ws) for(const id of (INVERTED[w] || [])) score[id] = (score[id] || 0) + 1;
+  return Object.entries(score).sort((a, b) => b[1] - a[1])
+    .map(([id, n]) => ({d: DOCS.find(x => x.id === Number(id)), n}));
+}
+function vectorHits(q){
+  return DOCS.map(d => ({d, s: semanticScore(q, d.id)}))
+    .filter(x => x.s > 0.2).sort((a, b) => b.s - a.s);
+}
+
+function render(){
+  const q = $('#q').value.trim();
+  if(!q){ $('#r1').innerHTML = $('#r2').innerHTML = $('#r3').innerHTML = ''; return; }
+
+  const l = literalHits(q), inv = invertedHits(q), vec = vectorHits(q);
+
+  $('#r1').innerHTML = l.length
+    ? l.map(x => `<div class="hit"><b>${x.d.name}</b> <span class="hint">${x.why}</span></div>`).join('')
+    : `<div class="step bad">0 条 —— 字面里根本没有「${q}」</div>`;
+
+  $('#r2').innerHTML = inv.length
+    ? inv.slice(0, 5).map(x => `<div class="hit"><b>${x.d.name}</b> <span class="score">命中 ${x.n} 词</span><div class="hint">${x.d.text.slice(0, 20)}…</div></div>`).join('')
+      + `<div class="hint">共 ${inv.length} 条候选（按命中词数排序）</div>`
+    : `<div class="step bad">0 条 —— 没有共同词</div>`;
+
+  $('#r3').innerHTML = vec.length
+    ? vec.slice(0, 4).map(x => `<div class="hit"><b>${x.d.name}</b> <span class="score">相似 ${x.s.toFixed(2)}</span><div class="hint">${(THEMES[x.d.id] || []).slice(0, 4).join(' · ')}</div></div>`).join('')
+    : `<div class="step bad">0 条（本页预设里没有相近主题）</div>`;
+
+  // 结论
+  const c = [];
+  if(!l.length && vec.length){
+    c.push(`<div class="step ok">✅ 看差别：问题里的「${q}」在 8 条文本里<b>字面一次都没出现</b>（①② 都是 0 条），但 ③ 语义检索命中了 <b>${vec[0].d.name}</b> —— 这就是"用户用自己的词提问"时的真实情况。</div>`);
+  }
+  if(l.length > 4){
+    c.push(`<div class="step bad">⚠️ ①② 命中了 ${l.length} 条（超过一半）—— <b>过度命中</b>：字面像但语义不一定对，等于没筛。</div>`);
+  }
+  if(l.length && l.length <= 4){
+    c.push(`<div class="step">①② 命中 ${l.length} 条；③ 给出 ${vec.length} 条按"意思接近程度"排序 —— 真实系统会把两者<b>合并</b>（hybrid）。</div>`);
+  }
+  $('#conclusion').innerHTML = c.join('');
+}
+
+document.addEventListener('click', e => {
+  const pq = e.target.dataset && e.target.dataset.q;
+  if(pq){ $('#q').value = pq; render(); return; }
+  if(e.target.id === 'run') render();
+});
+$('#q').addEventListener('input', render);
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>逐日学习计划 · 第 1 周</title>
+<style>
+  @page { size: A4; margin: 13mm 12mm 12mm 12mm; }
+  * { box-sizing: border-box; }
+  body { font: 13.2px/1.62 "Microsoft YaHei","Segoe UI",sans-serif; color: #111; margin: 0; }
+  h1 { font-size: 20px; margin: 0 0 2px; letter-spacing: .5px; }
+  .sub { font-size: 11.5px; color: #555; margin-bottom: 9px; }
+  .band { display: flex; justify-content: space-between; font-size: 11.5px; color: #555;
+          border: 1px solid #bbb; border-radius: 5px; padding: 4px 8px; margin-bottom: 9px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #999; padding: 4px 5px; vertical-align: top; }
+  th { background: #eee; font-size: 11.5px; text-align: left; }
+  .day { width: 46px; text-align: center; font-weight: 700; background: #f7f7f7; }
+  .chk { width: 38px; min-width: 38px; text-align: center; font-size: 15px; color: #444; }
+  th.chk { font-size: 11px; white-space: nowrap; }
+  .min { width: 40px; text-align: center; color: #444; }
+  .task { font-size: 12.4px; }
+  .task b { font-size: 12.8px; }
+  .why { font-size: 11.2px; color: #555; }
+  .air { height: 5px; }
+  .note { font-size: 11.3px; color: #444; border-left: 3px solid #888; padding-left: 7px; margin: 9px 0; }
+  .foot { font-size: 10.6px; color: #666; margin-top: 9px; text-align: center; }
+  .tick { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h1>逐日学习计划 · 第 1 周</h1>
+<div class="sub">韩立 · 2026.09.20（周日）起 8 天 · 每天 10–20 分钟 · 不用等课，自己在宿舍就能做</div>
+
+<div class="band">
+  <span>本周主线：<b>SQL 关系模型 + JOIN</b>（卡点 P-009）</span>
+  <span>本周副线：<b>3 个常忘的内置函数</b></span>
+  <span>周末：我会按你的卡点出下一张</span>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th class="day">日期</th>
+      <th class="chk">打勾</th>
+      <th class="min">用时</th>
+      <th>今天做什么（照着做，不用想下一步）</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="day">D1<br>09-20</td>
+      <td class="chk">☐</td>
+      <td class="min">15′</td>
+      <td class="task">
+        <b>先把 JOIN 变成能拧的东西</b><br>
+        ① 手机或电脑打开 <b>交互演示/SQL基础③-JOIN详解.html</b>（想先补基础就先开 ①）<br>
+        ② 在「先猜」里填一个行数 → 点揭晓（猜错最值钱）<br>
+        ③ 点「开始配对」，盯着高亮看它一行行怎么配的<br>
+        ④ 加一个"没人加的群"，再切换 INNER / LEFT JOIN 看差别<br>
+        <span class="why">为什么：先"看见"再"记住"，比读十遍文字管用。</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="day">D2<br>09-21</td>
+      <td class="chk">☐</td>
+      <td class="min">15′</td>
+      <td class="task">
+        <b>换成自己的手（跑 + 改）</b><br>
+        ① 跑 <code>python 样例代码库/sql_join.py</code>，看输出<br>
+        ② 把文件里 <code>WHERE groups.id = 1</code> 改成 2、3，各跑一次<br>
+        ③ <b>自己写</b>：查「小明在哪些群里」（起点换成 persons）<br>
+        <span class="why">为什么：复制→改参数→自己写，这一步是"会"的分界线。</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="day">D3<br>09-22</td>
+      <td class="chk">☐</td>
+      <td class="min">12′</td>
+      <td class="task">
+        <b>回到自己的库：数一数</b><br>
+        ❶ 打开你的 <code>prescriptions.db</code>，跑：<br>
+        &nbsp;&nbsp;<code>SELECT COUNT(*) FROM ingredients;</code><br>
+        &nbsp;&nbsp;<code>SELECT COUNT(*) FROM prescription_ingredients;</code><br>
+        ❷ 把两个数字写下来：药材 ____ 味 · 关联 ____ 条<br>
+        ❸ 和你笔记 <code>sql-notes.md</code> 第八节写的数字对一对<br>
+        ❹ 想补细节就开 <b>交互演示/SQL基础①-查询与筛选.html</b>（NULL 那一节最容易踩坑）<br>
+        <span class="why">为什么：学会"不信笔记、自己数"，是工程师的起点。</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="day">D4<br>09-23</td>
+      <td class="chk">☐</td>
+      <td class="min">15′</td>
+      <td class="task">
+        <b>陌生函数日 · len()</b><br>
+        ① 跑 <code>python 样例代码库/len用法.py</code><br>
+        ② 改里面的字符串/列表，看输出变化<br>
+        ③ 把「④ 轮到你了」三道题做完（先猜再跑）<br>
+        <span class="why">为什么：你忘函数用法是因为"用得太少"，不是记性差。</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="day">D5<br>09-24</td>
+      <td class="chk">☐</td>
+      <td class="min">15′</td>
+      <td class="task">
+        <b>检索日（闭卷，不许翻笔记）</b><br>
+        ① JOIN 为什么需要"第三张表"？用一句话写在下面卡点栏<br>
+        ② <code>SELECT persons.name FROM persons JOIN group_members ON persons.id = group_members.uid WHERE group_members.gid = 1;</code> 出几行？<br>
+        ③ 打开交互卡片，用「你先自己写」核对你的写法<br>
+        <span class="why">为什么：闭卷回忆一次 &gt; 重读三遍（这是证据最强的结论）。</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="day">D6<br>09-25</td>
+      <td class="chk">☐</td>
+      <td class="min">15′</td>
+      <td class="task">
+        <b>陌生函数日 · range()</b><br>
+        ① 跑 <code>python 样例代码库/range用法.py</code><br>
+        ② 重点记：<b>终点取不到</b>、空 range 的三种情况<br>
+        ③ 做完「④ 轮到你了」三道题<br>
+        <span class="why">为什么：range 写错边界是新手最常见的 off-by-one 错误源。</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="day">D7<br>09-26</td>
+      <td class="chk">☐</td>
+      <td class="min">15′</td>
+      <td class="task">
+        <b>陌生函数日 · enumerate()</b><br>
+        ① 跑 <code>python 样例代码库/enumerate用法.py</code><br>
+        ② 对比"旧写法 for i in range(len(x))"和 enumerate 的差别<br>
+        ③ 做完三道题，并回答：什么时候该 <code>start=1</code>？<br>
+        <span class="why">为什么：这是"从能跑 → 写得顺"的第一批函数。</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="day">D8<br>09-27</td>
+      <td class="chk">☐</td>
+      <td class="min">20′</td>
+      <td class="task">
+        <b>动手任务 · 选修课报名（L2 验收）</b><br>
+        自己建三张表：<code>students</code> / <code>courses</code> / <code>enrollments</code><br>
+        ① 画关系图标出"绳子"是哪张表 ② 各插 3 行数据<br>
+        ③ 写一条 JOIN 查出「课程 + 学生名字」<br>
+        ④ 把代码存成 <code>选修课报名.py</code> 发我，我批改<br>
+        <span class="why">为什么：能自己搭出结构 + 写出 JOIN，P-009 就算真解决了。</span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <b>卡点栏（每天写一行，周末发我，我按你的卡点出下周计划）</b><br>
+  D1：<span class="air"></span>________________________________________________________________<br>
+  D2：<span class="air"></span>________________________________________________________________<br>
+  D3：<span class="air"></span>药材数 ______ 味 · 关联数 ______ 条 · 和笔记一致吗？□一致 □不一致<br>
+  D4–D7：<span class="air"></span>____________________________________________________________<br>
+  D8：<span class="air"></span>________________________________________________________________
+</div>
+
+<div class="note">
+  <b>记忆曲线打卡（闭卷回忆，5 分钟，不许重读笔记）</b><br>
+  <table style="margin-top:4px">
+    <tr>
+      <th style="width:34%">复习内容</th><th class="chk">当天</th><th class="chk">隔天</th><th class="chk">3 天</th><th class="chk">7 天</th><th class="chk">30 天</th>
+    </tr>
+    <tr><td>第 1 课 Python 概念</td><td class="chk tick">☑</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td></tr>
+    <tr><td>第 2 课 FastAPI 概念</td><td class="chk tick">☑</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td></tr>
+    <tr><td>第 3 课 关系模型 + JOIN</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td></tr>
+    <tr><td>len / range / enumerate</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td><td class="chk tick">☐</td></tr>
+  </table>
+</div>
+
+<div class="foot">
+  逐日学习计划 · 第 1 周 · 2026.09.20 · 配套：交互演示/JOIN配对过程.html · 样例代码库/ · 打印出来贴在桌上
+</div>
+
+</body>
+</html>

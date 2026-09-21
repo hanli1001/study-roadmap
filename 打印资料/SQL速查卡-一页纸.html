@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SQL 速查卡 · 一页纸</title>
+<style>
+  @page { size: A4; margin: 11mm 10mm 10mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font: 11.6px/1.5 "Microsoft YaHei","Segoe UI",sans-serif; color: #111; margin: 0; }
+  h1 { font-size: 18px; margin: 0 0 2px; }
+  .sub { font-size: 10.6px; color: #555; margin-bottom: 8px; }
+  .cols { display: flex; gap: 9px; }
+  .col { flex: 1; }
+  h2 { font-size: 12.4px; margin: 8px 0 4px; padding: 2px 6px; background: #ececec;
+       border-left: 4px solid #444; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+  th, td { border: 1px solid #aaa; padding: 3px 4px; vertical-align: top; text-align: left; }
+  th { background: #f2f2f2; font-size: 10.7px; }
+  code { font-family: Consolas,"Cascadia Mono",monospace; font-size: 11px;
+         background: #f4f4f4; padding: 0 2px; border-radius: 2px; }
+  pre { font-family: Consolas,"Cascadia Mono",monospace; font-size: 10.6px; line-height: 1.45;
+        background: #f6f6f6; border: 1px solid #ccc; border-radius: 4px; padding: 6px 7px; margin: 4px 0; }
+  .warn { border-left: 4px solid #b00; background: #fdf3f3; padding: 5px 7px; font-size: 11px; margin: 5px 0; }
+  .good { border-left: 4px solid #0a7; background: #f2fbf7; padding: 5px 7px; font-size: 11px; margin: 5px 0; }
+  ul { margin: 3px 0 3px 16px; padding: 0; }
+  li { margin: 1.5px 0; }
+  .foot { font-size: 9.8px; color: #666; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>SQL 速查卡 · 一页纸</h1>
+<div class="sub">韩立 · 2026.09.20 · 贴在电脑旁 · 对应 交互演示/JOIN配对过程.html 与 样例代码库/sql_join.py</div>
+
+<div class="cols">
+  <div class="col">
+
+    <h2>① 三种表的分工（关系模型）</h2>
+    <table>
+      <tr><th style="width:34%">表的角色</th><th>装什么</th></tr>
+      <tr><td>人表 / 群表</td><td>各自独有的信息（姓名、群名、手机号）</td></tr>
+      <tr><td><b>绳子表</b>（关联表）</td><td><b>只记"谁连着谁"</b>：两列 id + 属于这段关系的信息（如加入时间、用量、身份）</td></tr>
+    </table>
+    <div class="good"><b>三步推导法</b>（遇到新需求就这么推）<br>
+      ① 数一数有几种"东西" → 每样一张表<br>
+      ② 每个事实跟着谁走？只跟一个 → 放它自己的表<br>
+      ③ 跟<b>两个</b>走的（如"谁在哪个群"）→ 单独做<b>绳子表</b>
+    </div>
+    <div class="warn"><b>为什么不能省掉第三张表</b><br>
+      · 塞进人表 → 一个人加 10 个群就要存 10 行<br>
+      · 塞进群表 → 200 人的群，群名要重复 200 遍<br>
+      · 用 <b>id</b> 而不是名字做绳子 → 名字改了不用全库改
+    </div>
+
+    <h2>② JOIN 模板（照抄改表名）</h2>
+<pre>SELECT 要看的列
+FROM 主表
+JOIN 绳子表 ON 主表.id = 绳子表.主表_id
+JOIN 另一张表 ON 绳子表.另一张_id = 另一张表.id
+WHERE 筛选条件;</pre>
+    <table>
+      <tr><th style="width:30%">字段</th><th>作用</th></tr>
+      <tr><td><code>ON</code></td><td><b>配对规则</b>：拿哪个 id 去对哪个 id（接反了就全错）</td></tr>
+      <tr><td><code>WHERE</code></td><td><b>筛选</b>：配对完之后，只要哪几行</td></tr>
+      <tr><td><code>JOIN</code></td><td>两边都配上才出行</td></tr>
+      <tr><td><code>LEFT JOIN</code></td><td>左表一行都不丢，右边配不上填 <code>NULL</code></td></tr>
+    </table>
+
+  </div>
+  <div class="col">
+
+    <h2>③ 执行过程（背这 4 步）</h2>
+    <ul>
+      <li>① 从主表拿出<b>一行</b>（如 id=1 的群）</li>
+      <li>② 拿这个 id 去绳子表<b>一行行比</b></li>
+      <li>③ 每条配上的行，拿另一个 id 去目标表<b>换出名字</b></li>
+      <li>④ 拼成一行交出去</li>
+    </ul>
+    <div class="good">结果行数 = <b>配对成功的次数</b>，不是任何一张表的行数。</div>
+
+    <h2>④ 查出来不对时的排查（三步）</h2>
+    <table>
+      <tr><th style="width:8%">#</th><th>做什么</th></tr>
+      <tr><td>1</td><td><b>单独</b>数绳子表：<code>SELECT * FROM 绳子表 WHERE ...;</code> 看应有几行</td></tr>
+      <tr><td>2</td><td>再数 JOIN 的结果行数</td></tr>
+      <tr><td>3</td><td>两数一致 <b>≠</b> 配对正确 → <b>挑一行人工核对内容</b></td></tr>
+    </table>
+    <div class="warn"><b>JOIN 的两种"错法"（实测过）</b><br>
+      · id 空间不重叠 → <b>0 行</b>，不报错（空的，还看得出来）<br>
+      · id 空间重叠 → <b>照样出数据，看着还挺合理</b>（静默错误，最危险）<br>
+      👉 所以"不为空"绝不等于"对"
+    </div>
+
+    <h2>⑤ 常见报错/症状</h2>
+    <table>
+      <tr><th style="width:42%">症状</th><th>多半是</th></tr>
+      <tr><td>结果 0 行但不报错</td><td><code>ON</code> 接反 / 条件写错</td></tr>
+      <tr><td>行数比预期多很多</td><td>配错了、或多对多没经过绳子表</td></tr>
+      <tr><td>某一列全是 <code>NULL</code></td><td>用了 LEFT JOIN 且右边没配上（正常）</td></tr>
+      <tr><td><code>no such column</code></td><td>列名写错 / 忘了用表别名</td></tr>
+      <tr><td><code>ambiguous column</code></td><td>两张表都有这列名 → 前面加表名</td></tr>
+    </table>
+
+    <h2>⑥ 别忘的老三样</h2>
+    <ul>
+      <li><code>?</code> 占位符防注入，永远别 f-string 拼 SQL</li>
+      <li>增删改之后必须 <code>conn.commit()</code>（≈ git commit）</li>
+      <li>用完 <code>conn.close()</code>（托盘放回）</li>
+    </ul>
+
+  </div>
+</div>
+
+<div class="foot">
+  SQL 速查卡 v1 · 2026.09.20 · 数字与结论均在 prescriptions.db + 交互演示 上实测过 · 有新卡点就往这张纸上加
+</div>
+
+</body>
+</html>

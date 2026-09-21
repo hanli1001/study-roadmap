@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>range() 详解 · 签名/参数/返回类型/推导式</title>
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#2a2f3a;--txt:#e6e8ee;--dim:#98a0b3;
+        --ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--accent:#60a5fa;--purple:#c084fc;--hl:#1e3a5f}
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:960px;background:var(--bg);color:var(--txt);
+    font:15px/1.75 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:21px;margin:0 0 4px}
+  h2{font-size:16.5px;margin:28px 0 9px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;font-size:13px}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;line-height:1.65;margin:8px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.8px;margin:6px 0}
+  th,td{border:1px solid var(--line);padding:5px 8px;vertical-align:top;text-align:left}
+  th{background:#1d2129;color:var(--dim);font-size:12.5px;font-weight:600}
+  button{background:#232833;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+    padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#06121f;font-weight:600}
+  button.on{background:var(--hl);border-color:var(--accent)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  input[type=number]{background:#0d1017;color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:6px 9px;font:inherit;font-size:14px}
+  .sig{font-family:"Cascadia Mono",Consolas,monospace;font-size:15px;background:#0b0e13;
+    border:1px solid var(--line);border-radius:9px;padding:14px 16px;text-align:center;line-height:2.1}
+  .kw{color:var(--purple)}.fn{color:var(--accent)}.strc{color:#86efac}.numc{color:#fbbf24}.cm{color:#5c6577}
+  .hint{color:var(--dim);font-size:12.8px}
+  .step{border-left:3px solid var(--warn);padding:5px 10px;margin:5px 0;font-size:13.6px;background:#1d1a12}
+  .step.ok{border-color:var(--ok);background:#12251a;color:#c9f5d8}
+  .step.bad{border-color:var(--bad);background:#2a1414;color:#f7c9c9}
+  .verdict{font-weight:600;padding:7px 10px;border-radius:7px;display:inline-block;margin-top:6px}
+  .verdict.ok{background:#14321f;color:var(--ok)}
+  .verdict.no{background:#3a1a1a;color:var(--bad)}
+  .track{position:relative;height:46px;background:#0b0e13;border:1px solid var(--line);border-radius:8px;margin:10px 0}
+  .tick{position:absolute;top:0;bottom:0;width:44px;text-align:center;font:13px/46px Consolas,monospace;color:var(--dim)}
+  .tick.in{color:var(--ok);background:#12251a;border-radius:6px}
+  .tick.stop{color:var(--bad)}
+  textarea{width:100%;min-height:76px;background:#0b0e13;color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:10px;font:13px/1.5 "Cascadia Mono",Consolas,monospace}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+
+<h1>range() 详解</h1>
+<div class="sub">签名 · 三种形态 · 返回类型 · 与 len/list 的关系 · 推导式 · 常见异常。配套：<code>样例代码库/range用法.py</code></div>
+
+<!-- ① 签名 -->
+<h2>① 它长什么样（签名）</h2>
+<div class="card">
+  <div class="sig">
+    <span class="kw">range</span>(<span class="fn">start</span>, <span class="fn">stop</span>[, <span class="fn">step</span>]) → <span class="numc">range</span> 对象
+  </div>
+  <table>
+    <tr><th style="width:14%">参数</th><th style="width:22%">类型</th><th style="width:14%">必填？</th><th>含义</th></tr>
+    <tr><td><code>start</code></td><td><code>int</code></td><td>可选（默认 0）</td><td>从哪个数字开始，<b>包含</b></td></tr>
+    <tr><td><code>stop</code></td><td><code>int</code></td><td>必需</td><td>到哪个数字停，<b>不包含</b>（左闭右开）</td></tr>
+    <tr><td><code>step</code></td><td><code>int</code></td><td>可选（默认 1）</td><td>每次加多少；<b>可以是负数</b>（倒着数）</td></tr>
+    <tr><td>返回值</td><td><code>range</code> 对象</td><td>—</td><td><b>不是列表！</b>是一个"会按需生成数字的懒对象"（见④）</td></tr>
+  </table>
+  <div class="hint">💡 只给一个参数时，它是 <code>stop</code>（不是 start）：<code>range(5)</code> = 0,1,2,3,4</div>
+</div>
+
+<!-- ② 铁律 -->
+<h2>② 一条铁律 + 一个记忆法</h2>
+<div class="card">
+  <div class="step"><b>终点取不到</b>（左闭右开）：<code>range(1, 5)</code> → 1,2,3,4，<b>没有 5</b></div>
+  <div class="step ok"><b>记忆法：range 像"数数到门槛前就停"</b> —— 说"走到第 5 个"就停在第 5 个之前。<br>
+    想要 1~5 就写 <code>range(1, 6)</code>；想要"重复 n 次"就写 <code>range(n)</code>。</div>
+  <div class="hint">为什么这样设计？因为编程里 99% 的循环都是"走 n 次"或"走一遍下标"，0 起、取不到终点最顺手。</div>
+</div>
+
+<!-- ③ 交互：三种形态 -->
+<h2>③ 拧参数：看数字轨道</h2>
+<div class="card">
+  <div class="row">
+    <span>start</span><input type="number" id="start" value="0" style="width:74px">
+    <span>stop</span><input type="number" id="stop" value="6" style="width:74px">
+    <span>step</span><input type="number" id="step" value="1" style="width:74px">
+    <button class="ex" data-s="0,5,1">range(5)</button>
+    <button class="ex" data-s="2,6,1">range(2,6)</button>
+    <button class="ex" data-s="0,10,3">range(0,10,3)</button>
+    <button class="ex" data-s="5,0,-1">range(5,0,-1)</button>
+    <button class="ex" data-s="0,0,1">range(0) 空</button>
+    <button class="ex" data-s="5,1,1">range(5,1) 空</button>
+    <button class="ex" data-s="1,10,-1">range(1,10,-1) 空</button>
+  </div>
+  <pre id="sigBox"></pre>
+  <div class="track" id="track"></div>
+  <div id="steps"></div>
+  <div class="row">
+    <span>先猜它能生成几个数：</span>
+    <input type="number" id="guess" min="0" max="99" placeholder="?" style="width:74px">
+    <button class="pri" id="reveal">揭晓</button><span id="verdict"></span>
+  </div>
+</div>
+
+<!-- ④ 返回类型 -->
+<h2>④ 返回类型：它不是列表（这是新手最大的误会）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:34%">写法</th><th style="width:24%">结果</th><th>说明</th></tr>
+    <tr><td><code>range(3)</code></td><td><code>range(0, 3)</code></td><td>打印出来长这样 —— <b>不是 <code>[0,1,2]</code></b></td></tr>
+    <tr><td><code>list(range(3))</code></td><td><code>[0, 1, 2]</code></td><td>要看内容就转列表</td></tr>
+    <tr><td><code>len(range(3))</code></td><td><code>3</code></td><td>能数！因为它<b>知道</b>自己有多少个</td></tr>
+    <tr><td><code>range(3)[1]</code></td><td><code>1</code></td><td>能按下标取（支持切片和索引）</td></tr>
+    <tr><td><code>3 in range(5)</code></td><td><code>True</code></td><td>能判断"在不在里面"</td></tr>
+    <tr><td><code>range(3) == [0,1,2]</code></td><td class="bad">False</td><td>它和列表<b>不是</b>同一种东西</td></tr>
+  </table>
+  <div class="step ok">为什么要设计成"懒对象"？<code>range(100000000)</code> 如果是列表，要立刻占几百 MB 内存；<br>
+    懒对象只记住 start/stop/step 三个数，用的时候现算 —— <b>省内存</b>。同一个套路还有 <code>enumerate</code>、生成器。</div>
+</div>
+
+<!-- ⑤ for 循环 -->
+<h2>⑤ 最常见的用法：for 循环（3 种写法对应 3 种需求）</h2>
+<div class="card">
+<pre><span class="cm"># 写法 1：只要重复 n 次，不要数字</span>
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(3):
+    <span class="fn">print</span>(<span class="strc">"跑一次"</span>)        <span class="cm"># 跑 3 次（习惯用 _ 表示"我不关心这个变量"）</span>
+
+<span class="cm"># 写法 2：要用到数字</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(3):
+    <span class="fn">print</span>(i)               <span class="cm"># 0 1 2</span>
+
+<span class="cm"># 写法 3：走一遍下标（要按位置取别的东西）</span>
+names = [<span class="strc">"甲"</span>, <span class="strc">"乙"</span>, <span class="strc">"丙"</span>]
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(names)):
+    <span class="fn">print</span>(i, names[i])     <span class="cm"># 更 Python 的写法：enumerate(names)</span></pre>
+  <div class="hint">💡 判断标准：<b>只要次数</b> → <code>range(n)</code>；<b>要序号又要值</b> → <code>enumerate()</code>；<b>要下标做复杂计算</b> → <code>range(len(x))</code>。</div>
+</div>
+
+<!-- ⑥ 推导式 -->
+<h2>⑥ 搭配推导式：一行造列表</h2>
+<div class="card">
+<pre><span class="cm"># 0~9 的平方</span>
+[x*x <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(10)]              <span class="cm"># [0,1,4,9,...,81]</span>
+
+<span class="cm"># 0~9 里的偶数（条件放 for 后面！）</span>
+[x <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(10) <span class="kw">if</span> x % 2 == 0]   <span class="cm"># [0,2,4,6,8]</span>
+
+<span class="cm"># 倒着来</span>
+[x <span class="kw">for</span> x <span class="kw">in</span> <span class="fn">range</span>(10, 0, -1)]          <span class="cm"># [10,...,1]</span></pre>
+  <div class="hint">⚠️ 你踩过的坑（P-006）：<b>条件要放在 <code>for</code> 后面</b>；只有带 <code>else</code> 的才是三元表达式。</div>
+</div>
+
+<!-- ⑦ 异常 -->
+<h2>⑦ 会报什么错</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:30%">写法</th><th style="width:36%">报错</th><th>怎么改</th></tr>
+    <tr><td><code>range(1.5)</code></td><td><code>TypeError: 'float' object cannot be interpreted as an integer</code></td><td>只能整数：<code>range(int(1.5))</code></td></tr>
+    <tr><td><code>range(1, 5, 0)</code></td><td><code>ValueError: range() arg 3 must not be zero</code></td><td>步长不能为 0（会无限循环）</td></tr>
+    <tr><td><code>range("5")</code></td><td><code>TypeError: 'str' object cannot be interpreted as an integer</code></td><td>先转：<code>range(int("5"))</code></td></tr>
+    <tr><td><code>range(1,2,3,4)</code></td><td><code>TypeError: range expected at most 3 arguments, got 4</code></td><td>最多 3 个参数</td></tr>
+  </table>
+</div>
+
+<!-- ⑧ 边界 -->
+<h2>⑧ 空 range 的三种情况（循环体一次都不执行）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:30%">写法</th><th style="width:16%">结果</th><th>为什么空</th></tr>
+    <tr><td><code>range(0)</code></td><td>空</td><td>从 0 开始、到 0 停，一步都走不了</td></tr>
+    <tr><td><code>range(5, 5)</code></td><td>空</td><td>起点 == 终点</td></tr>
+    <tr><td><code>range(5, 1)</code></td><td>空</td><td>步长是正的，但起点 &gt; 终点 → <b>不会自动倒过来</b></td></tr>
+    <tr><td><code>range(1, 10, -1)</code></td><td>空</td><td>步长是负的，但起点 &lt; 终点</td></tr>
+  </table>
+  <div class="step bad">⚠️ <b>空 range 不报错</b>，循环体静默不执行 —— 这是"我明明写了循环却没输出"的最常见原因。</div>
+</div>
+
+<!-- ⑨ 自己写 -->
+<h2>⑨ 你先自己写</h2>
+<div class="card">
+  <div class="hint">任务：用 <code>range</code> 打印 1~10 的所有偶数；再打印 10~1 的倒计时。</div>
+  <textarea id="own" placeholder="for i in range(...):
+    print(i)"></textarea>
+  <div class="row"><button id="check">对照思路（不直接给答案）</button><span id="checkMsg" class="hint"></span></div>
+</div>
+
+<div class="foot">
+  range() 详解卡 · 2026.09.20 · 结构同 len 详解卡 · 配套 样例代码库/range用法.py
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+function vals(st, sp, stp){
+  const out = [];
+  if(stp === 0) return out;
+  if(stp > 0){ for(let i = st; i < sp; i += stp) out.push(i); }
+  else { for(let i = st; i > sp; i += stp) out.push(i); }
+  return out.length > 200 ? out.slice(0, 200) : out;
+}
+function render(){
+  const st = Number($('#start').value), sp = Number($('#stop').value), stp = Number($('#step').value);
+  const v = vals(st, sp, stp);
+  $('#sigBox').innerHTML = `<span class="kw">range</span>(${st}, ${sp}, ${stp})   <span class="cm"># 生成 ${v.length} 个数</span>`;
+  // 轨道：从 min(所有相关数)-1 到 max+1
+  const lo = Math.min(st, sp, ...(v.length ? v : [st, sp])) - 1;
+  const hi = Math.max(st, sp, ...(v.length ? v : [st, sp])) + 1;
+  const total = hi - lo + 1;
+  let html = '';
+  for(let n = lo; n <= hi; n++){
+    const isIn = v.includes(n), isStop = n === sp;
+    const left = ((n - lo) / total) * 100;
+    html += `<div class="tick ${isIn ? 'in' : ''} ${isStop ? 'stop' : ''}" style="left:${left}%">${n}</div>`;
+  }
+  $('#track').innerHTML = html;
+
+  const reason = v.length === 0
+    ? (stp === 0 ? '步长是 0（实际会报错）'
+      : st === sp ? '起点 == 终点 → 一步都走不了'
+      : (stp > 0 ? '步长为正但起点 ≥ 终点 → 不会自动倒过来' : '步长为负但起点 ≤ 终点'))
+    : null;
+  $('#steps').innerHTML =
+    `<div class="step">① 起点 <b>${st}</b>（包含在内）→ 轨道上写 "${st}"</div>`
+    + `<div class="step">② 每次加 <b>${stp}</b>，一直加到<b>碰到或越过</b>终点 ${sp} 之前就停</div>`
+    + `<div class="step ${v.length ? 'ok' : 'bad'}">③ 结果 ${v.length} 个数：${v.length ? (v.length > 24 ? v.slice(0,24).join(', ') + ' …' : v.join(', ')) : '（空）'}`
+      + (v.length === 0 ? `—— 原因：${reason}` : '') + '</div>'
+    + `<div class="step">④ 注意终点 <b>${sp}</b> 在轨道上是<span style="color:var(--bad)">红色</span>：它<b>取不到</b></div>`;
+  $('#verdict').innerHTML = ''; $('#guess').value = '';
+  return v.length;
+}
+document.addEventListener('click', e => {
+  const s = e.target.dataset && e.target.dataset.s;
+  if(s){ const [a,b,c] = s.split(',').map(Number);
+    $('#start').value = a; $('#stop').value = b; $('#step').value = c; render(); return; }
+  if(e.target.id === 'reveal'){
+    const g = $('#guess').value;          // ⚠️ 必须先读：render() 会清空输入框
+    const t = render();
+    if(g === ''){ $('#verdict').innerHTML = '<span class="verdict no">先填一个数</span>'; return; }
+    const n = Number(g);
+    $('#verdict').innerHTML = (n === t) ? `<span class="verdict ok">对！就是 ${t} 个数</span>`
+                                       : `<span class="verdict no">你猜 ${n}，实际 ${t} 个数</span>`;
+    return;
+  }
+  if(e.target.id === 'check'){
+    const t = $('#own').value;
+    const w = t.toLowerCase().match(/[a-z_]+/g) || [];
+    const has = x => w.includes(x);
+    $('#checkMsg').innerHTML = [
+      has('range') ? '用了 range ✅' : '还没用 range ❌',
+      has('for') ? '有 for ✅' : '还没有 for ❌',
+      /range\(\s*\d+\s*,\s*\d+\s*,\s*2\s*\)/.test(t.replace(/\s/g,'')) || /step|2\)/.test(t) ? '看起来用了步长/终点 ✅' : '偶数可以靠步长 2 或 %2 判断',
+      has('print') ? '有 print ✅' : '建议加 print 看结果'
+    ].join(' · ') + `<br><span class="hint">自己核对：要出 2 4 6 8 10，终点该写几？倒计时的步长是正还是负？</span>`;
+    return;
+  }
+});
+['#start','#stop','#step'].forEach(id => $(id).addEventListener('input', render));
+render();
+</script>
+</body>
+</html>

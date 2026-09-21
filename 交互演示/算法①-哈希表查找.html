@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>算法模式 ① 哈希表查找 · 两数之和（含 O(n²) vs O(n) 对比）</title>
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#2a2f3a;--txt:#e6e8ee;--dim:#98a0b3;
+        --ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--accent:#60a5fa;--purple:#c084fc;--hl:#1e3a5f}
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:1020px;background:var(--bg);color:var(--txt);
+    font:15px/1.75 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:21px;margin:0 0 4px}
+  h2{font-size:16.5px;margin:28px 0 9px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;font-size:13px}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;line-height:1.65;margin:8px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.8px;margin:6px 0}
+  th,td{border:1px solid var(--line);padding:5px 8px;vertical-align:top;text-align:left}
+  th{background:#1d2129;color:var(--dim);font-size:12.5px;font-weight:600}
+  button{background:#232833;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+    padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#06121f;font-weight:600}
+  button.on{background:var(--hl);border-color:var(--accent)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  input[type=text],input[type=number]{background:#0d1017;color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:6px 9px;font:inherit;font-size:13.5px}
+  .kw{color:var(--purple)}.fn{color:var(--accent)}.strc{color:#86efac}.numc{color:#fbbf24}.cm{color:#5c6577}
+  .hint{color:var(--dim);font-size:12.8px}
+  .step{border-left:3px solid var(--warn);padding:5px 10px;margin:5px 0;font-size:13.6px;background:#1d1a12}
+  .step.ok{border-color:var(--ok);background:#12251a;color:#c9f5d8}
+  .step.bad{border-color:var(--bad);background:#2a1414;color:#f7c9c9}
+  .grid{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .cell{min-width:52px;text-align:center;border:1px solid var(--line);border-radius:7px;padding:4px 6px;
+    font-family:Consolas,monospace;font-size:14px;background:#0b0e13;transition:.12s}
+  .cell small{display:block;color:var(--dim);font-size:10px}
+  .cell.cur{background:var(--hl);border-color:var(--accent)}
+  .cell.hit{background:#14321f;border-color:var(--ok);color:#c9f5d8}
+  .cell.miss{background:#3a1a1a;border-color:var(--bad)}
+  .cell.done{background:#1b2029;opacity:.55}
+  .meter{height:10px;background:#0b0e13;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:4px 0 10px}
+  .meter i{display:block;height:100%;background:var(--accent)}
+  .meter.slow i{background:var(--bad)}
+  .verdict{font-weight:600;padding:7px 10px;border-radius:7px;display:inline-block;margin-top:6px}
+  .verdict.ok{background:#14321f;color:var(--ok)}
+  .verdict.no{background:#3a1a1a;color:var(--bad)}
+  textarea{width:100%;min-height:150px;background:#0b0e13;color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:10px;font:13px/1.55 "Cascadia Mono",Consolas,monospace}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+  .kv{display:flex;gap:16px;flex-wrap:wrap;font-family:Consolas,monospace;font-size:13.5px}
+  .kv b{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<h1>算法模式 ① · 哈希表查找</h1>
+<div class="sub">例题：两数之和（LeetCode 1）· 阶段 A 主目标起步 · 本节讲清「暴力为什么慢 → 哈希怎么一次遍历解决」，含实测操作次数对比</div>
+
+<!-- ① 题目 -->
+<h2>① 题目（用数字数组，纯逻辑）</h2>
+<div class="card">
+  <p style="margin:4px 0">给一个整数数组和 一个目标值 <code>target</code>，找出<b>两个不同位置</b>的数，使它们的和等于 target，返回这两个位置的下标。</p>
+<pre>nums = [2, 7, 11, 15]   target = 9
+答案：[0, 1]         <span class="cm"># 因为 nums[0] + nums[1] = 2 + 7 = 9</span>
+
+<span class="cm"># 换个更"像真实数据"的例子（比如你项目里各味药的用量数字）</span>
+nums = [3, 3, 4, 8]     target = 6
+答案：[0, 1]</pre>
+  <div class="hint">💡 为什么第 1 题永远是它：**它是"用哈希表把嵌套循环压成一层"的最小样板** —— 这个模式后面会反复出现（去重、分组、计数、看是否出现过）。</div>
+</div>
+
+<!-- ② 暴力 -->
+<h2>② 先看暴力法有多慢（先猜再看）</h2>
+<div class="card">
+  <p style="margin:4px 0">最直白的想法：<b>把所有两两组合都试一遍</b>。</p>
+<pre><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(nums)):          <span class="cm"># 第 1 个数的位置</span>
+    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(i + 1, <span class="fn">len</span>(nums)):  <span class="cm"># 第 2 个数（只往后找，避免重复配对）</span>
+        <span class="kw">if</span> nums[i] + nums[j] == target:
+            <span class="kw">return</span> [i, j]</pre>
+  <div class="row">
+    <b>先猜：4 个数要比较几次？10 个数呢？</b>
+    <input type="number" id="guessN" min="0" max="999" placeholder="4 个数" style="width:110px">
+    <button class="pri" id="revealN">揭晓</button>
+    <span id="verdictN"></span>
+  </div>
+  <div class="step">4 个数：组合数是 3+2+1 = <b>6</b> 次；10 个数：9+8+…+1 = <b>45</b> 次；n 个数：(n²-n)/2 次 → <b>O(n²)</b></div>
+</div>
+
+<!-- ③ 关键洞察 -->
+<h2>③ 关键洞察（一句话，整个模式的地基）</h2>
+<div class="card">
+  <div class="step ok"><b>与其问"我和谁能凑成 target"，不如问"我需要谁，以及它出现过没有"。</b><br>
+    你需要的那一个数 = <code>target - 当前数</code>。它<b>唯一确定</b> —— 所以问题从"两两配对"变成了"查一个数在不在"。</div>
+  <table>
+    <tr><th style="width:30%">动作</th><th>暴力法</th><th>哈希表法</th></tr>
+    <tr><td>问什么</td><td>"你俩加起来是 target 吗"</td><td>"我需要的那个数出现过了吗"</td></tr>
+    <tr><td>要试多少次</td><td>n(n-1)/2（两两组合）</td><td>n（每个元素只看一次）</td></tr>
+    <tr><td>要额外空间吗</td><td>不要</td><td>要一个字典（记"见过的数和它的位置"）</td></tr>
+  </table>
+  <div class="hint">💡 这和你在 SQL 里学的 <code>JOIN ... ON id = outer_id</code> 是<b>同一个动作</b>：拿一个值去另一张结构里换出对应的东西。哈希表就是"用值换值"的 O(1) 版本。</div>
+</div>
+
+<!-- ④ 交互 -->
+<h2>④ 拧参数：两种算法并排跑，看操作次数</h2>
+<div class="card">
+  <div class="row">
+    <span>数组：</span><input type="text" id="nums" value="2, 7, 11, 15" style="flex:1;min-width:200px">
+    <span>target：</span><input type="number" id="target" value="9" style="width:80px">
+    <button class="ex" data-s="2,7,11,15|9">例题</button>
+    <button class="ex" data-s="3,3,4,8|6">有重复值</button>
+    <button class="ex" data-s="1,2,3,4,5,6,7,8|15">8 个数</button>
+    <button class="ex" data-s="1,2,3,4,5,6,7,8,9,10|19">10 个数</button>
+    <button class="ex" data-s="5,1,9,3|100">无解</button>
+  </div>
+  <div class="row">
+    <button class="pri" id="runBrute">▶ 暴力法（一步步）</button>
+    <button class="pri" id="runHash">▶ 哈希表法（一步步）</button>
+    <button id="reset">↺ 重来</button>
+    <span class="hint">每次点都是"走一步"，盯着高亮看它在比较什么</span>
+  </div>
+  <div id="steps"></div>
+  <div id="meters"></div>
+</div>
+
+<div class="card">
+  <b>先猜答案</b>：上面这个数组的解是几号下标？<input type="text" id="guessAns" placeholder="如 0,1" style="width:110px">
+  <button id="revealAns">揭晓</button> <span id="verdictAns"></span>
+</div>
+
+<!-- ⑤ 完整代码 -->
+<h2>⑤ 能提交的完整代码（哈希表法）</h2>
+<div class="card">
+<pre><span class="kw">def</span> <span class="fn">two_sum</span>(nums, target):
+    <span class="strc">"""返回两个加数为 target 的下标；没有就返回 []。时间 O(n)、空间 O(n)。"""</span>
+    seen = {}                        <span class="cm"># 值 → 下标（"我见过这个数，它在第几号位置"）</span>
+    <span class="kw">for</span> i, x <span class="kw">in</span> <span class="fn">enumerate</span>(nums):
+        need = target - x            <span class="cm"># 关键：我需要的那一个数</span>
+        <span class="kw">if</span> need <span class="kw">in</span> seen:            <span class="cm"># 先在"以前见过的"里找 → 保证下标不重复</span>
+            <span class="kw">return</span> [seen[need], i]
+        seen[x] = i                  <span class="cm"># 再把自己记下来，给后面的人用</span>
+    <span class="kw">return</span> []
+
+<span class="fn">print</span>(two_sum([2, 7, 11, 15], 9))   <span class="cm"># [0, 1]</span>
+<span class="fn">print</span>(two_sum([3, 3, 4, 8], 6))     <span class="cm"># [0, 1]  ← 重复值也要对</span></pre>
+  <div class="step">⚠️ <b>顺序很关键</b>：先"查 need"、再"存自己"。<br>
+    如果反过来先存自己，当 <code>target = 2*x</code> 时会拿自己配自己（比如 <code>[3,3], target=6</code> 会返回 <code>[0,0]</code>）。</div>
+</div>
+
+<!-- ⑥ 复杂度 -->
+<h2>⑥ 复杂度：为什么 O(n) 比 O(n²) 重要（数字说话）</h2>
+<div class="card">
+  <table>
+    <tr><th>n（元素个数）</th><th>暴力法操作数 (n²-n)/2</th><th>哈希表法操作数 ≈ n</th><th>快多少倍</th></tr>
+    <tr><td>10</td><td>45</td><td>10</td><td>4×</td></tr>
+    <tr><td>100</td><td>4,950</td><td>100</td><td>50×</td></tr>
+    <tr><td>1,000</td><td>499,500</td><td>1,000</td><td>500×</td></tr>
+    <tr><td>10,000</td><td>49,995,000</td><td>10,000</td><td>5,000×</td></tr>
+    <tr><td>100,000</td><td>4,999,950,000（≈50 亿）</td><td>100,000</td><td>50,000×</td></tr>
+  </table>
+  <div class="step bad">⚠️ 面试/笔试里"<b>超时</b>"（TLE）几乎都是这个原因：n 到 10⁴~10⁵ 时，O(n²) 的 50 亿次操作跑不完，而 O(n) 只要 10 万次。</div>
+  <div class="hint">💡 记忆：<b>看到"找两个数/找是否存在/统计次数"，先想"能不能用一个字典把 n² 压成 n"。</b></div>
+</div>
+
+<!-- ⑦ 变式 -->
+<h2>⑦ 同一个模式的变式（做完这题就能做这些）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:26%">题目</th><th style="width:34%">把什么存进字典</th><th>要额外注意什么</th></tr>
+    <tr><td>两数之和（本题）</td><td>值 → 下标</td><td>先查后存，避免自己配自己</td></tr>
+    <tr><td>看数组有没有重复元素</td><td>值 → 出现过</td><td>用 <code>set</code> 更省（只需"在不在"）</td></tr>
+    <tr><td>统计每个数出现几次</td><td>值 → 次数</td><td><code>d[x] = d.get(x, 0) + 1</code></td></tr>
+    <tr><td>字母异位词分组</td><td>排序后的字符串 → 原词列表</td><td>key 要能代表"同一组"</td></tr>
+    <tr><td>最长无重复子串</td><td>字符 → 最近下标</td><td>要配合"左边界"移动（滑动窗口）</td></tr>
+  </table>
+</div>
+
+<!-- ⑧ 常见错 -->
+<h2>⑧ 新手最容易错的 4 个点</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:36%">错误</th><th>症状 / 后果</th></tr>
+    <tr><td>先 <code>seen[x] = i</code> 再查 need</td><td>返回 <code>[0,0]</code>（自己和自己配对）</td></tr>
+    <tr><td>返回 <code>nums[i], nums[j]</code>（值）</td><td>题目要的是<b>下标</b></td></tr>
+    <tr><td>忘记"无解返回什么"</td><td>题目没明说就返回空列表，别让它报错</td></tr>
+    <tr><td><code>need in seen</code> 写成 <code>need in nums</code></td><td>变成 O(n²)（每次都在列表里线性找），白学了</td></tr>
+  </table>
+</div>
+
+<!-- ⑨ 自己写 -->
+<h2>⑨ 你先自己写</h2>
+<div class="card">
+  <div class="hint">任务：不看上面的代码，自己写 <code>two_sum(nums, target)</code>；写完点下面的按钮做**粗检**（不判对错，只勾要点）。</div>
+  <textarea id="own" placeholder="def two_sum(nums, target):
+    seen = {}
+    for i, x in enumerate(nums):
+        ...
+"></textarea>
+  <div class="row"><button id="check">粗检要点</button><span id="checkMsg" class="hint"></span></div>
+  <div class="hint">进阶（同模式）：① 判断数组里有重复元素 ② 统计每个元素出现次数 ③ 找"两数之差等于 k"</div>
+</div>
+
+<div class="foot">
+  算法模式 ① · 2026.09.21 · 阶段 A 主目标（算法 150 题）起步卡 · 操作次数表格为公式计算值<br>
+  下一个模式建议：双指针（有序数组 / 移动零 / 盛最多水）
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function readInputs(){
+  const nums = $('#nums').value.split(',').map(s => Number(s.trim())).filter(v => !Number.isNaN(v));
+  const target = Number($('#target').value);
+  return {nums, target};
+}
+function gridHTML(nums, states, labels){
+  return '<div class="grid">' + nums.map((v, i) =>
+    `<div class="cell ${states[i] || ''}">${v}<small>#${i}${labels && labels[i] ? ' ' + labels[i] : ''}</small></div>`
+  ).join('') + '</div>';
+}
+function bruteCount(n){ return n * (n - 1) / 2; }
+
+let bruteState = null, hashState = null;
+
+/* ── 暴力法：逐步推进 ── */
+function bruteStep(){
+  const {nums, target} = readInputs();
+  if(!bruteState || bruteState.nums.join() !== nums.join() || bruteState.target !== target){
+    bruteState = {nums, target, i:0, j:1, ops:0, found:null, log:[], done:false};
+  }
+  const st = bruteState;
+  if(st.done){ renderBrute(); return; }
+  if(st.i >= nums.length - 1){ st.done = true; st.log.push('❌ 试完了所有组合，没有解'); renderBrute(); return; }
+  st.ops++;
+  const sum = nums[st.i] + nums[st.j];
+  const hit = sum === target;
+  st.log.push(`比较 nums[${st.i}]+nums[${st.j}] = ${nums[st.i]}+${nums[st.j]} = ${sum} ${hit ? '= target ✅' : '≠ target'}`);
+  if(hit){ st.found = [st.i, st.j]; st.done = true; }
+  else {
+    st.j++;
+    if(st.j >= nums.length){ st.i++; st.j = st.i + 1; }
+  }
+  renderBrute();
+}
+function renderBrute(){
+  const st = bruteState;
+  const {nums, target} = readInputs();
+  const states = nums.map((_, i) => i < (st ? st.i : 0) ? 'done' : '');
+  if(st){
+    states[st.i] = 'cur';
+    if(st.j < nums.length) states[st.j] = states[st.j] === 'cur' ? 'cur' : 'cur';
+  }
+  const total = bruteCount(nums.length);
+  const ops = st ? st.ops : 0;
+  $('#steps').innerHTML =
+    `<div class="step"><b>暴力法</b>：两两比较，共 ${total} 种组合（n=${nums.length}）</div>`
+    + gridHTML(nums, states, nums.map((_, i) => i === (st ? st.i : -1) ? 'i' : (st && i === st.j ? 'j' : '')))
+    + (st ? st.log.slice(-4).map(l => `<div class="step">${l}</div>`).join('') : '')
+    + (st && st.done ? `<div class="step ${st.found ? 'ok' : 'bad'}">${st.found ? '✅ 找到：[' + st.found + ']' : '❌ 无解'}（共比较 ${st.ops} 次）</div>` : '');
+  $('#meters').innerHTML =
+    `<div class="kv"><span>操作次数 <b>${ops}</b></span><span>上限 <b>${total}</b></span></div>`
+    + `<div class="meter slow"><i style="width:${total ? Math.min(100, ops / total * 100) : 0}%"></i></div>`;
+}
+
+/* ── 哈希表法：逐步推进 ── */
+function hashStep(){
+  const {nums, target} = readInputs();
+  if(!hashState || hashState.nums.join() !== nums.join() || hashState.target !== target){
+    hashState = {nums, target, i:0, seen:{}, ops:0, found:null, log:[], done:false};
+  }
+  const st = hashState;
+  if(st.done){ renderHash(); return; }
+  if(st.i >= nums.length){ st.done = true; st.log.push('❌ 全部看过一遍，没有解'); renderHash(); return; }
+  const x = nums[st.i], need = target - x;
+  st.ops++;
+  if(need in st.seen){
+    st.found = [st.seen[need], st.i];
+    st.log.push(`第 ${st.i} 步：x=${x}，need=${target}-${x}=${need} → <b>字典里有！</b>位置 ${st.seen[need]} ✅`);
+    st.done = true;
+  } else {
+    st.log.push(`第 ${st.i} 步：x=${x}，need=${need} → 字典里没有；把 ${x} 记进字典（位置 ${st.i}）`);
+    st.seen[x] = st.i;
+    st.i++;
+  }
+  renderHash();
+}
+function renderHash(){
+  const st = hashState;
+  const {nums, target} = readInputs();
+  const states = nums.map((_, i) => (st && i < st.i) ? 'done' : '');
+  if(st && st.i < nums.length) states[st.i] = 'cur';
+  if(st && st.found) st.found.forEach(k => states[k] = 'hit');
+  const total = nums.length;
+  const ops = st ? st.ops : 0;
+  const dict = st ? Object.entries(st.seen).map(([k, v]) => `${k}→#${v}`).join('  ') : '';
+  $('#steps').innerHTML =
+    `<div class="step"><b>哈希表法</b>：每个元素只看一次，最多 ${total} 步（n=${nums.length}）</div>`
+    + gridHTML(nums, states, nums.map((_, i) => (st && i === st.i) ? '← 当前' : ''))
+    + (dict ? `<div class="step">字典 seen = { ${dict} }</div>` : '')
+    + (st ? st.log.slice(-4).map(l => `<div class="step">${l}</div>`).join('') : '')
+    + (st && st.done ? `<div class="step ${st.found ? 'ok' : 'bad'}">${st.found ? '✅ 找到：[' + st.found + ']' : '❌ 无解'}（共 ${st.ops} 步）</div>` : '');
+  const bruteTotal = bruteCount(nums.length) || 1;
+  $('#meters').innerHTML =
+    `<div class="kv"><span>哈希表操作 <b>${ops}</b></span><span>同规模暴力法要 <b>${bruteCount(nums.length)}</b> 次</span>`
+    + `<span>省了 <b>${bruteCount(nums.length) ? Math.round((1 - ops / bruteCount(nums.length)) * 100) : 0}%</b></span></div>`
+    + `<div class="meter"><i style="width:${Math.min(100, ops / bruteTotal * 100)}%"></i></div>`;
+}
+
+/* ── 直接求解（给"揭晓答案"用） ── */
+function solve(){
+  const {nums, target} = readInputs();
+  const seen = {};
+  for(let i = 0; i < nums.length; i++){
+    const need = target - nums[i];
+    if(need in seen) return [seen[need], i];
+    seen[nums[i]] = i;
+  }
+  return null;
+}
+
+document.addEventListener('click', async e => {
+  const preset = e.target.dataset && e.target.dataset.s;
+  if(preset){
+    const [n, t] = preset.split('|');
+    $('#nums').value = n; $('#target').value = t;
+    bruteState = hashState = null;
+    $('#steps').innerHTML = ''; $('#meters').innerHTML = '';
+    return;
+  }
+  if(e.target.id === 'runBrute'){ bruteStep(); return; }
+  if(e.target.id === 'runHash'){ hashStep(); return; }
+  if(e.target.id === 'reset'){
+    bruteState = hashState = null;
+    $('#steps').innerHTML = ''; $('#meters').innerHTML = '';
+    $('#verdictN').innerHTML = ''; $('#verdictAns').innerHTML = '';
+    return;
+  }
+  if(e.target.id === 'revealN'){
+    const g = $('#guessN').value; const n = 4;
+    if(g === ''){ $('#verdictN').innerHTML = '<span class="verdict no">先填一个数</span>'; return; }
+    const truth = bruteCount(n);
+    $('#verdictN').innerHTML = (Number(g) === truth)
+      ? `<span class="verdict ok">对！${n} 个数要比较 ${truth} 次</span>`
+      : `<span class="verdict no">你猜 ${g}，实际 ${truth} 次（3+2+1）</span>`;
+    return;
+  }
+  if(e.target.id === 'revealAns'){
+    const g = ($('#guessAns').value || '').replace(/\s/g, '');
+    if(!g){ $('#verdictAns').innerHTML = '<span class="verdict no">先填答案</span>'; return; }
+    const ans = solve();
+    const truth = ans ? ans.join(',') : '无解';
+    const ok = g === truth || (ans === null && /无解|none|\[\]/.test(g));
+    $('#verdictAns').innerHTML = ok ? `<span class="verdict ok">对！答案 ${truth}</span>`
+                                    : `<span class="verdict no">你填 ${g}，实际 ${truth}</span>`;
+    return;
+  }
+  if(e.target.id === 'check'){
+    const t = $('#own').value;
+    const w = t.toLowerCase().match(/[a-z_]+/g) || [];
+    const has = x => w.includes(x);
+    const seenIdx = t.indexOf('seen['), needIdx = t.indexOf('need');
+    const orderOK = needIdx >= 0 && seenIdx > 0 && t.indexOf('if') < seenIdx;
+    $('#checkMsg').innerHTML = [
+      has('def') ? '有 def ✅' : '还没有 def ❌',
+      has('for') ? '有 for ✅' : '还没有循环 ❌',
+      has('enumerate') ? '用了 enumerate ✅' : '建议用 enumerate 同时拿下标和值',
+      /target\s*-\s*x|target\s*-\s*nums/.test(t.replace(/\s/g,'')) ? '算了 need = target - x ✅' : '❌ 缺关键一步：need = target - x',
+      has('seen') ? '用了字典 seen ✅' : '还没有字典 ❌',
+      /in\s+seen/.test(t) ? '查了 "in seen" ✅' : '❌ 要判断 need 在不在字典里',
+      orderOK ? '顺序看起来是「先查后存」✅' : '⚠️ 检查顺序：必须先 if need in seen，再 seen[x]=i'
+    ].join(' · ') + `<br><span class="hint">自己核对：[3,3], target=6 你的代码会返回什么？会不会返回 [0,0]？</span>`;
+    return;
+  }
+});
+</script>
+</body>
+</html>

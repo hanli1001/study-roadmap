@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL 基础 ② · 分组与聚合（GROUP BY / HAVING / COUNT）</title>
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#2a2f3a;--txt:#e6e8ee;--dim:#98a0b3;
+        --ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--accent:#60a5fa;--purple:#c084fc}
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:1000px;background:var(--bg);color:var(--txt);
+    font:15px/1.75 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:21px;margin:0 0 4px}
+  h2{font-size:16.5px;margin:28px 0 9px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;font-size:13px}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;line-height:1.65;margin:8px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.8px;margin:6px 0}
+  th,td{border:1px solid var(--line);padding:5px 8px;vertical-align:top;text-align:left}
+  th{background:#1d2129;color:var(--dim);font-size:12.5px;font-weight:600}
+  td.n{color:var(--dim);font-style:italic}
+  button{background:#232833;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+    padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#06121f;font-weight:600}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  .hint{color:var(--dim);font-size:12.8px}
+  .kw{color:var(--purple)}.fn{color:var(--accent)}.cm{color:#5c6577}
+  .step{border-left:3px solid var(--warn);padding:5px 10px;margin:5px 0;font-size:13.6px;background:#1d1a12}
+  .step.ok{border-color:var(--ok);background:#12251a;color:#c9f5d8}
+  .step.bad{border-color:var(--bad);background:#2a1414;color:#f7c9c9}
+  tr.hit td{background:#14321f}
+  .verdict{font-weight:600;padding:7px 10px;border-radius:7px;display:inline-block;margin-top:6px}
+  .verdict.ok{background:#14321f;color:var(--ok)}
+  .verdict.no{background:#3a1a1a;color:var(--bad)}
+  textarea{width:100%;min-height:80px;background:#0b0e13;color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:10px;font:13px/1.5 "Cascadia Mono",Consolas,monospace}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+
+<h1>SQL 基础 ② · 分组与聚合</h1>
+<div class="sub">把"很多行"压缩成"每类一行" —— GROUP BY / HAVING / COUNT/SUM/AVG/MAX/MIN。示例数据是上一张的 learners 表。</div>
+
+<!-- ① 痛点 -->
+<h2>① 先说它解决什么问题</h2>
+<div class="card">
+  <p style="margin:4px 0">上一张的查询是<b>一行进、一行出</b>：查明细。</p>
+  <p style="margin:4px 0">但老板问的是这种问题：</p>
+  <ul style="margin:4px 0">
+    <li>「一共有多少人？」→ 不是某个人的信息，是<b>整个表的总结</b></li>
+    <li>「每个城市各有多少人？」→ 不是一行，而是<b>每个城市一行</b></li>
+    <li>「大家平均几岁？」→ <b>一堆数字压成一个</b></li>
+  </ul>
+  <div class="step">这类"<b>把多行压成一行（或每类一行）</b>"的活儿，就叫<b>聚合</b>。它的搭档是 <code>GROUP BY</code>。</div>
+</div>
+
+<!-- ② 五个聚合函数 -->
+<h2>② 五个聚合函数（参数种类 + 返回类型）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:16%">函数</th><th style="width:26%">签名</th><th style="width:16%">返回类型</th><th>干什么 / 坑</th></tr>
+    <tr><td><code>COUNT(*)</code></td><td><code>COUNT(*)</code></td><td><code>int</code></td><td>数<b>行数</b>（含 NULL 的行也算）</td></tr>
+    <tr><td><code>COUNT(列)</code></td><td><code>COUNT(col)</code></td><td><code>int</code></td><td>数这一列<b>非 NULL</b> 的个数 —— <b>和 COUNT(*) 结果常不一样！</b></td></tr>
+    <tr><td><code>SUM</code></td><td><code>SUM(col)</code></td><td>数字</td><td>求和，跳过 NULL</td></tr>
+    <tr><td><code>AVG</code></td><td><code>AVG(col)</code></td><td><code>float</code></td><td>平均值，<b>分母不含 NULL 行</b>（最容易算错的地方）</td></tr>
+    <tr><td><code>MAX/MIN</code></td><td><code>MAX(col)</code></td><td>该列类型</td><td>最大/最小，跳过 NULL</td></tr>
+  </table>
+  <div class="hint">💡 记忆：<b>COUNT(*) 数行，COUNT(列) 数"填了值的"</b>。表里 6 行、其中 1 行 age 是 NULL，那么 <code>COUNT(*)</code>=6 而 <code>COUNT(age)</code>=5。</div>
+</div>
+
+<!-- ③ GROUP BY 执行过程 -->
+<h2>③ GROUP BY 到底做了什么（抽丝剥茧）</h2>
+<div class="card">
+  <div class="hint">数据（6 行，city 有一行是 NULL）：小明/合肥、小红/合肥、小刚/芜湖、小美/<span class="n">NULL</span>、阿强/芜湖、小雨/合肥</div>
+<pre><span class="kw">SELECT</span> city, <span class="fn">COUNT</span>(*)
+<span class="kw">FROM</span> learners
+<span class="kw">GROUP BY</span> city;</pre>
+  <div class="step">① <b>分组</b>：按 city 的值，把行<b>分堆</b>（相同的放一堆）</div>
+  <table>
+    <tr><th style="width:22%">堆</th><th>堆里的行</th><th style="width:18%">COUNT(*)</th></tr>
+    <tr class="hit"><td>合肥</td><td>小明(19) · 小红(20) · 小雨(22)</td><td><b>3</b></td></tr>
+    <tr class="hit"><td>芜湖</td><td>小刚(NULL) · 阿强(19)</td><td><b>2</b></td></tr>
+    <tr class="hit"><td>NULL</td><td>小美(21) —— <b>NULL 自己算一堆</b></td><td><b>1</b></td></tr>
+  </table>
+  <div class="step">② <b>每堆算一个值</b>：对每一堆分别算 COUNT/SUM/AVG…（不是整表一起算）</div>
+  <div class="step ok">③ <b>每堆输出一行</b>：所以结果是 3 行，不是 6 行</div>
+  <div class="hint">⚠️ 真实结果就是 3 行：合肥 3、芜湖 2、NULL 1。这就是"多行压成每类一行"。</div>
+</div>
+
+<!-- ④ SELECT 里能写什么 -->
+<h2>④ 分组后，<code>SELECT</code> 里能写什么（铁律）</h2>
+<div class="card">
+  <div class="step"><b>只能写两类东西</b>：① <code>GROUP BY</code> 里出现过的列 ② 聚合函数</div>
+  <table>
+    <tr><th style="width:42%">写法</th><th style="width:14%">行不行</th><th>为什么</th></tr>
+    <tr><td><code>SELECT city, COUNT(*) … GROUP BY city</code></td><td>✅</td><td>city 是分组依据，每堆一个值</td></tr>
+    <tr><td><code>SELECT name, COUNT(*) … GROUP BY city</code></td><td class="bad">❌</td><td>一堆里有 3 个 name，<b>缩不成一个</b> —— 数据库不知道给你哪个</td></tr>
+    <tr><td><code>SELECT city, AVG(age) … GROUP BY city</code></td><td>✅</td><td>聚合函数会把一堆压成一个值</td></tr>
+    <tr><td><code>SELECT COUNT(*) FROM learners</code></td><td>✅</td><td>不写 GROUP BY = 整表当一堆 → 结果 1 行</td></tr>
+  </table>
+</div>
+
+<!-- ⑤ WHERE vs HAVING -->
+<h2>⑤ <code>WHERE</code> 和 <code>HAVING</code>：都叫筛选，筛的东西不同</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:16%"></th><th style="width:26%"><code>WHERE</code></th><th><code>HAVING</code></th></tr>
+    <tr><td>筛什么</td><td><b>行</b></td><td><b>组</b>（分组之后的结果）</td></tr>
+    <tr><td>什么时候执行</td><td>分组<b>之前</b></td><td>分组<b>之后</b></td></tr>
+    <tr><td>能用聚合吗</td><td class="bad">不能</td><td>能</td></tr>
+    <tr><td>例子</td><td><code>WHERE age &gt; 18</code></td><td><code>HAVING COUNT(*) &gt;= 3</code></td></tr>
+  </table>
+  <div class="step bad">实测报错（SQLite）：<code>SELECT category, COUNT(*) FROM prescriptions WHERE COUNT(*)&gt;1 GROUP BY category;</code><br>
+    → <code>OperationalError: misuse of aggregate: COUNT()</code>（"聚合用错地方了"）</div>
+  <div class="hint">💡 老板问"人数 ≥3 的城市" → <code>GROUP BY city HAVING COUNT(*) &gt;= 3</code>，不是 WHERE。</div>
+</div>
+
+<!-- ⑥ 执行顺序 -->
+<h2>⑥ 完整的执行顺序（本张卡最重要的一张图）</h2>
+<div class="card">
+<pre style="text-align:center;line-height:2.2">
+写的时候是这个顺序 ↓
+
+<span class="kw">SELECT</span> … <span class="kw">FROM</span> … <span class="kw">WHERE</span> … <span class="kw">GROUP BY</span> … <span class="kw">HAVING</span> … <span class="kw">ORDER BY</span> … <span class="kw">LIMIT</span>
+
+数据库真正执行是这个顺序 ↓
+
+<span class="fn">① FROM</span>  找表
+<span class="fn">② WHERE</span> 筛<b>行</b>（不要的行先扔掉）
+<span class="fn">③ GROUP BY</span> 分堆
+<span class="fn">④ HAVING</span> 筛<b>组</b>（不要的堆扔掉）
+<span class="fn">⑤ SELECT</span> 挑列 / 算聚合
+<span class="fn">⑥ ORDER BY</span> 排序
+<span class="fn">⑦ LIMIT</span>  截断</pre>
+  <div class="hint">看懂这个顺序，⑤ 的疑问就自动解开了：WHERE 在第 ② 步，那时还没分堆，怎么可能用聚合？</div>
+</div>
+
+<!-- ⑦ 沙盒 -->
+<h2>⑦ 拧参数：分组模拟器</h2>
+<div class="card">
+  <div class="row">
+    <span>分组依据：</span>
+    <select id="gcol"><option value="city">city（城市）</option><option value="age">age（年龄）</option></select>
+    <span>聚合：</span>
+    <select id="agg">
+      <option value="COUNT(*)">COUNT(*) 数行</option>
+      <option value="COUNT(phone)">COUNT(phone) 数填了手机号的</option>
+      <option value="AVG(age)">AVG(age) 平均年龄</option>
+      <option value="SUM(age)">SUM(age) 年龄之和</option>
+      <option value="MAX(age)">MAX(age) 最大年龄</option>
+    </select>
+    <span>额外筛行(WHERE)：</span>
+    <select id="whr">
+      <option value="">不筛</option>
+      <option value="age IS NOT NULL">age IS NOT NULL</option>
+      <option value="city IS NOT NULL">city IS NOT NULL</option>
+      <option value="age > 19">age &gt; 19</option>
+    </select>
+    <span>筛组(HAVING)：</span>
+    <select id="hav">
+      <option value="">不筛</option>
+      <option value="1">只留 count ≥ 2 的组</option>
+    </select>
+  </div>
+  <pre id="sqlBox"></pre>
+  <div class="row">
+    <button class="pri" id="run">▶ 执行</button>
+    <span>先猜结果几行：</span>
+    <input type="number" id="guess" min="0" max="99" placeholder="?" style="width:76px">
+    <button id="reveal">揭晓</button>
+    <span id="verdict"></span>
+  </div>
+  <div id="steps"></div>
+  <div class="row" style="margin-top:10px"><b>结果</b><span class="hint" id="resInfo"></span></div>
+  <table id="result"></table>
+</div>
+
+<!-- ⑧ 真实库示例 -->
+<h2>⑧ 换到你的真实库（实测数字）</h2>
+<div class="card">
+<pre><span class="cm">-- 每类方剂有几首（实测：5 组）</span>
+<span class="kw">SELECT</span> category, <span class="fn">COUNT</span>(*) <span class="kw">FROM</span> prescriptions <span class="kw">GROUP BY</span> category <span class="kw">ORDER BY</span> <span class="fn">COUNT</span>(*) <span class="kw">DESC</span>;
+<span class="cm">-- → 解表剂 3 · 补益剂 2 · 祛湿剂 1 · 清热剂 1 · 和解剂 1</span>
+
+<span class="cm">-- 药材 ≥5 味的方剂（WHERE 不行，必须 HAVING）—— 实测 4 首</span>
+<span class="kw">SELECT</span> p.name, <span class="fn">COUNT</span>(pi.ingredient_id) c
+<span class="kw">FROM</span> prescriptions p
+<span class="kw">JOIN</span> prescription_ingredients pi <span class="kw">ON</span> p.id = pi.prescription_id
+<span class="kw">GROUP BY</span> p.id
+<span class="kw">HAVING</span> c &gt;= 5
+<span class="kw">ORDER BY</span> c <span class="kw">DESC</span>;
+<span class="cm">-- → 藿香正气散 12 · 银翘散 9 · 小柴胡汤 7 · 桂枝汤 5</span></pre>
+</div>
+
+<!-- ⑨ 自己写 -->
+<h2>⑨ 你先自己写</h2>
+<div class="card">
+  <div class="hint">任务：算出<b>每个城市的平均年龄</b>，并只留下"人数 ≥ 2"的城市。</div>
+  <textarea id="own" placeholder="SELECT city, ______ FROM learners GROUP BY ______ HAVING ______;"></textarea>
+  <div class="row">
+    <button id="check">对照思路（不直接给答案）</button>
+    <span id="checkMsg" class="hint"></span>
+  </div>
+</div>
+
+<div class="foot">
+  SQL 基础 ② · 2026.09.20 · 所有数字在 prescriptions.db / learners 上实测 · 上一张：查询与筛选 ｜ 下一张：JOIN 正式化
+</div>
+
+<script>
+const ROWS = [
+  {id:1,name:'小明',age:19,city:'合肥',phone:'138…'},
+  {id:2,name:'小红',age:20,city:'合肥',phone:'139…'},
+  {id:3,name:'小刚',age:null,city:'芜湖',phone:'137…'},
+  {id:4,name:'小美',age:21,city:null,phone:null},
+  {id:5,name:'阿强',age:19,city:'芜湖',phone:'136…'},
+  {id:6,name:'小雨',age:22,city:'合肥',phone:null}
+];
+const $ = s => document.querySelector(s);
+const fmt = v => v === null ? '<span class="hint">NULL</span>' : v;
+
+function currentSQL(){
+  const g = $('#gcol').value, a = $('#agg').value, w = $('#whr').value, h = $('#hav').value;
+  return `SELECT ${g}, ${a}\nFROM learners`
+    + (w ? `\nWHERE ${w}` : '')
+    + `\nGROUP BY ${g}`
+    + (h ? `\nHAVING COUNT(*) >= 2` : '') + ';';
+}
+
+function compute(){
+  const g = $('#gcol').value, agg = $('#agg').value;
+  const w = $('#whr').value, h = $('#hav').value;
+  let rows = ROWS.slice();
+  if(w === 'age IS NOT NULL') rows = rows.filter(r => r.age !== null);
+  if(w === 'city IS NOT NULL') rows = rows.filter(r => r.city !== null);
+  if(w === 'age > 19') rows = rows.filter(r => r.age !== null && r.age > 19);
+
+  const groups = new Map();
+  for(const r of rows){
+    const k = r[g] === null ? 'NULL' : String(r[g]);
+    if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+  const applyAgg = arr => {
+    if(agg === 'COUNT(*)') return arr.length;
+    if(agg === 'COUNT(phone)') return arr.filter(r => r.phone !== null).length;
+    const nums = arr.map(r => r.age).filter(v => v !== null);
+    if(!nums.length) return 'NULL';
+    if(agg === 'AVG(age)') return Math.round(nums.reduce((a,b)=>a+b,0) / nums.length * 100) / 100;
+    if(agg === 'SUM(age)') return nums.reduce((a,b)=>a+b,0);
+    if(agg === 'MAX(age)') return Math.max(...nums);
+  };
+  let out = [...groups.entries()].map(([k, arr]) => ({key:k, n:arr.length, val:applyAgg(arr), rows:arr}));
+  if(h) out = out.filter(o => o.n >= 2);
+  return {rows, groups:out, agg, g};
+}
+
+function render(){
+  const {rows, groups, agg, g} = compute();
+  $('#sqlBox').textContent = currentSQL();
+  const warn = (agg === 'COUNT(phone)')
+    ? 'COUNT(phone) 只数"填了手机号的"：手机号是 NULL 的两行不计 —— 对比 COUNT(*) 的数法'
+    : (agg === 'AVG(age)' ? 'AVG(age) 的分母是"age 不为 NULL 的行数"，NULL 行不参与' : '');
+  $('#steps').innerHTML =
+    `<div class="step">① FROM learners → ${ROWS.length} 行</div>`
+    + ($('#whr').value ? `<div class="step">② WHERE ${$('#whr').value} → 剩 ${rows.length} 行（筛<b>行</b>）</div>`
+                       : `<div class="step">② 没有 WHERE</div>`)
+    + `<div class="step">③ GROUP BY ${g} → 分成 ${groups.length} 堆`
+      + (groups.length ? '：' + groups.map(o => `${o.key}(${o.n}行)`).join(' · ') : '') + '</div>'
+    + ($('#hav').value ? `<div class="step">④ HAVING COUNT(*) &gt;= 2 → 只留 ${groups.length} 堆（筛<b>组</b>）</div>`
+                       : `<div class="step">④ 没有 HAVING</div>`)
+    + (warn ? `<div class="step ok">💡 ${warn}</div>` : '');
+
+  $('#result').innerHTML = '<tr><th>' + g + '</th><th>' + agg + '</th><th class="hint">这一组有几行</th></tr>'
+    + (groups.length
+        ? groups.map(o => `<tr><td>${o.key}</td><td><b>${fmt(o.val)}</b></td><td class="hint">${o.n}</td></tr>`).join('')
+        : `<tr><td colspan="3" class="hint">（0 行）</td></tr>`);
+  $('#resInfo').textContent = ` ${groups.length} 行`;
+  return groups.length;
+}
+
+document.addEventListener('click', e => {
+  if(e.target.id === 'run'){ render(); return; }
+  if(e.target.id === 'reveal'){
+    const truth = render();
+    if($('#guess').value === ''){ $('#verdict').innerHTML = '<span class="verdict no">先填一个数</span>'; return; }
+    const g = Number($('#guess').value);
+    $('#verdict').innerHTML = (g === truth)
+      ? `<span class="verdict ok">对！就是 ${truth} 行</span>`
+      : `<span class="verdict no">你猜 ${g}，实际 ${truth} 行</span>`;
+    return;
+  }
+  if(e.target.id === 'check'){
+    const t = $('#own').value.toLowerCase(), w = t.match(/[a-z_]+/g) || [];
+    const has = x => w.includes(x);
+    $('#checkMsg').innerHTML = [
+      has('select') ? '有 SELECT ✅' : '还没有 SELECT ❌',
+      has('group') ? '有 GROUP BY ✅' : '还没分组 ❌',
+      has('having') ? '有 HAVING ✅' : '还没筛组 ❌',
+      /avg/.test(t) ? '用了 AVG ✅' : '平均年龄要用 AVG ❌',
+      /count/.test(t) ? '用了 COUNT ✅（筛组需要它）' : '筛组需要 COUNT(*)'
+    ].join(' · ') + `<br><span class="hint">自己核对：HAVING 里能不能写 WHERE 的条件？COUNT(*) 和 COUNT(age) 结果一样吗？</span>`;
+    return;
+  }
+});
+document.querySelectorAll('#gcol,#agg,#whr,#hav').forEach(s => s.addEventListener('change', render));
+render();
+</script>
+</body>
+</html>

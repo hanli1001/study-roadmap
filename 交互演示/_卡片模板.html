@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>卡片模板 · 遇到陌生函数就复制这一份</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --txt:#e6e8ee; --dim:#98a0b3;
+    --ok:#4ade80; --bad:#f87171; --warn:#fbbf24; --accent:#60a5fa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:900px;background:var(--bg);color:var(--txt);
+    font:15px/1.7 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:20px;margin:0 0 4px}
+  h2{font-size:16px;margin:26px 0 8px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+  .slot{border-left:3px solid var(--warn);background:#1d1a12;padding:9px 11px;border-radius:0 8px 8px 0;
+    font-size:13.5px;color:#f0e2c0;margin:6px 0}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#1d2129;color:var(--dim);font-size:12.5px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;
+    border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:13px}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:12.6px;line-height:1.5}
+  ol,ul{margin:6px 0;padding-left:22px}
+  li{margin:3px 0}
+  .ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+  textarea{width:100%;min-height:70px;background:#0b0e13;color:var(--txt);border:1px solid var(--line);
+    border-radius:8px;padding:9px;font:13px/1.5 "Cascadia Mono",Consolas,monospace}
+</style>
+</head>
+<body>
+
+<h1>卡片模板 · 遇到陌生函数就复制这一份</h1>
+<div class="sub">2026.09.20 建 · 触发条件：你在写代码时卡在某个函数/语法上（"这个到底返回什么？"）</div>
+
+<div class="card">
+  <b>两步用法</b>
+  <ol>
+    <li>复制本文件 → 改名放进 <code>交互演示/</code>（例：<code>dict.get用法.html</code>）</li>
+    <li>把下面 6 个「<span class="warn">填这里</span>」替换成那个函数的内容；顺手在 <code>样例代码库/</code> 建同名 <code>.py</code></li>
+  </ol>
+  <div class="slot" style="border-color:var(--accent);background:#101a26;color:#cfe4ff">
+    也可以只跟我说一句「我又卡在 XXX 了」—— 我按这份结构给你出，你不用自己填。
+  </div>
+</div>
+
+<h2>先判一下：值得做卡片吗？（3 秒判断）</h2>
+<table>
+  <tr><th style="width:52%">情况</th><th>做什么</th></tr>
+  <tr><td>参数多 / 行为随参数变（切片、<code>range</code>、格式化、正则）</td><td><b>做卡片</b> ✅</td></tr>
+  <tr><td>过程/状态变化（JOIN、递归、事务、事件循环）</td><td><b>做卡片</b> ✅</td></tr>
+  <tr><td>同一件事你已经问过第二次</td><td><b>做卡片</b> ✅</td></tr>
+  <tr><td>就是"名字记不住"，看完就懂</td><td class="warn">不做卡片，写进速查卡 + 复习卡即可</td></tr>
+</table>
+
+<h2>卡片的 6 个格子（缺一不可）</h2>
+
+<div class="card">
+  <b>① 先猜</b> <span class="sub" style="margin:0">（生成效应：先预测再看答案，记得更牢）</span>
+  <div class="slot">填这里：抛一个"改参数会怎样"的预测题，配一个输入框 + 揭晓按钮</div>
+</div>
+
+<div class="card">
+  <b>② 能拧的参数（至少 3 个）</b>
+  <div class="slot">填这里：<code>&lt;input type=number&gt;</code> / <code>&lt;select&gt;</code> / 可增删的行 —— 每个参数都要真的影响下面的结果</div>
+</div>
+
+<div class="card">
+  <b>③ 并排看变化（改完立刻变，不用点"运行"）</b>
+  <div class="slot">填这里：输入区 | 输出区 并排。参数一变，输出同步刷新</div>
+</div>
+
+<div class="card">
+  <b>④ 看得见的过程（中间步骤高亮）</b>
+  <div class="slot">填这里：这个函数内部一步一步做了什么？哪一步被跳过、哪一步报错 —— 用颜色标出来</div>
+  <div class="sub" style="margin:6px 0 0">参考已做好的：<code>交互演示/JOIN配对过程.html</code> 的「③ 看得见的过程」区</div>
+</div>
+
+<div class="card">
+  <b>⑤ 能复制的真代码</b>
+  <div class="slot">填这里：把你在页面上拧出来的参数，翻译成能直接粘进 Python 的一行代码，配「复制」按钮</div>
+</div>
+
+<div class="card">
+  <b>⑥ 你先自己写（不写不算学完）</b>
+  <div class="slot">填这里：留一道小题 + 一个 textarea + 一个"对照思路（不直接给答案）"按钮</div>
+  <div class="sub" style="margin:6px 0 0">
+    ⚠️ 校验器别犯我犯过的错：<b>认独立单词，别用 <code>/on/</code> 这种子串匹配</b>
+    —— <code>persons</code> 里的 "on" 会被误判。用 <code>text.match(/[a-z_]+/g).includes("on")</code>
+  </div>
+</div>
+
+<h2>配套的 .py 模板（四段式）</h2>
+<pre>"""样例代码库 · &lt;函数名&gt;() —— 「一句话说清它干什么」
+
+用法：python 样例代码库/&lt;函数名&gt;用法.py
+配套：交互演示/&lt;函数名&gt;用法.html
+"""
+
+# ① 最小可运行：一行能看出它干什么
+print(&lt;函数&gt;(...))
+
+# ② 改参数看变化：至少 3 组输入 → 输出
+for x in [...]:
+    print(x, "→", &lt;函数&gt;(x))
+
+# ③ 边界情况：空值 / 越界 / 类型不对，会怎样（报什么错）
+# ④ 轮到你了：留 3 道题，最后一行放参考答案（注释形式）</pre>
+
+<h2>做完别忘的三件事</h2>
+<ol>
+  <li>写进 <code>逐日学习计划</code> 的「内置函数打卡」那一行（记忆曲线表）</li>
+  <li>在卡片底部署名日期，并在 <code>改动路线.md</code> 的变更记录里补一行</li>
+  <li>给 <code>样例代码库/&lt;函数名&gt;用法.py</code> 跑一遍 —— 跑通才算做完</li>
+</ol>
+
+<div class="foot">
+  卡片模板 · 2026.09.20 · 依据：教学法 v3 武器一（6 块固定结构）· 遇到新函数就复制这一份
+</div>
+
+</body>
+</html>

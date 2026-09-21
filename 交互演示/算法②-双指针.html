@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>算法模式 ② 双指针（含与哈希表的分工）</title>
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#2a2f3a;--txt:#e6e8ee;--dim:#98a0b3;
+        --ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--accent:#60a5fa;--purple:#c084fc;--hl:#1e3a5f}
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:1020px;background:var(--bg);color:var(--txt);
+    font:15px/1.75 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:21px;margin:0 0 4px}
+  h2{font-size:16.5px;margin:28px 0 9px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;font-size:13px}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;line-height:1.65;margin:8px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.7px;margin:6px 0}
+  th,td{border:1px solid var(--line);padding:5px 8px;vertical-align:top;text-align:left}
+  th{background:#1d2129;color:var(--dim);font-size:12.5px;font-weight:600}
+  button{background:#232833;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+    padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#06121f;font-weight:600}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  input[type=text],input[type=number]{background:#0d1017;color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:6px 9px;font:inherit;font-size:13.5px}
+  .kw{color:var(--purple)}.fn{color:var(--accent)}.strc{color:#86efac}.numc{color:#fbbf24}.cm{color:#5c6577}
+  .hint{color:var(--dim);font-size:12.8px}
+  .step{border-left:3px solid var(--warn);padding:5px 10px;margin:5px 0;font-size:13.6px;background:#1d1a12}
+  .step.ok{border-color:var(--ok);background:#12251a;color:#c9f5d8}
+  .step.bad{border-color:var(--bad);background:#2a1414;color:#f7c9c9}
+  .grid{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .cell{min-width:54px;text-align:center;border:1px solid var(--line);border-radius:7px;padding:5px 7px;
+    font-family:Consolas,monospace;font-size:14px;background:#0b0e13}
+  .cell small{display:block;color:var(--dim);font-size:10px}
+  .cell.L{border-color:var(--accent);background:var(--hl)}
+  .cell.R{border-color:var(--purple);background:#2a1f45}
+  .cell.both{border-color:var(--ok);background:#14321f}
+  .cell.dead{opacity:.35}
+  .kv{display:flex;gap:16px;flex-wrap:wrap;font-family:Consolas,monospace;font-size:13.5px}
+  .verdict{font-weight:600;padding:7px 10px;border-radius:7px;display:inline-block;margin-top:6px}
+  .verdict.ok{background:#14321f;color:var(--ok)}
+  .verdict.no{background:#3a1a1a;color:var(--bad)}
+  textarea{width:100%;min-height:130px;background:#0b0e13;color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:10px;font:13px/1.5 "Cascadia Mono",Consolas,monospace}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+
+<h1>算法模式 ② · 双指针</h1>
+<div class="sub">三个变式（有序数组两数之和 / 盛最多水 / 移动零）· 重点讲"为什么可以省掉一层循环"—— 那是这个模式的灵魂</div>
+
+<!-- ① 与哈希表的分工 -->
+<h2>① 先看清它和哈希表的分工（你已经会哈希表了）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:16%">模式</th><th style="width:26%">靠什么省时间</th><th style="width:18%">代价</th><th>什么时候用</th></tr>
+    <tr><td>哈希表</td><td><b>额外空间</b>换查找 O(1)</td><td>多花 O(n) 内存</td><td>数据<b>无序</b>，只问"出现过没有/几次"</td></tr>
+    <tr><td><b>双指针</b></td><td><b>数据有序</b>（或能排序）换"一次决定排除一整片"</td><td>常常要先排序（O(n log n)）</td><td>数组<b>有序</b>，或"两头往中间逼"的问题</td></tr>
+  </table>
+  <div class="step ok">一句话记：<b>哈希表是"记住见过什么"，双指针是"利用排好的顺序"。</b><br>
+    题目给了有序数组 → 先想双指针；题目没序、只问存在性 → 先想哈希表。</div>
+</div>
+
+<!-- ② 为什么能省一层循环（灵魂） -->
+<h2>② 灵魂：一次比较，为什么能"排除一整片"</h2>
+<div class="card">
+  <p style="margin:4px 0">问题：<b>有序</b>数组里找两个数加起来等于 target。</p>
+<pre>nums = [1, 3, 4, 6, 8, 11]      target = 10
+         ↑                 ↑
+         L                 R
+
+L=1, R=11 → 和 = 12 &gt; 10  →  太大了</pre>
+  <div class="step"><b>关键推理</b>：既然 <code>1 + 11</code> 都太大了，那么 <b>1 和任何其他数相加都更大</b>（因为其他数都比 11 小吗？不 —— 是比 11 小，所以和更小…）</div>
+  <div class="step bad">⚠️ 上面那句是<b>故意写错的</b>。你自己推一遍：R 指向的是当前<b>最大</b>的数。<br>
+    若 <code>nums[L] + nums[R] &gt; target</code>，说明 <b>nums[R] 和谁都太大了</b>（L 已经是最小端）→ <b>R 可以整个排除，R--</b>。</div>
+  <div class="step ok">✅ 正确推理：<br>
+    · <code>和 &gt; target</code> → R 太大 → <code>R -= 1</code>（L 已经是最小的了，配 R 都不行，R 跟谁都不行）<br>
+    · <code>和 &lt; target</code> → L 太小 → <code>L += 1</code><br>
+    · <code>和 == target</code> → 找到<br>
+    <b>每一步都"永远排除掉一个元素"，所以最多走 n 步 → O(n)。</b>这就是它比暴力 O(n²) 快的<b>根本原因</b>。</div>
+</div>
+
+<!-- ③ 交互 -->
+<h2>③ 拧参数：看指针怎么往中间逼</h2>
+<div class="card">
+  <div class="row">
+    <span>有序数组：</span><input type="text" id="nums" value="1, 3, 4, 6, 8, 11" style="flex:1;min-width:220px">
+    <span>target：</span><input type="number" id="target" value="10" style="width:80px">
+    <button class="ex" data-s="1,3,4,6,8,11|10">标准例</button>
+    <button class="ex" data-s="2,7,11,15|9">第 1 题的有序版</button>
+    <button class="ex" data-s="1,2,3,4,5|100">无解</button>
+    <button class="ex" data-s="1,2|3">只有两个</button>
+  </div>
+  <div class="row">
+    <button class="pri" id="step">▶ 走一步</button>
+    <button id="reset">↺ 重来</button>
+    <span class="hint">对比：暴力法要 n(n-1)/2 次，双指针最多 n 步</span>
+  </div>
+  <div id="grid"></div>
+  <div id="trace"></div>
+  <div id="meter"></div>
+</div>
+
+<div class="card">
+  <b>先猜</b>：上面这个数组（6 个数）双指针最多走几步？
+  <input type="number" id="guess" min="0" max="99" placeholder="?" style="width:70px">
+  <button id="reveal">揭晓</button><span id="verdict"></span>
+</div>
+
+<!-- ④ 完整代码 -->
+<h2>④ 能提交的完整代码（有序数组两数之和）</h2>
+<div class="card">
+<pre><span class="kw">def</span> <span class="fn">two_sum_sorted</span>(nums, target):
+    <span class="strc">"""有序数组里找两个数之和 = target，返回下标 [i, j]；没有返回 []。时间 O(n)、空间 O(1)。"""</span>
+    L, R = 0, <span class="fn">len</span>(nums) - 1
+    <span class="kw">while</span> L &lt; R:                       <span class="cm"># 注意是 &lt; 不是 &lt;=：不能自己和自己配</span>
+        s = nums[L] + nums[R]
+        <span class="kw">if</span> s == target:
+            <span class="kw">return</span> [L, R]
+        <span class="kw">elif</span> s &gt; target:
+            R -= 1                       <span class="cm"># 太大了 → 右指针往左</span>
+        <span class="kw">else</span>:
+            L += 1                       <span class="cm"># 太小了 → 左指针往右</span>
+    <span class="kw">return</span> []
+
+<span class="fn">print</span>(two_sum_sorted([1, 3, 4, 6, 8, 11], 10))   <span class="cm"># [2, 3] → 4+6=10</span></pre>
+  <div class="step">💡 和哈希表版对比：<b>哈希表版不需要有序</b>（空间 O(n)），<b>双指针版要求有序</b>但只用 O(1) 额外空间。<br>
+    面试里如果数组已排序，说双指针更加分；没排序就要先说"排序会破坏原下标"这个坑。</div>
+</div>
+
+<!-- ⑤ 三个变式 -->
+<h2>⑤ 同模式三变式（同一个骨架，换判定条件）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:22%">题目</th><th style="width:34%">指针怎么动</th><th>要额外维护什么</th></tr>
+    <tr><td><b>有序两数之和</b></td><td>和大了 R--，和小了 L++</td><td>没有（最简单）</td></tr>
+    <tr><td><b>盛最多水的容器</b></td><td><b>每次移动较矮的那一边</b>（移动高的必然变小）</td><td>维护"目前最大面积"</td></tr>
+    <tr><td><b>移动零</b>（原地）</td><td>两个都从左边出发：一个找非零、一个放位置</td><td>要交换（原地改写）</td></tr>
+  </table>
+  <div class="step ok"><b>盛水题的关键推理</b>（自己过一遍）：面积 = 宽 × <b>较矮的高度</b>。<br>
+    往中间收，宽度一定变小 → 只有"增高"才可能让面积变大 → 所以<b>只能舍掉矮的那根</b>并赌后面有更高的。</div>
+<pre><span class="cm"># 盛最多水（骨架同，只是判定换成"面积"）</span>
+<span class="kw">def</span> <span class="fn">max_area</span>(h):
+    L, R, best = 0, <span class="fn">len</span>(h) - 1, 0
+    <span class="kw">while</span> L &lt; R:
+        best = <span class="fn">max</span>(best, (R - L) * <span class="fn">min</span>(h[L], h[R]))
+        <span class="kw">if</span> h[L] &lt; h[R]:
+            L += 1
+        <span class="kw">else</span>:
+            R -= 1
+    <span class="kw">return</span> best
+
+<span class="cm"># 移动零（双指针的另一种形态：同向、不等速）</span>
+<span class="kw">def</span> <span class="fn">move_zeroes</span>(nums):
+    pos = 0                          <span class="cm"># pos = 下一个"非零数该放的位置"</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(nums)):
+        <span class="kw">if</span> nums[i] != 0:
+            nums[pos], nums[i] = nums[i], nums[pos]
+            pos += 1
+    <span class="cm"># 原地修改，不需要返回新列表</span></pre>
+</div>
+
+<!-- ⑥ 常见错 -->
+<h2>⑥ 最容易错的 5 个点</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:38%">错误</th><th>后果</th></tr>
+    <tr><td><code>while L &lt;= R</code></td><td>同一个元素自己配自己（两数之和类题目）</td></tr>
+    <tr><td>数组没序就上双指针</td><td>判定失效，答案随机</td></tr>
+    <tr><td>盛水题移动<b>较高</b>的那边</td><td>漏掉最优解（高度只可能更矮）</td></tr>
+    <tr><td>忘了返回原下标 vs 排序后下标</td><td>题目要原下标时，排序后必须另存映射</td></tr>
+    <tr><td>移动零里用 <code>append/remove</code> 新建列表</td><td>题目要求"原地"，且复杂度可能退化</td></tr>
+  </table>
+</div>
+
+<!-- ⑦ 自己写 -->
+<h2>⑦ 验收：去写 <code>样例代码库/two_pointer_自测.py</code></h2>
+<div class="card">
+  <div class="hint">四道变式的自测文件已经给你了（同一套判分方式：跑一下就知道对错）。<br>
+    先在这儿把"有序两数之和"默写一遍练手：</div>
+  <textarea id="own" placeholder="def two_sum_sorted(nums, target):
+    L, R = 0, len(nums) - 1
+    while ...
+"></textarea>
+  <div class="row"><button id="check">粗检要点</button><span id="checkMsg" class="hint"></span></div>
+</div>
+
+<div class="foot">
+  算法模式 ② · 2026.09.21 · 配套 样例代码库/two_pointer_自测.py · 上一模式：哈希表（✅ 已过关）
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function readInputs(){
+  const nums = $('#nums').value.split(',').map(s => Number(s.trim())).filter(v => !Number.isNaN(v));
+  return {nums, target: Number($('#target').value)};
+}
+let st = null;
+
+function renderGrid(nums, L, R, found){
+  $('#grid').innerHTML = '<div class="grid">' + nums.map((v, i) => {
+    let cls = '';
+    if(found && found.includes(i)) cls = 'both';
+    else if(i === L && i === R) cls = 'both';
+    else if(i === L) cls = 'L';
+    else if(i === R) cls = 'R';
+    else if(i < L || i > R) cls = 'dead';
+    const tag = (i === L && i === R) ? 'L=R' : (i === L ? 'L' : (i === R ? 'R' : (i < L || i > R ? '已排除' : '')));
+    return `<div class="cell ${cls}">${v}<small>#${i} ${tag}</small></div>`;
+  }).join('') + '</div>';
+}
+
+function stepOnce(){
+  const {nums, target} = readInputs();
+  if(!st || st.nums.join() !== nums.join() || st.target !== target){
+    st = {nums, target, L: 0, R: nums.length - 1, ops: 0, log: [], done: false, found: null};
+  }
+  if(st.done){ draw(); return; }
+  if(st.L >= st.R){
+    st.done = true; st.log.push('❌ L 追上 R 了，没有解（循环结束）'); draw(); return;
+  }
+  const {L, R} = st, s = nums[L] + nums[R];
+  st.ops++;
+  if(s === target){
+    st.found = [L, R]; st.done = true;
+    st.log.push(`nums[${L}]+nums[${R}] = ${nums[L]}+${nums[R]} = ${s} = target ✅ 找到！`);
+  } else if(s > target){
+    st.log.push(`nums[${L}]+nums[${R}] = ${s} > ${target} → 太大，R -= 1（把 ${nums[R]} 整个排除）`);
+    st.R -= 1;
+  } else {
+    st.log.push(`nums[${L}]+nums[${R}] = ${s} < ${target} → 太小，L += 1（把 ${nums[L]} 整个排除）`);
+    st.L += 1;
+  }
+  draw();
+}
+
+function draw(){
+  const {nums, target} = readInputs();
+  const n = nums.length;
+  const brute = n * (n - 1) / 2;
+  const ops = st ? st.ops : 0;
+  renderGrid(nums, st ? st.L : 0, st ? st.R : n - 1, st && st.found);
+  $('#trace').innerHTML = (st ? st.log.slice(-4).map(l => `<div class="step">${l}</div>`).join('') : '')
+    + (st && st.done ? `<div class="step ${st.found ? 'ok' : 'bad'}">${st.found ? '✅ 结果下标 [' + st.found + ']' : '❌ 无解'}（走了 ${st.ops} 步）</div>` : '');
+  $('#meter').innerHTML =
+    `<div class="kv"><span>双指针已走 <b>${ops}</b> 步</span>
+      <span>上限 <b>${Math.max(0, n - 1)}</b> 步（O(n)）</span>
+      <span>暴力法要 <b>${brute}</b> 次（O(n²)）</span></div>`;
+}
+
+document.addEventListener('click', async e => {
+  const preset = e.target.dataset && e.target.dataset.s;
+  if(preset){
+    const [nn, tt] = preset.split('|');
+    $('#nums').value = nn; $('#target').value = tt;
+    st = null; $('#trace').innerHTML = ''; $('#meter').innerHTML = ''; $('#verdict').innerHTML = '';
+    draw(); return;
+  }
+  if(e.target.id === 'step'){ stepOnce(); return; }
+  if(e.target.id === 'reset'){ st = null; $('#trace').innerHTML=''; $('#meter').innerHTML=''; draw(); return; }
+  if(e.target.id === 'reveal'){
+    const g = $('#guess').value;
+    if(g === ''){ $('#verdict').innerHTML = '<span class="verdict no">先填一个数</span>'; return; }
+    const {nums} = readInputs();
+    const truth = Math.max(0, nums.length - 1);
+    $('#verdict').innerHTML = (Number(g) === truth)
+      ? `<span class="verdict ok">对！最多 ${truth} 步（n-1）</span>`
+      : `<span class="verdict no">你猜 ${g}，实际最多 ${truth} 步 —— 因为每步都排除一个元素</span>`;
+    return;
+  }
+  if(e.target.id === 'check'){
+    const t = $('#own').value;
+    const w = t.toLowerCase().match(/[a-z_]+/g) || [];
+    const has = x => w.includes(x);
+    $('#checkMsg').innerHTML = [
+      has('while') ? '有 while ✅' : '双指针要用 while（不是 for）❌',
+      /L\s*<\s*R|L\s*<\s*=\s*R/i.test(t) ? '循环条件写了 ✅（注意是 < 还是 <=）' : '缺循环条件 ❌',
+      has('target') ? '比较了 target ✅' : '要和 target 比 ❌',
+      /R\s*-=\s*1|R\s*=\s*R\s*-\s*1/.test(t) ? '有 R -= 1 ✅' : '缺"太大就 R--" ❌',
+      /L\s*\+=\s*1|L\s*=\s*L\s*\+\s*1/.test(t) ? '有 L += 1 ✅' : '缺"太小就 L++" ❌',
+      has('return') ? '有 return ✅' : '别忘了无解时 return []'
+    ].join(' · ') + `<br><span class="hint">自己核对：L 和 R 相等时该不该继续？为什么？</span>`;
+    return;
+  }
+});
+$('#nums').addEventListener('input', () => { st = null; draw(); });
+$('#target').addEventListener('input', () => { st = null; draw(); });
+draw();
+</script>
+</body>
+</html>

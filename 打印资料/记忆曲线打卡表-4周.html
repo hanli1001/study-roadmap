@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>记忆曲线打卡表 · 4 周</title>
+<style>
+  @page { size: A4; margin: 12mm 11mm 11mm 11mm; }
+  * { box-sizing: border-box; }
+  body { font: 12.4px/1.55 "Microsoft YaHei","Segoe UI",sans-serif; color: #111; margin: 0; }
+  h1 { font-size: 19px; margin: 0 0 2px; }
+  .sub { font-size: 11px; color: #555; margin-bottom: 8px; }
+  .rule { border: 1px solid #999; border-radius: 5px; padding: 5px 8px; font-size: 11.4px;
+          background: #fafafa; margin-bottom: 9px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #999; padding: 3.5px 5px; vertical-align: middle; }
+  th { background: #eee; font-size: 11px; text-align: center; }
+  td.item { text-align: left; font-size: 12px; }
+  td.c { text-align: center; font-size: 14px; color: #333; width: 34px; }
+  td.d { text-align: center; font-size: 9.6px; color: #666; width: 56px; }
+  .sec { font-size: 12.4px; margin: 10px 0 4px; padding: 2px 6px; background: #ececec; border-left: 4px solid #444; }
+  .foot { font-size: 10.2px; color: #666; text-align: center; margin-top: 9px; }
+  .note { font-size: 11px; color: #444; border-left: 3px solid #888; padding-left: 7px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>记忆曲线打卡表 · 4 周</h1>
+<div class="sub">韩立 · 2026.09.20 起 · 每次 5 分钟 · 打印出来打勾</div>
+
+<div class="rule">
+  <b>规则（三条，很简单）</b><br>
+  ① <b>闭卷回忆</b>，不许翻笔记、不许重读 —— 想不起来也算练过（回忆失败也有用）<br>
+  ② 想不起来 → 当场把答案补进「卡点栏」，<b>不用自责</b>；下个格子继续回忆<br>
+  ③ 格子上写<b>实际打勾的日期</b>（不是计划日期）—— 拖了也没关系，拖多久都还算有效
+</div>
+
+<div class="sec">A. 唤醒课三条主线的复习打卡</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:31%">复习内容（闭卷回忆）</th>
+      <th class="d">当天</th><th class="d">隔天</th><th class="d">3 天</th><th class="d">7 天</th><th class="d">30 天</th>
+      <th style="width:22%">卡点 / 想不起来的地方</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="item">第 1 课 · Python 概念<br><span style="font-size:10px;color:#666">装饰器 / 推导式 / 默认参数 / <code>=</code> vs <code>==</code></span></td>
+      <td class="c">☑</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td>
+    </tr>
+    <tr>
+      <td class="item">第 2 课 · FastAPI 概念<br><span style="font-size:10px;color:#666">路由顺序 / Query vs 路径参数 / Pydantic / 404 三步排查</span></td>
+      <td class="c">☑</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td>
+    </tr>
+    <tr>
+      <td class="item"><b>第 3 课 · 关系模型 + JOIN</b><br><span style="font-size:10px;color:#666">三步推导法 / ON 是配对 / 执行 4 步 / 错配的两种后果</span></td>
+      <td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td>
+    </tr>
+    <tr>
+      <td class="item">第 4 课 · pytest 进阶<br><span style="font-size:10px;color:#666">fixture / 参数化 / 断言</span></td>
+      <td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="sec">B. 内置函数打卡（每学一个就加一行 —— 这是解决"函数记不住"的主战场）</div>
+<table>
+  <thead>
+    <tr>
+      <th style="width:31%">函数 / 算法</th>
+      <th class="d">当天</th><th class="d">隔天</th><th class="d">3 天</th><th class="d">7 天</th><th class="d">30 天</th>
+      <th style="width:22%">一句话记住它（自己写，别抄）</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="item"><code>len()</code> · 数一数有多少个</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td></tr>
+    <tr><td class="item"><code>range()</code> · 生成一串数字（终点取不到）</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td></tr>
+    <tr><td class="item"><code>enumerate()</code> · 一边数序号一边取东西</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td></tr>
+    <tr><td class="item">（空行：下一个陌生函数）</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td></tr>
+    <tr><td class="item">（空行）</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td></tr>
+    <tr><td class="item">（空行）</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td></tr>
+    <tr><td class="item">（空行）</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td class="c">☐</td><td></td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <b>本周结束后问我三句话（会改变下周的计划）</b><br>
+  ① 哪一格最难回忆起来？ → 那个主题下周加练一次<br>
+  ② 哪个函数你"跑通了但还是说不清"？ → 我给它做一张交互卡片<br>
+  ③ 这周实际学了几次、每次多少分钟？ → 计划按你的真实节奏调，不按我的理想节奏
+</div>
+
+<div class="note">
+  <b>卡点栏（想不起来/卡住的地方，随手写，周末拍照发我）</b><br>
+  _______________________________________________________________________________<br>
+  _______________________________________________________________________________<br>
+  _______________________________________________________________________________
+</div>
+
+<div class="foot">
+  记忆曲线打卡表 · 2026.09.20 · 依据：间隔重复（1-3-7-30）+ 检索练习 —— 证据最强的两种学习方法
+</div>
+
+</body>
+</html>

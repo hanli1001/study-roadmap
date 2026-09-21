@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>len() 详解 · 签名/参数/返回类型/异常</title>
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#2a2f3a;--txt:#e6e8ee;--dim:#98a0b3;
+        --ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--accent:#60a5fa;--hl:#1e3a5f;--purple:#c084fc}
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:960px;background:var(--bg);color:var(--txt);
+    font:15px/1.75 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:21px;margin:0 0 4px}
+  h2{font-size:16.5px;margin:28px 0 9px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;font-size:13px}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;line-height:1.6;margin:8px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.8px;margin:6px 0}
+  th,td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}
+  th{background:#1d2129;color:var(--dim);font-size:12.5px;font-weight:600}
+  button{background:#232833;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+    padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#06121f;font-weight:600}
+  button.on{background:var(--hl);border-color:var(--accent)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  input[type=number]{background:#0d1017;color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:6px 9px;font:inherit;font-size:14px}
+  .sig{font-family:"Cascadia Mono",Consolas,monospace;font-size:15px;background:#0b0e13;
+    border:1px solid var(--line);border-radius:9px;padding:14px 16px;text-align:center;line-height:2}
+  .kw{color:var(--purple)}.fn{color:var(--accent)}.strc{color:#86efac}.numc{color:#fbbf24}
+  .big{font-size:36px;font-weight:700;text-align:center;padding:8px 0}
+  .verdict{font-weight:600;padding:7px 10px;border-radius:7px;display:inline-block;margin-top:6px}
+  .verdict.ok{background:#14321f;color:var(--ok)}
+  .verdict.no{background:#3a1a1a;color:var(--bad)}
+  .hint{color:var(--dim);font-size:12.8px}
+  .pair{display:flex;gap:12px}
+  .pair>div{flex:1;min-width:0}
+  .step{border-left:3px solid var(--warn);padding:5px 10px;margin:5px 0;font-size:13.6px;background:#1d1a12}
+  .step.ok{border-color:var(--ok);background:#12251a;color:#c9f5d8}
+  .step.bad{border-color:var(--bad);background:#2a1414;color:#f7c9c9}
+  .tag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:10px;
+    border:1px solid var(--line);color:var(--dim);margin-right:5px}
+  .tag.y{color:var(--ok);border-color:#245c3a}
+  .tag.n{color:var(--bad);border-color:#5c2424}
+  .cell{display:inline-block;min-width:26px;text-align:center;border:1px solid var(--line);
+    border-radius:5px;padding:2px 6px;margin:2px;font-family:Consolas,monospace}
+  .grp{font-size:12px;color:var(--dim);margin:10px 0 3px;letter-spacing:.5px}
+  textarea{width:100%;min-height:76px;background:#0b0e13;color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:10px;font:13px/1.5 "Cascadia Mono",Consolas,monospace}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+
+<h1>len() 详解</h1>
+<div class="sub">签名 · 参数种类 · 返回类型 · 异常 · 类型对照 —— 边拧边看。配套：<code>样例代码库/len用法.py</code></div>
+
+<!-- ① 一句话 + 签名 -->
+<h2>① 它长什么样（签名）</h2>
+<div class="card">
+  <div class="sig">
+    <span class="kw">len</span>(<span class="fn">obj</span>) → <span class="numc">int</span>
+  </div>
+  <table>
+    <tr><th style="width:16%">部位</th><th style="width:22%">名字</th><th>含义</th></tr>
+    <tr><td><code>len</code></td><td>函数名</td><td>length（长度）的缩写 —— <b>数一数里面有多少个</b></td></tr>
+    <tr><td><code>obj</code></td><td>参数名</td><td>要数的东西。**只能传"有长度"的类型**（见③）</td></tr>
+    <tr><td><code>→ int</code></td><td>返回类型</td><td>返回一个<b>整数</b>（永远不是小数、不是字符串）</td></tr>
+  </table>
+  <div class="hint">💡 括号里的 <code>obj</code> 是"参数"，箭头右边是"返回类型"。以后看任何函数都先找这两样。</div>
+</div>
+
+<!-- ② 参数种类 -->
+<h2>② 参数种类：它能吃什么、不能吃什么</h2>
+<div class="card">
+  <div class="grp">✅ 能数（有长度）</div>
+  <table>
+    <tr><th style="width:22%">类型</th><th style="width:20%">写法</th><th style="width:14%">len 结果</th><th>数的是什么</th></tr>
+    <tr><td><code>str</code> 字符串</td><td><code>"abc"</code></td><td>3</td><td>字符个数（中文 / 空格 / 标点各算 1）</td></tr>
+    <tr><td><code>list</code> 列表</td><td><code>[1,2,3]</code></td><td>3</td><td>元素个数（嵌套的列表整体算 1 个）</td></tr>
+    <tr><td><code>tuple</code> 元组</td><td><code>(1,2)</code></td><td>2</td><td>元素个数</td></tr>
+    <tr><td><code>dict</code> 字典</td><td><code>{"a":1}</code></td><td>1</td><td><b>键</b>的个数（不是键值对！）</td></tr>
+    <tr><td><code>set</code> 集合</td><td><code>{1,2,3}</code></td><td>3</td><td>元素个数（重复的会被去掉）</td></tr>
+    <tr><td><code>range</code></td><td><code>range(5)</code></td><td>5</td><td>它有明确长度，所以能数</td></tr>
+  </table>
+  <div class="grp">❌ 不能数（会报 TypeError）</div>
+  <table>
+    <tr><th style="width:22%">类型</th><th style="width:20%">写法</th><th>为什么不能</th></tr>
+    <tr><td><code>int</code> / <code>float</code></td><td><code>123</code></td><td>数字没有"长度"这个概念（想数位数要 <code>len(str(123))</code>）</td></tr>
+    <tr><td><code>None</code></td><td><code>None</code></td><td>空的东西，没有长度（要判空用 <code>if x is None</code>）</td></tr>
+    <tr><td>生成器 / 迭代器</td><td><code>(x for x in ...)</code></td><td>它<b>不知道后面还有多少个</b>，而且只能用一次 → 先 <code>list()</code> 转成列表</td></tr>
+    <tr><td><code>bool</code></td><td><code>True</code></td><td>真/假没有长度</td></tr>
+  </table>
+</div>
+
+<!-- ③ 交互 -->
+<h2>③ 拧参数：换一种输入，看输出类型和结果</h2>
+<div class="card">
+  <div class="grp">字符串类</div>
+  <div class="row" id="grp-str"></div>
+  <div class="grp">容器类（列表 / 字典 / 集合 / 元组）</div>
+  <div class="row" id="grp-cont"></div>
+  <div class="grp">不能数的（点一下看它怎么报错）</div>
+  <div class="row" id="grp-bad"></div>
+
+  <div class="pair" style="margin-top:12px">
+    <div class="card" style="margin:0">
+      <div class="hint">输入</div>
+      <div style="font-family:Consolas,monospace;font-size:15px;padding:6px 0" id="inputBox"></div>
+      <div class="hint">传入类型：<b id="typeBox"></b></div>
+    </div>
+    <div class="card" style="margin:0">
+      <div class="hint">返回</div>
+      <div class="big" id="outBox"></div>
+      <div class="hint">返回类型：<b id="retType"></b></div>
+    </div>
+  </div>
+  <div id="steps" style="margin-top:10px"></div>
+
+  <div class="row" style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
+    <span>先猜它的返回值：</span>
+    <input type="number" id="guess" min="0" max="999" placeholder="?" style="width:76px">
+    <button class="pri" id="reveal">揭晓</button>
+    <span id="verdict"></span>
+  </div>
+</div>
+
+<!-- ④ 返回类型 -->
+<h2>④ 返回类型：结果是"什么都干不了"的裸整数</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:30%">写法</th><th style="width:16%">结果</th><th>说明</th></tr>
+    <tr><td><code>len("abc")</code></td><td><code>3</code></td><td>是 <code>int</code>，可以直接比大小</td></tr>
+    <tr><td><code>len("abc") + 1</code></td><td><code>4</code></td><td>能参与计算</td></tr>
+    <tr><td><code>"共" + len("abc") + "个字"</code></td><td class="bad">报错 ❌</td><td>int 不能直接拼进字符串 → 要 <code>str(len("abc"))</code> 或用 f-string</td></tr>
+    <tr><td><code>f"共{len('abc')}个字"</code></td><td><code>共3个字</code></td><td>f-string 会自动转字符串（推荐）</td></tr>
+    <tr><td><code>len("abc") > 2</code></td><td><code>True</code></td><td>比较得到 <code>bool</code></td></tr>
+  </table>
+</div>
+
+<!-- ⑤ 四种用法 -->
+<h2>⑤ 常见用法（4 种，都是真代码）</h2>
+<div class="card">
+<pre><span class="cm"># 1) 判空：最常见</span>
+names = []
+<span class="kw">if</span> <span class="fn">len</span>(names) == 0:
+    <span class="fn">print</span>(<span class="strc">"还没有人"</span>)      <span class="cm"># 等价写法：if not names:</span>
+
+<span class="cm"># 2) 循环遍历下标</span>
+data = [<span class="strc">"甲"</span>, <span class="strc">"乙"</span>]
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(data)):
+    <span class="fn">print</span>(i, data[i])            <span class="cm"># 更 Python 的写法是 enumerate(data)</span>
+
+<span class="cm"># 3) 校验用户输入长度</span>
+pwd = <span class="strc">"abc"</span>
+<span class="kw">if</span> <span class="fn">len</span>(pwd) &lt; 6:
+    <span class="fn">print</span>(<span class="strc">"密码太短"</span>)
+
+<span class="cm"># 4) 数"数字有几位"（先转字符串）</span>
+<span class="fn">print</span>(<span class="fn">len</span>(<span class="fn">str</span>(12345)))           <span class="cm"># 5</span></pre>
+</div>
+
+<!-- ⑥ 异常 -->
+<h2>⑥ 会报什么错（照抄报错信息，认清它）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:26%">写法</th><th style="width:34%">报错</th><th>怎么改</th></tr>
+    <tr><td><code>len(123)</code></td><td><code>TypeError: object of type 'int' has no len()</code></td><td><code>len(str(123))</code></td></tr>
+    <tr><td><code>len(None)</code></td><td><code>TypeError: object of type 'NoneType' has no len()</code></td><td>先判断 <code>if x is not None</code></td></tr>
+    <tr><td><code>len(x for x in "ab")</code></td><td><code>TypeError: ... 'generator' has no len()</code></td><td><code>len(list(x for x in "ab"))</code></td></tr>
+    <tr><td><code>len()</code></td><td><code>TypeError: len() takes exactly one argument (0 given)</code></td><td>必须给一个参数</td></tr>
+    <tr><td><code>len("a", "b")</code></td><td><code>TypeError: len() takes exactly one argument (2 given)</code></td><td>只能给一个</td></tr>
+  </table>
+  <div class="hint">💡 报错信息里的 <code>has no len()</code> = "这个东西没有长度" —— 见到它就想到"类型不对"。</div>
+</div>
+
+<!-- ⑦ 边界 -->
+<h2>⑦ 边界情况（最容易想错的 4 个）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:34%">输入</th><th style="width:14%">len</th><th>为什么</th></tr>
+    <tr><td><code>""</code></td><td>0</td><td>空字符串不是错误，就是 0 —— 判空靠它</td></tr>
+    <tr><td><code>"a b"</code></td><td>3</td><td><b>空格也算一个字符</b></td></tr>
+    <tr><td><code>"你好"</code></td><td>2</td><td>一个汉字算 1（不是按字节算 6）</td></tr>
+    <tr><td><code>[[], []]</code></td><td>2</td><td>外层列表有 2 个元素，里面空不空不影响</td></tr>
+  </table>
+</div>
+
+<!-- ⑧ 自己写 -->
+<h2>⑧ 你先自己写</h2>
+<div class="card">
+  <div class="hint">任务：写一个判断，如果"名字列表"是空的就打印提示（要求用上 <code>len()</code>）。</div>
+  <textarea id="own" placeholder="names = []
+if ______:
+    print('还没有人')"></textarea>
+  <div class="row">
+    <button id="check">对照思路（不直接给答案）</button>
+    <span id="checkMsg" class="hint"></span>
+  </div>
+  <div class="hint">写完跑一遍 <code>样例代码库/len用法.py</code> 的「④ 轮到你了」，对照输出。</div>
+</div>
+
+<div class="foot">
+  len() 详解卡 · 2026.09.20 · 结构：签名 → 参数种类 → 交互 → 返回类型 → 用法 → 异常 → 边界 → 自己写
+</div>
+
+<script>
+/* 数据：按"能不能数"分组 */
+const EX = {
+  "字符串":        {grp:'str',  input:'"abc"',                    type:'str',  len:3,    note:'一个字符算 1 个'},
+  "中文":          {grp:'str',  input:'"你好"',                   type:'str',  len:2,    note:'汉字也算 1 个'},
+  "带空格":        {grp:'str',  input:'"a b"',                    type:'str',  len:3,    note:'空格也是字符'},
+  "空字符串":      {grp:'str',  input:'""',                       type:'str',  len:0,    note:'长度 0（判空就靠它）'},
+  "列表":          {grp:'cont', input:'[1, 2, 3]',                type:'list', len:3,    note:'数元素个数'},
+  "嵌套列表":      {grp:'cont', input:'[[], []]',                 type:'list', len:2,    note:'里面的空列表整体算 1 个'},
+  "字典":          {grp:'cont', input:'{"a": 1, "b": 2}',         type:'dict', len:2,    note:'数"键"的个数'},
+  "集合(去重)":    {grp:'cont', input:'{1, 1, 2}',                type:'set',  len:2,    note:'重复的自动去掉 → 2 不是 3'},
+  "元组":          {grp:'cont', input:'(1, 2)',                   type:'tuple',len:2,    note:'和列表一样数元素'},
+  "range(5)":      {grp:'cont', input:'range(5)',                 type:'range',len:5,    note:'有明确长度，能数'},
+  "数字 123":      {grp:'bad',  input:'123',                      type:'int',  len:null, note:"int 没有长度 → TypeError"},
+  "None":          {grp:'bad',  input:'None',                     type:'NoneType', len:null, note:'没有长度 → TypeError'},
+  "布尔 True":     {grp:'bad',  input:'True',                     type:'bool', len:null, note:'真/假没有长度 → TypeError'},
+  "生成器":        {grp:'bad',  input:'(x for x in "ab")',        type:'generator', len:null, note:'它不知道后面有多少个 → TypeError'}
+};
+let cur = '字符串';
+const $ = s => document.querySelector(s);
+
+/* 建按钮 */
+for(const [name, e] of Object.entries(EX)){
+  const b = document.createElement('button');
+  b.textContent = name; b.dataset.ex = name; b.className = 'ex';
+  (e.grp === 'str' ? $('#grp-str') : e.grp === 'cont' ? $('#grp-cont') : $('#grp-bad')).appendChild(b);
+}
+
+function render(){
+  const e = EX[cur];
+  document.querySelectorAll('.ex').forEach(b => b.classList.toggle('on', b.dataset.ex === cur));
+  $('#inputBox').textContent = e.input;
+  $('#typeBox').textContent = e.type;
+  const bad = e.len === null;
+  $('#outBox').textContent = bad ? 'TypeError' : e.len;
+  $('#outBox').style.color = bad ? 'var(--bad)' : 'var(--ok)';
+  $('#retType').textContent = bad ? '（没有返回值 —— 程序在这里停了）' : 'int 整数';
+
+  $('#steps').innerHTML = bad
+    ? `<div class="step bad">① Python 看 <code>${e.input}</code> 的类型是 <code>${e.type}</code></div>
+       <div class="step bad">② 查这个类型支不支持 len → <b>不支持</b></div>
+       <div class="step bad">③ 抛 TypeError: object of type '${e.type}' has no len() —— <span style="color:#f7c9c9">${e.note}</span></div>
+       <div class="step ok">④ 想数就得先换类型：${e.type === 'int' ? '<code>len(str(123))</code> → 3' : e.type === 'generator' ? '<code>len(list(...))</code> 先转列表' : '先确认它不是 None / bool'}</div>`
+    : `<div class="step">① 类型是 <code>${e.type}</code> → 它支持 len</div>
+       <div class="step">② 数什么：${e.type==='str' ? '一个字符算 1 个' : e.type==='dict' ? '数"键"的个数（值不算）' : e.type==='set' ? '元素个数（先自动去重）' : '一个元素算 1 个'}</div>
+       <div class="step ok">③ 返回 <b>${e.len}</b>（类型是 int）<span class="hint"> —— ${e.note}</span></div>`;
+
+  $('#verdict').innerHTML = ''; $('#guess').value = '';
+}
+
+/* 可视化：把"里面有几个"真的画出来 */
+function cells(){
+  const e = EX[cur];
+  if(e.len === null || e.len === 0) return '';
+  const parts = e.input.replace(/^[\[\(\{"]|[\]\)\}"]$/g, '').split(/,\s*/);
+  if(parts.length !== e.len) return '';
+  return '<div style="margin-top:8px">' + parts
+    .map(p => `<span class="cell">${p.replace(/^["']|["']$/g,'')}</span>`).join('+')
+    + `<span style="color:var(--dim)"> → 共 ${e.len} 个</span></div>`;
+}
+
+document.addEventListener('click', ev => {
+  const ex = ev.target.dataset && ev.target.dataset.ex;
+  if(ex){ cur = ex; render(); const c = cells(); if(c) $('#steps').insertAdjacentHTML('beforeend', c); return; }
+  if(ev.target.id === 'reveal'){
+    if($('#guess').value === ''){ $('#verdict').innerHTML = '<span class="verdict no">先填一个数</span>'; return; }
+    const truth = EX[cur].len, g = Number($('#guess').value);
+    if(truth === null){ $('#verdict').innerHTML = '<span class="verdict no">这个会直接报错，没有返回值 —— 猜错很正常</span>'; }
+    else $('#verdict').innerHTML = (g === truth)
+      ? `<span class="verdict ok">对！就是 ${truth}</span>`
+      : `<span class="verdict no">你猜 ${g}，实际 ${truth}</span>`;
+    return;
+  }
+  if(ev.target.id === 'check'){
+    const w = ($('#own').value.toLowerCase().match(/[a-z_]+/g) || []);
+    const has = x => w.includes(x);
+    $('#checkMsg').innerHTML = [
+      has('len') ? '用到了 len ✅' : '还没用 len ❌',
+      has('if') ? '有 if ✅' : '还没有 if ❌',
+      (has('names')||has('name')||has('list')) ? '用到了列表 ✅' : '还没用列表 ❌',
+      has('print') ? '有 print ✅' : '建议加 print 看结果'
+    ].join(' · ') + `<br><span class="hint">自己核对：空列表的 len 是几？<code>len(names) == 0</code> 和 <code>not names</code> 都对。</span>`;
+    return;
+  }
+});
+render();
+</script>
+</body>
+</html>

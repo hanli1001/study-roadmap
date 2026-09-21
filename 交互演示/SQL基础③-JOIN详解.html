@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL 基础 ③ · JOIN 详解（配对 / 三种连接 / ON vs WHERE）</title>
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#2a2f3a;--txt:#e6e8ee;--dim:#98a0b3;
+        --ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--accent:#60a5fa;--purple:#c084fc;--hl:#1e3a5f}
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:1060px;background:var(--bg);color:var(--txt);
+    font:15px/1.75 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:21px;margin:0 0 4px}
+  h2{font-size:16.5px;margin:28px 0 9px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;border:1px solid var(--line);
+    border-radius:4px;padding:1px 5px;font-size:13px}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;line-height:1.65;margin:8px 0}
+  table{border-collapse:collapse;width:100%;font-size:13.8px;margin:6px 0}
+  th,td{border:1px solid var(--line);padding:4px 7px;vertical-align:top;text-align:left}
+  th{background:#1d2129;color:var(--dim);font-size:12.5px;font-weight:600}
+  td input{width:100%;background:transparent;border:0;color:var(--txt);font:inherit;padding:2px;outline:none}
+  td input:focus{background:#0b1a2b;border-radius:3px}
+  tr.hl-row td{background:var(--hl)}
+  tr.ok-row td{background:#14321f}
+  tr.bad-row td{background:#3a1a1a}
+  .wrap3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+  @media(max-width:860px){.wrap3{grid-template-columns:1fr}}
+  button{background:#232833;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+    padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#06121f;font-weight:600}
+  button.mini{padding:1px 7px;font-size:12px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  select,input[type=number]{background:#0d1017;color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:6px 9px;font:inherit;font-size:13.5px}
+  .hint{color:var(--dim);font-size:12.8px}
+  .kw{color:var(--purple)}.fn{color:var(--accent)}.strc{color:#86efac}.cm{color:#5c6577}
+  .step{border-left:3px solid var(--warn);padding:5px 10px;margin:5px 0;font-size:13.6px;background:#1d1a12}
+  .step.ok{border-color:var(--ok);background:#12251a;color:#c9f5d8}
+  .step.bad{border-color:var(--bad);background:#2a1414;color:#f7c9c9}
+  .verdict{font-weight:600;padding:7px 10px;border-radius:7px;display:inline-block;margin-top:6px}
+  .verdict.ok{background:#14321f;color:var(--ok)}
+  .verdict.no{background:#3a1a1a;color:var(--bad)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--dim);margin-top:8px}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .steps li{margin:3px 0;color:var(--dim)}
+  .steps li.on{color:var(--warn);font-weight:600}
+  .steps li.done{color:var(--ok)}
+  textarea{width:100%;min-height:86px;background:#0b0e13;color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:10px;font:13px/1.5 "Cascadia Mono",Consolas,monospace}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+
+<h1>SQL 基础 ③ · JOIN 详解</h1>
+<div class="sub">为什么需要它 → 三张表怎么来的 → 执行过程 → 四种连接 → ON vs WHERE → NULL 陷阱 → 错配诊断。全程可拧。</div>
+
+<!-- ① 为什么 -->
+<h2>① 为什么需要 JOIN：从"一张表放不下"说起</h2>
+<div class="card">
+  <p style="margin:4px 0">假设把"谁在哪个群"硬塞进人表：</p>
+<pre>persons
+id | name | 群1     | 群2     | 群3   ← 一个人最多加 3 个群？
+7  | 小明 | 高数自习 | 游戏开黑 | (空)  ← 第 4 个群往哪写？</pre>
+  <div class="step bad">问题① <b>列数不够</b>：群的总数是不固定的，表结构不能天天改</div>
+  <div class="step bad">问题② <b>大量空白</b>：加 1 个群、99 个空列</div>
+  <div class="step bad">问题③ <b>改不动</b>：把"高数自习"改名 → 表里 N 行都要改</div>
+  <div class="step ok">✅ 正确做法：<b>拆成两张表 + 中间一张"绳子表"</b>，查的时候再用 JOIN 拼回来</div>
+  <div class="hint">💡 一句话：<b>存储时拆开（避免重复），查询时拼回（JOIN）</b> —— 这就是关系型数据库的核心思路。</div>
+</div>
+
+<!-- ② 三张表 -->
+<h2>② 三张表与"三步推导法"</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:22%">表的角色</th><th style="width:26%">例子</th><th>装什么</th></tr>
+    <tr><td>左表 / 实体表</td><td><code>persons</code>（人）</td><td>只属于它自己的信息：姓名、手机号</td></tr>
+    <tr><td>右表 / 实体表</td><td><code>groups</code>（群）</td><td>只属于它自己的信息：群名</td></tr>
+    <tr><td><b>中间表 / 关联表</b></td><td><code>group_members</code></td><td><b>只记"谁连着谁"</b>：两列 id + 属于"这段关系"的信息（加入时间、身份、用量）</td></tr>
+  </table>
+  <div class="step ok"><b>三步推导法</b>（遇到新需求就这么推）<br>
+    ① 数几种"东西" → 每样一张表<br>
+    ② 每个事实<b>跟着谁走</b>？只跟一个 → 放它自己的表<br>
+    ③ 跟<b>两个</b>走的 → 单独做关联表（"谁在哪个群"跟人和群都有关）</div>
+  <table>
+    <tr><th>放入位置</th><th style="width:40%">事实</th><th>为什么</th></tr>
+    <tr><td>persons</td><td>手机号</td><td>只跟人有关（一个人一个手机号）</td></tr>
+    <tr><td>groups</td><td>群名</td><td>只跟群有关</td></tr>
+    <tr><td>group_members</td><td><b>加入时间 / 群内身份</b></td><td>跟"人 <b>和</b> 群"都有关：同一个人在不同群里身份不同</td></tr>
+  </table>
+</div>
+
+<!-- ③ 数据 + 交互 -->
+<h2>③ 拧数据 + 看配对过程</h2>
+<div class="wrap3">
+  <div class="card">
+    <b>persons（人）</b> <button class="mini" data-add="persons">+ 行</button>
+    <table><thead><tr><th style="width:46px">id</th><th>name</th><th style="width:26px"></th></tr></thead>
+      <tbody id="tb-persons"></tbody></table>
+  </div>
+  <div class="card">
+    <b>group_members（绳子表）</b> <button class="mini" data-add="members">+ 行</button>
+    <table><thead><tr><th style="width:44px">uid</th><th style="width:44px">gid</th><th>joined</th><th style="width:26px"></th></tr></thead>
+      <tbody id="tb-members"></tbody></table>
+  </div>
+  <div class="card">
+    <b>groups（群）</b> <button class="mini" data-add="groups">+ 行</button>
+    <table><thead><tr><th style="width:46px">id</th><th>name</th><th style="width:26px"></th></tr></thead>
+      <tbody id="tb-groups"></tbody></table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="row">
+    <span>从哪张表出发（左表）：</span>
+    <select id="fromT"><option value="groups">groups（群）</option><option value="persons">persons（人）</option></select>
+    <span>连接方式：</span>
+    <select id="jt">
+      <option value="inner">JOIN / INNER JOIN</option>
+      <option value="left">LEFT JOIN</option>
+    </select>
+    <span>筛哪个：</span><select id="filter"></select>
+    <button class="pri" id="stepBtn">▶ 开始配对</button>
+    <button id="resetBtn">↺ 重来</button>
+  </div>
+  <div class="hint">故意捣乱：把某行 <code>uid</code> 改成 99（不存在的人），或加一个没人加的群 —— 看 INNER 和 LEFT 的差别。</div>
+</div>
+
+<div class="card">
+  <ol class="steps" id="steps" style="margin:0;padding-left:22px">
+    <li data-s="0">从左表拿出目标那一行</li>
+    <li data-s="1">拿左表的 id 去绳子表逐行比对</li>
+    <li data-s="2">配上的行，拿另一个 id 去右表换名字</li>
+    <li data-s="3">拼成结果行；LEFT JOIN 还要把没配上的左行补成 NULL</li>
+  </ol>
+  <div class="hint" id="trace" style="margin-top:8px">点"开始配对"，一步步看它怎么配。</div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--hl)"></i>正在比对</span>
+    <span><i class="sw" style="background:#14321f"></i>配对成功</span>
+    <span><i class="sw" style="background:#3a1a1a"></i>没配上（丢弃 / 填 NULL）</span>
+  </div>
+  <div class="row" style="margin-top:10px"><b>结果</b><span class="hint" id="resInfo"></span></div>
+  <table><thead><tr><th id="h1">左表</th><th id="h2">右表</th><th>joined</th></tr></thead>
+    <tbody id="tb-result"></tbody></table>
+</div>
+
+<div class="card">
+  <div class="row"><b>先猜：会出几行？</b>
+    <input type="number" id="guess" min="0" max="99" placeholder="?" style="width:76px">
+    <button class="pri" id="reveal">揭晓</button><span id="verdict"></span>
+  </div>
+  <pre id="sql"></pre>
+</div>
+
+<!-- ④ 四种连接 -->
+<h2>④ 四种连接：留下谁、丢掉谁</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:20%">类型</th><th style="width:30%">一句话</th><th>行数规则</th></tr>
+    <tr><td><code>INNER JOIN</code>（<code>JOIN</code>）</td><td>只留<b>两边都配上</b>的</td><td>= 配对成功的次数</td></tr>
+    <tr><td><code>LEFT JOIN</code></td><td>左表<b>一行都不丢</b>，右边配不上填 NULL</td><td>≥ INNER 的行数（多了那些"没配上的左行"）</td></tr>
+    <tr><td><code>RIGHT JOIN</code></td><td>右表一行都不丢（SQLite 老版本不支持，可用左右对调代替）</td><td>对称于 LEFT</td></tr>
+    <tr><td><code>FULL OUTER JOIN</code></td><td>两边都不丢（SQLite 不支持，要 UNION 模拟）</td><td>最多</td></tr>
+    <tr><td><code>CROSS JOIN</code></td><td>不要 ON，<b>每行两两组合</b>（笛卡尔积）</td><td>= 左行数 × 右行数</td></tr>
+  </table>
+  <div class="step ok">判断口诀：<b>问"哪边的数据一行都不能少？"</b> → 是左边就 LEFT JOIN，两边都要就 FULL。</div>
+  <div class="step bad">忘了写 ON 会变成笛卡尔积：3 行 × 4 行 = 12 行 —— 结果突然暴增，多半是 ON 写漏了。</div>
+  <div class="hint">💡 你最常用的是前两个：INNER（要匹配）和 LEFT（保留左边全部）。</div>
+</div>
+
+<!-- ⑤ ON vs WHERE -->
+<h2>⑤ <code>ON</code> vs <code>WHERE</code>：LEFT JOIN 里它们不一样（高阶坑）</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:16%"></th><th style="width:42%"><code>ON</code></th><th><code>WHERE</code></th></tr>
+    <tr><td>作用</td><td><b>配对规则</b>：怎么把两边的行接起来</td><td><b>筛选</b>：拼完之后再挑</td></tr>
+    <tr><td>执行时机</td><td>拼接时</td><td>拼接<b>之后</b></td></tr>
+    <tr><td>INNER JOIN 里</td><td colspan="2">写哪边结果一样（所以很多人不知道区别）</td></tr>
+    <tr><td><b>LEFT JOIN 里</b></td><td>写在 ON：配不上照样保留左行（右边 NULL）</td><td class="bad">写在 WHERE：把右边为 NULL 的行<b>筛掉了</b> → LEFT JOIN 白做，退化成 INNER</td></tr>
+  </table>
+  <div class="step bad">经典坑：<code>LEFT JOIN b ON a.id=b.aid WHERE b.status='ok'</code><br>
+    → 那些"没有对应 b 记录"的行，b.status 是 NULL，不满足 ='ok' → <b>被删掉</b>。<br>
+    想保留它们就把条件挪到 ON 里：<code>LEFT JOIN b ON a.id=b.aid AND b.status='ok'</code></div>
+</div>
+
+<!-- ⑥ NULL -->
+<h2>⑥ NULL 在 JOIN 里代表什么</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:44%">你看到的</th><th>含义</th></tr>
+    <tr><td>结果里某列是 <code>NULL</code></td><td>"<b>右边没配上</b>" —— 不是数据丢了，是本来就没有</td></tr>
+    <tr><td>LEFT JOIN 后 <code>COUNT(右表.列)</code></td><td>只数配上的（NULL 不计）；<code>COUNT(*)</code> 会把没配上的也算一行</td></tr>
+    <tr><td>用 <code>WHERE 右表.列 = 'x'</code></td><td>NULL 不满足任何比较 → 没配上的行消失（见⑤）</td></tr>
+  </table>
+  <div class="hint">💡 想"只看没配上的"（找孤儿数据）：<code>WHERE 右表.id IS NULL</code>。</div>
+</div>
+
+<!-- ⑦ 排查 -->
+<h2>⑦ 查出来不对时的三步核对（实测过的两种错法）</h2>
+<div class="card">
+  <div class="step">① <b>单独</b>数绳子表：<code>SELECT * FROM group_members WHERE gid=1;</code> → 应有几行</div>
+  <div class="step">② 再数 JOIN 的结果行数 → 对比</div>
+  <div class="step">③ 一致 <b>≠</b> 正确！还要<b>挑一行人工核对内容</b></div>
+  <table>
+    <tr><th style="width:34%">错法</th><th>实测结果</th></tr>
+    <tr><td>id 空间<b>不重叠</b>（人 7/9、群 1/2）</td><td><b>0 行</b>，不报错 —— 空的，还看得出来</td></tr>
+    <tr><td>id 空间<b>重叠</b>（两套都从 1 开始，如方剂库）</td><td class="bad"><b>照样出数据，看着还挺合理</b> —— 静默错误，最危险</td></tr>
+  </table>
+  <div class="step bad">实测反例：<code>prescriptions.id</code> 与 <code>ingredients.id</code> 都从 1 开始。<br>
+    把配对准写成 <code>p.id = pi.ingredient_id</code> → 返回 <b>20 行</b>（麻黄汤配麻黄…），看着像对、其实全错，且不报错。</div>
+  <div class="step ok">👉 结论：<b>"不为空"绝不等于"对"</b>。JOIN 要核对的是配对，不是语法。</div>
+</div>
+
+<!-- ⑧ 真实库 -->
+<h2>⑧ 换到你的真实库</h2>
+<div class="card">
+<pre><span class="cm">-- 每首方剂有哪些药材（实测 49 行 = 绳子表行数）</span>
+<span class="kw">SELECT</span> p.name, i.name, pi.dosage
+<span class="kw">FROM</span> prescriptions p
+<span class="kw">JOIN</span> prescription_ingredients pi <span class="kw">ON</span> p.id = pi.prescription_id
+<span class="kw">JOIN</span> ingredients i <span class="kw">ON</span> pi.ingredient_id = i.id;
+
+<span class="cm">-- 反着查：甘草（实测 7 首）—— 起点换成 ingredients</span>
+<span class="kw">SELECT</span> p.name <span class="kw">FROM</span> ingredients i
+<span class="kw">JOIN</span> prescription_ingredients pi <span class="kw">ON</span> i.id = pi.ingredient_id
+<span class="kw">JOIN</span> prescriptions p <span class="kw">ON</span> pi.prescription_id = p.id
+<span class="kw">WHERE</span> i.name = <span class="strc">'甘草'</span>;</pre>
+</div>
+
+<!-- ⑨ 自己写 -->
+<h2>⑨ 你先自己写</h2>
+<div class="card">
+  <div class="hint">任务：查出 <b>2 号群</b> 的成员名字（用上面的三张表写）。</div>
+  <textarea id="own" placeholder="SELECT ..."></textarea>
+  <div class="row"><button id="check">对照思路（不直接给答案）</button><span id="checkMsg" class="hint"></span></div>
+</div>
+
+<div class="foot">
+  SQL 基础 ③ · 2026.09.20 · 交互结构源自 JOIN配对过程.html，本卡补齐术语与规则 · 配套 样例代码库/sql_join.py
+</div>
+
+<script>
+let DB = {
+  persons:[{id:7,name:"小明"},{id:9,name:"小红"}],
+  groups:[{id:1,name:"高数自习"},{id:2,name:"游戏开黑"}],
+  members:[{uid:7,gid:1,joined:"2026-03-01"},{uid:9,gid:1,joined:"2026-03-02"},{uid:7,gid:2,joined:"2026-04-11"}]
+};
+let st = {phase:0, i:-1, res:[], fin:null};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function renderTables(){
+  $("#tb-persons").innerHTML = DB.persons.map((p,i)=>`<tr data-k="persons" data-i="${i}">
+    <td><input value="${esc(p.id)}" data-f="id"></td><td><input value="${esc(p.name)}" data-f="name"></td>
+    <td><button class="mini" data-del="persons" data-i="${i}">×</button></td></tr>`).join("");
+  $("#tb-groups").innerHTML = DB.groups.map((g,i)=>`<tr data-k="groups" data-i="${i}">
+    <td><input value="${esc(g.id)}" data-f="id"></td><td><input value="${esc(g.name)}" data-f="name"></td>
+    <td><button class="mini" data-del="groups" data-i="${i}">×</button></td></tr>`).join("");
+  $("#tb-members").innerHTML = DB.members.map((m,i)=>`<tr data-k="members" data-i="${i}">
+    <td><input value="${esc(m.uid)}" data-f="uid"></td><td><input value="${esc(m.gid)}" data-f="gid"></td>
+    <td><input value="${esc(m.joined)}" data-f="joined"></td>
+    <td><button class="mini" data-del="members" data-i="${i}">×</button></td></tr>`).join("");
+
+  const from = $("#fromT").value;
+  const list = from === "groups" ? DB.groups : DB.persons;
+  const keep = $("#filter").value;
+  $("#filter").innerHTML = list.map(x=>`<option value="${esc(x.id)}">${esc(x.id)} · ${esc(x.name)}</option>`).join("");
+  if(keep && list.some(x=>String(x.id)===String(keep))) $("#filter").value = keep;
+  const other = from === "groups" ? "persons" : "groups";
+  $("#h1").textContent = from + ".name";
+  $("#h2").textContent = other + ".name";
+}
+
+/* 计算：from 表 与 persons/groups 的配对（始终经过 members 绳子表） */
+function compute(){
+  const from = $("#fromT").value;                 // 左表
+  const jt = $("#jt").value;
+  const fid = $("#filter").value;
+  const left = (from === "groups" ? DB.groups : DB.persons).find(x=>String(x.id)===String(fid));
+  if(!left) return {left:null, steps:[], result:[], leftTable:from};
+
+  // 绳子表里与左表匹配的行
+  const key = from === "groups" ? "gid" : "uid";
+  const otherKey = from === "groups" ? "uid" : "gid";
+  const matched = DB.members.map((m,idx)=>({m,idx})).filter(r=>String(r.m[key])===String(left.id));
+
+  const steps = [], result = [];
+  matched.forEach(r=>{
+    const other = (from === "groups" ? DB.persons : DB.groups).find(x=>String(x.id)===String(r.m[otherKey]));
+    steps.push({idx:r.idx, hit:!!other, other, m:r.m});
+    result.push({left:left.name, right:other?other.name:null, joined:r.m.joined, orphan:!other});
+  });
+  // 左表这一行在绳子里完全没有记录
+  if(jt === "left" && matched.length === 0){
+    result.push({left:left.name, right:null, joined:null, orphan:true});
+  }
+  return {left, steps, result, matchedCount:matched.length, leftTable:from};
+}
+
+function paint(idx, cls){
+  document.querySelectorAll("#tb-members tr").forEach(tr=>{
+    tr.classList.remove("hl-row","ok-row","bad-row");
+    if(cls && Number(tr.dataset.i)===idx) tr.classList.add(cls);
+  });
+}
+function clearPaint(){ document.querySelectorAll("#tb-members tr").forEach(tr=>tr.classList.remove("hl-row","ok-row","bad-row")); }
+function markSteps(a){ document.querySelectorAll("#steps li").forEach(li=>{
+  li.classList.toggle("on", Number(li.dataset.s)===a);
+  li.classList.toggle("done", Number(li.dataset.s)<a); }); }
+
+function showResult(res){
+  const tb = $("#tb-result");
+  if(!res.result.length){ tb.innerHTML = `<tr><td colspan="3" class="hint">（0 行 —— 一行都没配上，但 SQL 不报错）</td></tr>`; $("#resInfo").textContent="0 行"; return; }
+  tb.innerHTML = res.result.map(r=>`<tr class="${r.orphan?"bad-row":"ok-row"}">
+    <td>${esc(r.left)}</td>
+    <td>${r.right===null?'<span class="hint">NULL</span>':esc(r.right)}</td>
+    <td>${r.joined===null?'<span class="hint">NULL</span>':esc(r.joined)}</td></tr>`).join("");
+  $("#resInfo").textContent = res.result.length + " 行";
+}
+function showSQL(){
+  const from = $("#fromT").value, jt = $("#jt").value === "left" ? "LEFT JOIN" : "JOIN";
+  const key = from === "groups" ? "gid" : "uid", okey = from === "groups" ? "uid" : "gid";
+  const other = from === "groups" ? "persons" : "groups";
+  $("#sql").innerHTML = `<span class="kw">SELECT</span> ${from}.name, ${other}.name, group_members.joined
+<span class="kw">FROM</span> ${from}
+${jt} group_members <span class="kw">ON</span> ${from}.id = group_members.${key}
+${jt} ${other} <span class="kw">ON</span> group_members.${okey} = ${other}.id
+<span class="kw">WHERE</span> ${from}.id = <span class="strc">${esc($("#filter").value)}</span>;`;
+}
+
+function step(){
+  if(st.phase === 0){
+    st.fin = compute(); st.res = []; st.phase = 1; markSteps(1);
+    $("#trace").innerHTML = st.fin.left ? `从左表取出：<b>${esc(st.fin.left.id)} · ${esc(st.fin.left.name)}</b>` : "没找到这一行";
+    return;
+  }
+  if(st.phase === 1){
+    if(st.i + 1 < st.fin.steps.length){
+      st.i++; const s = st.fin.steps[st.i];
+      paint(s.idx, "hl-row");
+      $("#trace").innerHTML = `比对第 ${st.i+1} 条绳子：${$("#fromT").value === "groups" ? "gid" : "uid"}=<b>${esc(s.m[$("#fromT").value === "groups" ? "gid" : "uid"])}</b> → ${s.hit ? "对上了 ✅" : "没对上 ❌"}`;
+      return;
+    }
+    st.phase = 2; markSteps(2); clearPaint();
+    $("#trace").innerHTML = `比对完：配上 <b>${st.fin.matchedCount}</b> 条。现在拿每条绳子的另一个 id 去右表换名字。`;
+    return;
+  }
+  if(st.phase === 2){
+    if(st.res.length < st.fin.steps.length){
+      const s = st.fin.steps[st.res.length];
+      st.res.push({left:st.fin.left.name, right:s.other?s.other.name:null, joined:s.m.joined, orphan:!s.other});
+      paint(s.idx, s.other ? "ok-row" : "bad-row");
+      showResult({result:st.res});
+      $("#trace").innerHTML = s.other ? `找到 <b>${esc(s.other.name)}</b> → 拼出一行` : `右表没有这个人 → 这一行右边为 NULL`;
+      return;
+    }
+    // LEFT JOIN 的收尾：把"完全没配上"的左行补进结果（右边 NULL）
+    const fin = compute();
+    while(st.res.length < fin.result.length){
+      const r = fin.result[st.res.length];
+      st.res.push(r);
+      $("#trace").innerHTML = `<b>LEFT JOIN</b>：左行 <b>${esc(r.left)}</b> 在绳子表里一条记录都没有 → 保留它，右边填 <span class="hint">NULL</span>`;
+    }
+    showResult({result: st.res});
+    st.phase = 3; markSteps(3); clearPaint();
+    const extra = fin.result.length - fin.matchedCount;
+    $("#trace").innerHTML = `配对结束：结果 <b>${st.res.length}</b> 行`
+      + (extra > 0 ? `<br><span class="hint">其中 ${extra} 行是 LEFT JOIN 保住"完全没配上"的左行（右边 NULL）。若用 INNER JOIN，这 ${extra} 行会消失 —— 切回 INNER 试试。</span>`
+                   : `<br><span class="hint">这里 INNER 和 LEFT 结果相同（左行的绳子里都有记录）。试着加一个"没人加的群"再看差别。</span>`);
+    return;
+  }
+  st = {phase:0,i:-1,res:[],fin:null}; markSteps(0); clearPaint(); showResult({result:[]}); showSQL();
+}
+
+document.addEventListener('input', e => {
+  const inp = e.target.closest("td input");
+  if(!inp) return;
+  const tr = inp.closest("tr");
+  let v = inp.value;
+  if(inp.dataset.f !== "joined" && inp.dataset.f !== "name") v = v === "" ? "" : Number(v);
+  DB[tr.dataset.k][Number(tr.dataset.i)][inp.dataset.f] = v;
+  showSQL();
+});
+document.addEventListener('change', e => {
+  if(["fromT","jt","filter"].includes(e.target.id)){
+    st = {phase:0,i:-1,res:[],fin:null}; markSteps(0); clearPaint(); showResult({result:[]});
+    if(e.target.id !== "jt") renderTables();
+    showSQL();
+  }
+});
+document.addEventListener('click', e => {
+  const add = e.target.dataset && e.target.dataset.add;
+  if(add){
+    if(add==="persons") DB.persons.push({id:(DB.persons.at(-1)?.id||0)+1, name:"新的人"});
+    if(add==="groups")  DB.groups.push({id:(DB.groups.at(-1)?.id||0)+1, name:"新群"});
+    if(add==="members") DB.members.push({uid:DB.persons.at(-1)?.id||1, gid:DB.groups[0]?.id||1, joined:"2026-09-20"});
+    renderTables(); showSQL(); return;
+  }
+  const del = e.target.dataset && e.target.dataset.del;
+  if(del){ DB[del].splice(Number(e.target.dataset.i),1); renderTables(); showSQL(); return; }
+  if(e.target.id === "stepBtn"){ step(); return; }
+  if(e.target.id === "resetBtn"){ st={phase:0,i:-1,res:[],fin:null}; markSteps(0); clearPaint(); showResult({result:[]}); $("#trace").textContent='点"开始配对"，一步步看它怎么配。'; return; }
+  if(e.target.id === "reveal"){
+    const fin = compute();
+    if($("#guess").value === ""){ $("#verdict").innerHTML = '<span class="verdict no">先填一个数</span>'; return; }
+    const g = Number($("#guess").value), t = fin.result.length;
+    $("#verdict").innerHTML = (g === t) ? `<span class="verdict ok">对！就是 ${t} 行</span>`
+                                        : `<span class="verdict no">你猜 ${g}，实际 ${t} 行</span>`;
+    return;
+  }
+  if(e.target.id === "check"){
+    const raw = $("#own").value.trim();
+    if(!raw){ $("#checkMsg").innerHTML = "<span class='verdict no'>先写点什么</span>"; return; }
+    const w = raw.toLowerCase().match(/[a-z_]+/g) || [];
+    const has = x => w.includes(x);
+    $("#checkMsg").innerHTML = [
+      has("select") ? "有 SELECT ✅" : "还没有 SELECT ❌",
+      has("join") ? "有 JOIN ✅" : "还没有 JOIN ❌",
+      has("on") ? "有 ON ✅" : "还没有 ON ❌",
+      (has("group_members")||has("members")) ? "用到了绳子表 ✅" : "没用到绳子表 ❌",
+      has("persons") ? "用到了 persons ✅" : "没用到 persons ❌",
+      has("where") ? "有 WHERE 条件 ✅" : "要用 WHERE 限定 2 号群"
+    ].join(" · ") + "<br><span class='hint'>自己核对：ON 两边接的是哪两个 id？2 号群写在哪一列？</span>";
+    return;
+  }
+});
+renderTables(); markSteps(0); showResult({result:[]}); showSQL();
+</script>
+</body>
+</html>

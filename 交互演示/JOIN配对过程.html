@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JOIN 是怎么"配对"的 —— 交互演示</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --txt:#e6e8ee; --dim:#98a0b3;
+    --ok:#4ade80; --bad:#f87171; --warn:#fbbf24; --accent:#60a5fa; --hl:#1e3a5f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font:15px/1.65 "Segoe UI","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    padding:18px 16px 60px;max-width:1180px;margin:0 auto}
+  h1{font-size:21px;margin:0 0 6px}
+  h2{font-size:16px;margin:26px 0 10px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:820px){.grid3{grid-template-columns:1fr}}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{border:1px solid var(--line);padding:3px 5px;text-align:left}
+  th{background:#1d2129;color:var(--dim);font-weight:600;font-size:12px}
+  td input{width:100%;background:transparent;border:0;color:var(--txt);font:inherit;padding:2px;outline:none}
+  td input:focus{background:#0b1a2b;border-radius:3px}
+  tr.hl-row td{background:var(--hl)}
+  tr.ok-row td{background:#14321f}
+  tr.bad-row td{background:#3a1a1a}
+  tr.dim-row td{opacity:.32}
+  .title{font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .title small{color:var(--dim);font-weight:400}
+  button{background:#232833;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+    padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#06121f;font-weight:600}
+  button.mini{padding:1px 7px;font-size:12px;line-height:1.3}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  select,input[type=number],input[type=text]{background:#0d1017;color:var(--txt);border:1px solid var(--line);
+    border-radius:7px;padding:6px 9px;font:inherit;font-size:13px}
+  code,pre{font-family:"Cascadia Mono",Consolas,monospace}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;
+    overflow-x:auto;font-size:13px;line-height:1.55;margin:8px 0}
+  .kw{color:#c084fc}.fn{color:#60a5fa}.str{color:#86efac}.cm{color:#5c6577}
+  .hint{color:var(--dim);font-size:13px}
+  .verdict{font-weight:600;padding:7px 10px;border-radius:7px;display:inline-block;margin-top:6px}
+  .verdict.ok{background:#14321f;color:var(--ok)}
+  .verdict.no{background:#3a1a1a;color:var(--bad)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--dim);margin-top:8px}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  textarea{width:100%;min-height:88px;background:#0b0e13;color:var(--txt);border:1px solid var(--line);
+    border-radius:9px;padding:10px;font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;line-height:1.5}
+  .steps li{margin:3px 0;color:var(--dim)}
+  .steps li.on{color:var(--warn);font-weight:600}
+  .steps li.done{color:var(--ok)}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+
+<h1>JOIN 是怎么"配对"的</h1>
+<div class="sub">拧一拧左边的数据，看中间的结果怎么变。三个表名和字段名跟 <code>prescriptions.db</code> 里那张关联表是同一个结构。</div>
+
+<!-- ① 先猜 -->
+<div class="card">
+  <div class="title">① 先猜（先填再看，猜错记得更牢）<small>生成效应</small></div>
+  <div class="row">
+    <span>1 号群有 <b id="g1count">?</b> 个成员，所以下面这条 SQL 会出</span>
+    <input type="number" id="guess" min="0" max="99" placeholder="?" style="width:70px">
+    <span>行</span>
+    <button class="pri" id="revealBtn">揭晓</button>
+    <span id="verdict"></span>
+  </div>
+  <div class="hint">提示：先别点"开始配对"。想清楚 <b>行数 = 什么</b> 再填。</div>
+</div>
+
+<!-- ②③ 数据 + 参数 -->
+<h2>② 拧数据：两张表 + 中间那张"绳子表"</h2>
+<div class="grid3">
+  <div class="card">
+    <div class="title">persons（人）<button class="mini" data-add="persons">+ 行</button></div>
+    <table><thead><tr><th style="width:52px">id</th><th>name</th><th style="width:34px"></th></tr></thead>
+      <tbody id="tb-persons"></tbody></table>
+  </div>
+  <div class="card">
+    <div class="title">group_members（绳子表）<button class="mini" data-add="members">+ 行</button></div>
+    <table><thead><tr><th style="width:52px">uid</th><th style="width:52px">gid</th><th>joined</th><th style="width:34px"></th></tr></thead>
+      <tbody id="tb-members"></tbody></table>
+  </div>
+  <div class="card">
+    <div class="title">groups（群）<button class="mini" data-add="groups">+ 行</button></div>
+    <table><thead><tr><th style="width:52px">id</th><th>name</th><th style="width:34px"></th></tr></thead>
+      <tbody id="tb-groups"></tbody></table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="row">
+    <span>看哪个群：</span><select id="targetGroup"></select>
+    <span style="margin-left:12px">连接方式：</span>
+    <select id="joinType">
+      <option value="inner">JOIN（两边都配上才出）</option>
+      <option value="left">LEFT JOIN（左表一行都不丢）</option>
+    </select>
+    <button class="pri" id="stepBtn">▶ 开始配对</button>
+    <button id="resetBtn">↺ 重来</button>
+  </div>
+  <div class="hint">故意捣乱：把某行的 <code>uid</code> 改成一个 <b>不存在的 id</b>，看结果怎么变。</div>
+</div>
+
+<!-- ④ 过程 -->
+<h2>③ 看得见的过程</h2>
+<div class="card">
+  <div class="row" style="align-items:flex-start">
+    <ol class="steps" id="steps" style="flex:1;margin:0;padding-left:22px">
+      <li data-s="0">从 groups 拿出目标群那一行</li>
+      <li data-s="1">拿群 id 去 group_members 一行行比对</li>
+      <li data-s="2">配上的行，拿 uid 去 persons 换名字</li>
+      <li data-s="3">拼成结果行交出去</li>
+    </ol>
+    <div style="flex:1.1">
+      <div class="hint" id="trace">点"开始配对"，一步步看它怎么配。</div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--hl)"></i>正在比对的绳子行</span>
+    <span><i class="sw" style="background:#14321f"></i>配对成功</span>
+    <span><i class="sw" style="background:#3a1a1a"></i>没对上（丢弃 / 填 NULL）</span>
+  </div>
+</div>
+
+<!-- ⑤ 结果 + 代码 -->
+<h2>④ 结果 & 能复制的 SQL</h2>
+<div class="card">
+  <div class="title">结果表 <small id="resInfo"></small></div>
+  <table><thead><tr><th>persons.name</th><th>groups.name</th><th>joined</th></tr></thead>
+    <tbody id="tb-result"><tr><td colspan="3" class="hint">（还没跑）</td></tr></tbody></table>
+</div>
+<div class="card">
+  <div class="title">对应的 SQL（复制去 SQLite / Python 里跑一遍）<small>迁移</small></div>
+  <pre id="sql"></pre>
+  <button id="copyBtn">复制 SQL</button>
+  <span class="hint" id="copyMsg"></span>
+</div>
+
+<!-- ⑥ 你自己写 -->
+<h2>⑤ 你先自己写（不写不算学完）</h2>
+<div class="card">
+  <div class="hint">任务：写一条 SQL，查出 <b>2 号群</b> 的成员名字（先在这儿写，写完再去 Python 里跑）。</div>
+  <textarea id="own" placeholder="SELECT ..."></textarea>
+  <div class="row">
+    <button id="checkBtn">对照思路（不直接给答案）</button>
+    <span class="hint" id="checkMsg"></span>
+  </div>
+</div>
+
+<div class="foot">
+  交互演示 · JOIN 配对过程 · 2026.09.20 · 配套：第3课-数据模型与JOIN.md、样例代码库/sql_join.py<br>
+  单文件、离线可用、手机能开 —— 遇到下一个"讲不清的抽象"，照这张卡的结构再造一张。
+</div>
+
+<script>
+/* ---------------- 数据 ---------------- */
+let DB = {
+  persons:[{id:7,name:"小明"},{id:9,name:"小红"}],
+  groups:[{id:1,name:"高数自习"},{id:2,name:"游戏开黑"}],
+  members:[{uid:7,gid:1,joined:"2026-03-01"},
+           {uid:9,gid:1,joined:"2026-03-02"},
+           {uid:7,gid:2,joined:"2026-04-11"}]
+};
+let state = { phase:0, mIdx:-1, matched:[], result:[] };
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------------- 渲染源表（可编辑） ---------------- */
+function renderTables(){
+  $("#tb-persons").innerHTML = DB.persons.map((p,i)=>`
+    <tr data-kind="persons" data-i="${i}">
+      <td><input value="${esc(p.id)}" data-f="id"></td>
+      <td><input value="${esc(p.name)}" data-f="name"></td>
+      <td><button class="mini" data-del="persons" data-i="${i}">×</button></td>
+    </tr>`).join("");
+  $("#tb-groups").innerHTML = DB.groups.map((g,i)=>`
+    <tr data-kind="groups" data-i="${i}">
+      <td><input value="${esc(g.id)}" data-f="id"></td>
+      <td><input value="${esc(g.name)}" data-f="name"></td>
+      <td><button class="mini" data-del="groups" data-i="${i}">×</button></td>
+    </tr>`).join("");
+  $("#tb-members").innerHTML = DB.members.map((m,i)=>`
+    <tr data-kind="members" data-i="${i}">
+      <td><input value="${esc(m.uid)}" data-f="uid"></td>
+      <td><input value="${esc(m.gid)}" data-f="gid"></td>
+      <td><input value="${esc(m.joined)}" data-f="joined"></td>
+      <td><button class="mini" data-del="members" data-i="${i}">×</button></td>
+    </tr>`).join("");
+
+  const sel = $("#targetGroup");
+  const keep = sel.value;
+  sel.innerHTML = DB.groups.map(g=>`<option value="${esc(g.id)}">${esc(g.id)} · ${esc(g.name)}</option>`).join("");
+  if(keep) sel.value = keep;
+  if(!sel.value && DB.groups[0]) sel.value = DB.groups[0].id;
+
+  const gid = sel.value;
+  $("#g1count").textContent = DB.members.filter(m=>String(m.gid)===String(gid)).length;
+}
+
+/* ---------------- 计算 ---------------- */
+function compute(){
+  const gid = $("#targetGroup").value;
+  const joinType = $("#joinType").value;
+  const g = DB.groups.find(x=>String(x.id)===String(gid));
+  const steps = [];
+  let result = [];
+
+  if(g){
+    const rows = DB.members.map((m,idx)=>({m,idx}));
+    const matched = rows.filter(r=>String(r.m.gid)===String(g.id));
+    matched.forEach(r=>{
+      const p = DB.persons.find(x=>String(x.id)===String(r.m.uid));
+      steps.push({idx:r.idx, hit:!!p, person:p, member:r.m});
+      result.push({personName:p?p.name:null, groupName:g.name, joined:r.m.joined, gaveUp:!p});
+    });
+    if(joinType==="left" && matched.length===0){
+      result.push({personName:null, groupName:g.name, joined:null, gaveUp:true});
+    }
+    return {g, steps, result, matchedCount:matched.length};
+  }
+  return {g:null, steps, result, matchedCount:0};
+}
+
+/* ---------------- 步骤动画 ---------------- */
+function paint(highlightMemberIdx, cls){
+  document.querySelectorAll("#tb-members tr").forEach(tr=>{
+    tr.classList.remove("hl-row","ok-row","bad-row","dim-row");
+    if(cls && Number(tr.dataset.i)===highlightMemberIdx) tr.classList.add(cls);
+  });
+}
+function clearPaint(){
+  document.querySelectorAll("#tb-members tr").forEach(tr=>tr.classList.remove("hl-row","ok-row","bad-row","dim-row"));
+}
+
+function renderSteps(active){
+  document.querySelectorAll("#steps li").forEach(li=>{
+    li.classList.toggle("on", Number(li.dataset.s)===active);
+    li.classList.toggle("done", Number(li.dataset.s)<active);
+  });
+}
+
+function renderResult(res){
+  const tb = $("#tb-result");
+  if(!res.result.length){
+    tb.innerHTML = `<tr><td colspan="3" class="hint">（0 行 —— 没有任何一行配对成功，但 SQL 不报错）</td></tr>`;
+    $("#resInfo").textContent = "0 行";
+    return;
+  }
+  tb.innerHTML = res.result.map(r=>`
+    <tr class="${r.gaveUp?"bad-row":"ok-row"}">
+      <td>${r.personName===null?"NULL":esc(r.personName)}</td>
+      <td>${esc(r.groupName)}</td>
+      <td>${r.joined===null?"NULL":esc(r.joined)}</td>
+    </tr>`).join("");
+  $("#resInfo").textContent = res.result.length + " 行";
+}
+
+function renderSQL(){
+  const gid = $("#targetGroup").value;
+  const jt = $("#joinType").value==="left" ? "LEFT JOIN" : "JOIN";
+  $("#sql").innerHTML =
+`<span class="kw">SELECT</span> persons.name, groups.name, group_members.joined
+<span class="kw">FROM</span> groups
+${jt} group_members <span class="kw">ON</span> groups.id = group_members.gid
+${jt} persons       <span class="kw">ON</span> group_members.uid = persons.id
+<span class="kw">WHERE</span> groups.id = <span class="str">${esc(gid)}</span>;`;
+}
+
+/* ---------------- 配对动画 ---------------- */
+let res0 = null;
+function step(){
+  if(state.phase===0){
+    res0 = compute(); state.result = []; state.matched = [];
+    state.phase=1; renderSteps(1);
+    $("#trace").innerHTML = res0.g
+      ? `从 groups 取出：<b>id=${esc(res0.g.id)}, ${esc(res0.g.name)}</b>`
+      : `没找到这个群`;
+    return;
+  }
+  if(state.phase===1){
+    if(state.mIdx+1 < res0.steps.length){
+      state.mIdx++;
+      const s = res0.steps[state.mIdx];
+      paint(s.idx, s.hit?"hl-row":"hl-row");
+      $("#trace").innerHTML = `比对第 ${state.mIdx+1} 条绳子：uid=<b>${esc(s.member.uid)}</b>, gid=<b>${esc(s.member.gid)}</b>`
+        + (s.hit ? ` → gid 对上了 ✅` : ` → gid 没对上 ❌`);
+      return;
+    }
+    state.phase=2; renderSteps(2);
+    $("#trace").innerHTML = `gid 比对完了：配上的有 <b>${res0.matchedCount}</b> 条，现在拿每条绳子的 uid 去 persons 换名字。`;
+    clearPaint();
+    return;
+  }
+  if(state.phase===2){
+    const stepIdx = state.result.length;
+    if(stepIdx < res0.steps.length){
+      const s = res0.steps[stepIdx];
+      if(s.hit){
+        state.result.push({personName:s.person.name, groupName:res0.g.name, joined:s.member.joined, gaveUp:false});
+        paint(s.idx,"ok-row");
+      } else {
+        state.result.push({personName:null, groupName:res0.g.name, joined:s.member.joined, gaveUp:true});
+        paint(s.idx,"bad-row");
+      }
+      renderResult({result:state.result});
+      $("#trace").innerHTML = s.hit
+        ? `uid=<b>${esc(s.member.uid)}</b> 在 persons 里找到 <b>${esc(s.person.name)}</b> → 拼出一行`
+        : `uid=<b>${esc(s.member.uid)}</b> 在 persons 里<b>没有</b>这个人 → 这一行作废`;
+      return;
+    }
+    state.phase=3; renderSteps(3);
+    const fin = compute();
+    renderResult(fin);
+    clearPaint();
+    $("#trace").innerHTML = `配对结束：结果 <b>${fin.result.length}</b> 行`
+      + `<br><span class="hint">行数不是表里的行数，是"配对成功"的次数（加 LEFT JOIN 的空行）。</span>`;
+    return;
+  }
+  // 重跑
+  state = { phase:0, mIdx:-1, matched:[], result:[] };
+  renderSteps(0); clearPaint(); renderResult({result:[]}); renderSQL();
+}
+
+/* ---------------- 事件 ---------------- */
+document.addEventListener("input", e=>{
+  const inp = e.target.closest("td input");
+  if(inp){
+    const tr = inp.closest("tr"), kind = tr.dataset.kind, i = Number(tr.dataset.i), f = inp.dataset.f;
+    let v = inp.value;
+    if(f==="id"||f==="uid"||f==="gid") v = v==="" ? "" : Number(v);
+    DB[kind][i][f] = v;
+    $("#g1count").textContent = DB.members.filter(m=>String(m.gid)===String($("#targetGroup").value)).length;
+    renderSQL();
+    return;
+  }
+  if(e.target.id==="targetGroup"){ renderSQL(); return; }
+});
+document.addEventListener("change", e=>{
+  if(e.target.id==="targetGroup"||e.target.id==="joinType"){
+    state = { phase:0, mIdx:-1, matched:[], result:[] };
+    renderSteps(0); clearPaint(); renderResult({result:[]}); renderSQL();
+    if(e.target.id==="targetGroup") renderTables();
+  }
+});
+document.addEventListener("click", e=>{
+  const add = e.target.dataset && e.target.dataset.add;
+  if(add){
+    if(add==="persons") DB.persons.push({id:(DB.persons.at(-1)?.id||0)+1, name:"新的人"});
+    if(add==="groups")  DB.groups.push({id:(DB.groups.at(-1)?.id||0)+1, name:"新群"});
+    if(add==="members") DB.members.push({uid:DB.persons.at(-1)?.id||1, gid:DB.groups[0]?.id||1, joined:"2026-09-20"});
+    renderTables(); renderSQL(); return;
+  }
+  const del = e.target.dataset && e.target.dataset.del;
+  if(del){ DB[del].splice(Number(e.target.dataset.i),1); renderTables(); renderSQL(); return; }
+
+  if(e.target.id==="stepBtn"){ step(); return; }
+  if(e.target.id==="resetBtn"){ state={phase:0,mIdx:-1,matched:[],result:[]}; renderSteps(0); clearPaint(); renderResult({result:[]}); $("#trace").textContent="点\"开始配对\"，一步步看它怎么配。"; return; }
+  if(e.target.id==="revealBtn"){
+    const fin = compute();
+    const truth = fin.result.length, guess = Number($("#guess").value);
+    if($("#guess").value===""){ $("#verdict").innerHTML = `<span class="verdict no">先填一个数再看</span>`; return; }
+    $("#verdict").innerHTML = (guess===truth)
+      ? `<span class="verdict ok">对！就是 ${truth} 行</span>`
+      : `<span class="verdict no">你猜 ${guess}，实际 ${truth} 行</span>`;
+    return;
+  }
+  if(e.target.id==="copyBtn"){
+    navigator.clipboard.writeText($("#sql").innerText).then(
+      ()=>{ $("#copyMsg").textContent="已复制 ✅"; setTimeout(()=>$("#copyMsg").textContent="",1500); },
+      ()=>{ $("#copyMsg").textContent="复制失败，手动选中吧"; });
+    return;
+  }
+  if(e.target.id==="checkBtn"){
+    const raw = $("#own").value.trim();
+    if(!raw){ $("#checkMsg").innerHTML = "<span class='verdict no'>先写点什么再看思路</span>"; return; }
+    // 只认"独立的词"：避免 persons 里的 on、joined 里的 join 被误判
+    const words = raw.toLowerCase().match(/[a-z_]+/g) || [];
+    const has = w => words.includes(w);
+    const hits = [
+      has("select") ? "有 SELECT ✅" : "还没有 SELECT ❌",
+      has("join")   ? "有 JOIN ✅"   : "还没有 JOIN ❌",
+      has("on")     ? "有 ON ✅"     : "还没有 ON ❌",
+      (has("group_members")||has("members")) ? "用到了绳子表 ✅" : "没用到绳子表 ❌",
+      has("persons") ? "用到了 persons ✅" : "没用到 persons ❌"
+    ];
+    $("#checkMsg").innerHTML = hits.join(" · ")
+      + "<br><span class='hint'>自己核对：两边的 id 接对了吗？2 号群是哪个条件？</span>";
+    return;
+  }
+});
+
+/* ---------------- 启动 ---------------- */
+renderTables(); renderSteps(0); renderResult({result:[]}); renderSQL();
+</script>
+</body>
+</html>
