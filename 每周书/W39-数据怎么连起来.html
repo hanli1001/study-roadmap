@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>W39 · 数据怎么连起来 —— 本周书</title>
+<link rel="stylesheet" href="../交互演示/_主题.css">
+<style>
+/* 只属于"书"的少量排印规则（跨页、页眉），不动全站主题 */
+@media print{
+  .cover{ break-after:page }
+  .chap-head,h3,.sec > h2{ break-after:avoid }
+  pre,table,.selfcheck,.note,.toc,.tw,.guess{ break-inside:avoid }
+  .toc{ break-after:page }
+}
+  .chap,#cover{ scroll-margin-top:76px }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <!-- ══ 书脊：粘在顶上那条。线上用；打印时自动消失 ══════ -->
+  <nav class="bookbar no-print" aria-label="书籍导航">
+    <button type="button" id="btnToc">☰ 目录</button>
+    <button type="button" id="btnPrev">← 上一章</button>
+    <button type="button" id="btnNext">下一章 →</button>
+    <span class="now" id="nowChap">封面</span>
+    <span class="prog" aria-hidden="true"><i id="prog"></i></span>
+    <span id="pct">0%</span>
+  </nav>
+  <div class="resume no-print" id="resume" hidden>
+    <span id="resumeTxt"></span>
+    <button type="button" id="resumeGo">跳过去</button>
+    <button type="button" id="resumeNo">不用了</button>
+  </div>
+
+  <!-- ══════════════ 封面 ══════════════ -->
+  <section class="cover" id="cover" data-nav="封面">
+    <div class="kicker">W39 ｜ 2026.09.21 – 09.27</div>
+    <h1 class="bt">数据怎么连起来</h1>
+    <p class="bsub">第 3 课 · 数据模型与 JOIN<br>
+       —— 一本能<b>在线翻</b>、也能<b>打出来读</b>的小册子</p>
+    <p class="sub" style="margin-top:14px">
+      书里所有代码和数字都<b>跑过</b>：不是"应该会这样"，是"实测就是这样"。<br>
+      凡是我没验过的，都写了「未验证」。
+    </p>
+  </section>
+
+  <section class="sec" id="whereami">
+    <h2 data-n="定位">你在这里</h2>
+    <div data-global-rail></div>
+    <p class="note">
+      这段轨道是<b>自动</b>的 —— 数据来自 <code>../交互演示/_全局进度.js</code>，全站只有那一份。
+      想看清楚整张地图，看
+      <a href="../交互演示/全局思维导图.html"><b>全局思维导图</b></a>。
+    </p>
+  </section>
+
+  <!-- ══════════════ 目录 ══════════════ -->
+  <section class="chap" id="tocpage" data-nav="目录">
+    <div class="chap-head">
+      <div class="chap-no">目录</div>
+      <h2>这本书里有什么</h2>
+      <p class="chap-lede">全书约 <b>70 分钟</b>。不用一次读完 —— 哪天只有 20 分钟，就读一章。</p>
+    </div>
+    <div class="toc">
+      <div class="line"><a href="#c1">第 1 章　先看三个数：为什么这周是这三件事</a><span class="dots"></span><span class="pg">5 分钟</span></div>
+      <div class="line"><a href="#c2">第 2 章　三步推导法：第三张表是被「逼」出来的</a><span class="dots"></span><span class="pg">8 分钟</span></div>
+      <div class="line"><a href="#c3">第 3 章　一行行带着 id 去问名字：JOIN 到底做了什么</a><span class="dots"></span><span class="pg">8 分钟</span></div>
+      <div class="line"><a href="#c4">第 4 章　ON 和 WHERE：配对 ≠ 筛选</a><span class="dots"></span><span class="pg">6 分钟</span></div>
+      <div class="line"><a href="#c5">第 5 章　JOIN 什么时候在骗你</a><span class="dots"></span><span class="pg">8 分钟</span></div>
+      <div class="line"><a href="#c6">第 6 章　搬回你自己的库：换皮三跳</a><span class="dots"></span><span class="pg">10 分钟</span></div>
+      <div class="line"><a href="#c7">第 7 章　预习：还没上的两块</a><span class="dots"></span><span class="pg">6 分钟</span></div>
+      <div class="line"><a href="#c8">第 8 章　本周作业 D8：选修课三张表</a><span class="dots"></span><span class="pg">10 分钟</span></div>
+      <div class="line"><a href="#appA">附录 A　复习卡：本周该过的</a><span class="dots"></span><span class="pg">4 分钟</span></div>
+      <div class="line"><a href="#appB">附录 B　本周清单（做完划掉）</a><span class="dots"></span><span class="pg">2 分钟</span></div>
+      <div class="line"><a href="#appC">附录 C　每天 1.5 小时怎么切</a><span class="dots"></span><span class="pg">3 分钟</span></div>
+    </div>
+    <p class="note margin">
+      <b>线上读</b>：顶上是书脊 —— 「目录 / 上一章 / 下一章」，键盘 <code>←</code> <code>→</code> 也能翻。<br>
+      <b>线下读</b>：<code>Ctrl+P</code> → 另存为 PDF。每章自动另起一页，按钮全部消失。
+    </p>
+  </section>
+
+  <!-- ══════════════ 第 1 章 ══════════════ -->
+  <section class="chap" id="c1" data-nav="第1章 · 为什么是这三件事">
+    <div class="chap-head">
+      <div class="chap-no">第 1 章</div>
+      <h2>先看三个数：为什么这周是这三件事</h2>
+      <p class="chap-lede">这一章不含代码。但它决定了后面七章为什么要存在。</p>
+    </div>
+
+    <p>今天的日期是 <b>2026.09.24（周四）</b>，本周还剩 <b>3 天</b>（到 09.27 周日）。先把三个日子摆在桌上：</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>倒推锚点</th><th style="width:16%">还有</th><th>意思</th></tr></thead>
+        <tbody>
+          <tr><td><b>2027.03</b> —— 简历上必须有东西可写</td><td class="num"><b>23 周</b></td><td>没东西写 → 2027 春投不出实习 → 后面全塌</td></tr>
+          <tr><td><b>2028.03</b> —— 考研 / 就业 决策点</td><td class="num">75 周</td><td>到时候凭<b>实习结果</b>定，不凭感觉</td></tr>
+          <tr><td><b>2029.06</b> —— 毕业入职</td><td class="num">140 周</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      🔴 <b>23 周 ≈ 一个多学期。</b>一个"从零自己做的 AI 应用"从立项到能写进简历，最少 2–3 个月。
+      所以项目<b>现在就要开始长</b> —— 不能等到 2027.06 才动手。这是本周目标背后的唯一理由。
+    </p>
+
+    <h3>于是这周只有三件事</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:6%">#</th><th style="width:30%">目标</th><th>怎么算完成</th><th style="width:14%">状态</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><b>Linux 微课 1</b><br>任务 1–5</td><td>① 5 个任务都在你<b>自己的服务器</b>上跑过 ② 合上文档能说出任务 3 用哪条命令 ③ 告诉我卡在第几个</td><td>⬜ 待做</td></tr>
+          <tr><td>2</td><td><b>项目立项</b><br>仓库 + README</td><td>① 仓库建好 ② README 三段：<i>解决什么问题 / 给谁用 / 怎么算做成功了</i> ③ 把链接发我</td><td>⬜ 待做</td></tr>
+          <tr><td>3</td><td><b>第 3 课 + D8 作业</b></td><td>① ①–④ 已上（09.23 晚，25 分钟）✅ ② ⑤⑥ 待下次 ③ <b>选修课三张表 + 一条 JOIN</b> ← 还差这一步</td><td>🔄 进行中</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>每件事都对着一条证据，不是为了凑数</h3>
+    <div class="detail">
+      <b>① Linux</b> —— 3 条合肥 JD 明确要求（薪火 / 数点智创 / 蔚来），几天就能补，而你自己说「几乎不太会」。<b>投入产出比最高的一项。</b><br>
+      <b>② 项目立项</b> —— 核对了本工作区所有 AI 代码的<b>作者归属</b>：<code>rag/01~03</code> 和 <code>agent_上下文消融.py</code> 都是我写的。你缺的不是"经验"，是<b>一个从零自己做的应用</b>。<br>
+      <b>③ JOIN</b> —— P-009 挂了半个月，教案早就绪，一直没上。SQL 是所有后端岗的默认底子。
+    </div>
+
+    <div class="selfcheck">
+      <b>合上书，你要能回答：</b>
+      <ol>
+        <li>为什么是 <b>2027.03</b> 这道门，而不是 2028.03？</li>
+        <li>三件事里，哪一件<b>可以第一个放弃</b>？为什么是它？</li>
+        <li>「LeetCode 每天 1 题」算不算本周三件事之一？</li>
+      </ol>
+      <p style="margin:7px 0 0">答不出就回去翻上面 —— 这三问的答案，决定了你这周的时间怎么花。</p>
+    </div>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#tocpage">← 目录</button>
+      <button type="button" data-go="#c2">第 2 章 →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 第 2 章 ══════════════ -->
+  <section class="chap" id="c2" data-nav="第2章 · 三步推导法">
+    <div class="chap-head">
+      <div class="chap-no">第 2 章</div>
+      <h2>三步推导法：第三张表是被「逼」出来的</h2>
+      <p class="chap-lede">本课第一个新概念：<b>第三张表不是"数据表"，是"绳子表"。</b></p>
+    </div>
+
+    <p>
+      这一章的回答对象是 <b>P-009：JOIN 关系表一直不理解</b>。但你的 <code>sql-notes.md</code>（7 月自己写的）里，
+      多对多、关联表、JOIN、执行过程四节<b>全都在</b> —— 所以断点不在语法，在<b>为什么非要有第三张表</b>。
+    </p>
+
+    <h3>① 三个业务事实</h3>
+    <ol>
+      <li>一个人 → 一个手机号（一个格子就够）</li>
+      <li>一个群 → 一个群名（一个格子就够）</li>
+      <li><b>「谁在哪个群 + 什么时候进的」</b> → 这格子该放哪？</li>
+    </ol>
+
+    <h3>② 三步推导法（写在纸上，别背）</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:34%">问自己</th><th>微信群例</th></tr></thead>
+        <tbody>
+          <tr><td>① 数一数，有几种「东西」？</td><td>每样东西一张表 → 人 / 群 = <b>2 张表</b></td></tr>
+          <tr><td>② 每个事实<b>跟着谁走</b>？</td><td>只跟一个人走 → 放人表；只跟一个群走 → 放群表</td></tr>
+          <tr><td>③ 跟<b>两个人</b>走的事实？</td><td>这就是<b>绳子</b> → 单独一张表</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>③ 第 3 张表长什么样</h3>
+    <pre>CREATE TABLE group_members (
+    uid    INTEGER,                 -- 指向 persons.id
+    gid    INTEGER,                 -- 指向 groups.id
+    joined TEXT,                    -- 加入时间
+    FOREIGN KEY (uid) REFERENCES persons(id),
+    FOREIGN KEY (gid) REFERENCES groups(id)
+);</pre>
+
+    <p>逐行问自己（对照你已经写过的 <code>prescription_ingredients</code>）：</p>
+    <div class="detail">
+      <b>为什么 <code>joined</code> 不能放 <code>persons</code> 表？</b> —— 一个人加了 10 个群，难道存 10 行？<br>
+      <b>为什么不能放 <code>groups</code> 表？</b> —— 群有 200 人，群名要存 200 遍？<br>
+      <b>这两列数字是名字吗？</b> —— 不是，是<b>绳子</b>（id）。
+    </div>
+
+    <h3>④ 故意填错一次（这一步最值钱）</h3>
+    <p>一个群 200 人，但我不知道谁知道谁是管理员 —— <b><code>role</code>（群主 / 成员）这一列放哪？</b></p>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:30%">放哪</th><th>会怎样</th></tr></thead>
+        <tbody>
+          <tr><td><code>groups</code></td><td>群有两个管理员就<b>存不下</b>（一格只能装一个值）</td></tr>
+          <tr><td><code>persons</code></td><td>他在 A 群是管理员、在 B 群是普通成员 → <b>装不下</b></td></tr>
+          <tr><td><b><code>group_members</code></b></td><td>✅ 每条绳子各自带一个身份 —— 跟 <code>dosage</code>（用量）<b>一模一样的位置</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>⑤ 画图收口（自己画，别抄）</h3>
+    <pre>persons          group_members            groups
++----+------+    +-----+-----+--------+   +----+-----------+
+| id | name |    | uid | gid | joined |   | id | name      |
++----+------+    +-----+-----+--------+   +----+-----------+
+| 7  | 小明 |&lt;---| 7   | 1   | 03-01  |--&gt;| 1  | 高数自习  |
+| 9  | 小红 |&lt;---| 9   | 1   | 03-02  |   | 2  | 游戏开黑  |
+| 7  | 小明 |&lt;---| 7   | 2   | 04-11  |   +----+-----------+
++----+------+    +-----+-----+--------+
+     ↑ 名字在这边         ↑ 只有数字：绳子
+                  ↑ 中间这张 = 绳子，两边各拉一头</pre>
+
+    <p class="redpen">
+      一句话：<b>第三张表不是"数据表"，是"绳子表"；它的行 = 一条关系，不是一个人。</b>
+      小明同时在 1 群和 2 群 → 他在绳子表里占<b>两行</b>。
+    </p>
+
+    <div class="selfcheck">
+      <b>合上书，你要能回答：</b>
+      <ol>
+        <li>说出三步推导法（不许看上面）。</li>
+        <li><code>dosage</code> 为什么放关联表，不放方剂表也不放药材表？</li>
+        <li>为什么关联表里<b>存数字 id，不直接存名字</b>？（三个理由）</li>
+      </ol>
+    </div>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#c1">← 第 1 章</button>
+      <button type="button" data-go="#c3">第 3 章 →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 第 3 章 ══════════════ -->
+  <section class="chap" id="c3" data-nav="第3章 · JOIN 的执行过程">
+    <div class="chap-head">
+      <div class="chap-no">第 3 章</div>
+      <h2>一行行带着 id 去问名字：JOIN 到底做了什么</h2>
+      <p class="chap-lede">本课第二个新概念：<b>执行过程</b>。看懂这一章，JOIN 就不再是咒语。</p>
+    </div>
+
+    <p>要查的东西：<b>1 号群的成员名字</b>。可绳子表里只有数字，名字在另一张表 —— 于是：</p>
+
+    <pre>SELECT persons.name, groups.name
+FROM groups
+JOIN group_members ON groups.id = group_members.gid
+JOIN persons       ON group_members.uid = persons.id
+WHERE groups.id = 1;</pre>
+
+    <p>逐行问自己：</p>
+    <div class="detail">
+      <b><code>FROM groups</code></b> —— 先站哪张表？（主干：我要 1 号群）<br>
+      <b>第 1 行 <code>ON</code></b> —— 拿什么去配什么？（<code>groups.id = group_members.gid</code>）<br>
+      <b>第 2 行 <code>ON</code></b> —— 绳子拿到了 <code>uid</code>，去哪换名字？（<code>persons</code> 表）<br>
+      <b><code>WHERE groups.id = 1</code></b> —— 为什么这条写在最后、长得还不一样？（它才是<b>筛选</b> —— 第 4 章）
+    </div>
+
+    <h3>数据库实际做的四步</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:6%">步</th><th style="width:46%">数据库在干什么</th><th>数据长什么样</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>从 <code>groups</code> 拿出 1 行</td><td><code>1 | 高数自习</code></td></tr>
+          <tr><td>2</td><td>拿着 <code>1</code> 去 <code>group_members.gid</code> <b>一行行比</b></td><td>命中 <code>(7,1)</code> ✓ <code>(9,1)</code> ✓ <code>(7,2)</code> ✗</td></tr>
+          <tr><td>3</td><td>每条命中的行，拿 <code>uid</code> 去 <code>persons.id</code> 换名字</td><td><code>7→小明</code>、<code>9→小红</code></td></tr>
+          <tr><td>4</td><td>拼成行交出去</td><td><code>小明 | 高数自习</code>、<code>小红 | 高数自习</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      🔑 <b>结果 2 行，不是因为"1 号群有 2 个人"，而是因为"配对成功了 2 次"。</b>
+      这两句话平时结论一样，但换一张表就不一样了 —— 这是本书第 5 章要用的伏笔。
+    </p>
+
+    <h3>立即复刻（别往下看，先自己写）</h3>
+    <pre>-- 把「1 号群的成员名字」改成「2 号群」
+SELECT persons.name FROM ??? JOIN ??? ON ???  WHERE ???;</pre>
+    <p class="note margin">
+      答案在你自己手上：<b>只改 WHERE 那一句</b>就够了（<code>groups.id = 2</code>）——
+      因为 JOIN 说的是"怎么配"，WHERE 说的是"要哪个"。配法没变，只有筛选变了。
+    </p>
+
+    <div class="selfcheck">
+      <b>合上书，你要能回答：</b>
+      <ol>
+        <li>不用笔记，口述 JOIN 的执行过程（一行行带 id 去换名字）。</li>
+        <li>三表 JOIN 不加 <code>WHERE</code> 会出几行？<b>实测：3 行</b>（所有群的成员都算上）。补上 <code>WHERE groups.id = 1</code> → <b>2 行</b>。差的就是这一句。</li>
+        <li>上面那句「3 行 → 2 行」，少的<b>那一行</b>是谁？为什么它不该在？</li>
+      </ol>
+    </div>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#c2">← 第 2 章</button>
+      <button type="button" data-go="#c4">第 4 章 →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 第 4 章 ══════════════ -->
+  <section class="chap" id="c4" data-nav="第4章 · ON 和 WHERE">
+    <div class="chap-head">
+      <div class="chap-no">第 4 章</div>
+      <h2>ON 和 WHERE：配对 ≠ 筛选</h2>
+      <p class="chap-lede">本课第三个新概念。也是最容易"看起来懂了"的一个。</p>
+    </div>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:18%">关键字</th><th style="width:26%">管什么</th><th>一句话</th></tr></thead>
+        <tbody>
+          <tr><td><code>ON</code></td><td><b>怎么配</b>（横着拼）</td><td>决定两张表的行怎么对上 —— 配不上的行直接消失（INNER JOIN）</td></tr>
+          <tr><td><code>WHERE</code></td><td><b>要哪些</b>（竖着筛）</td><td>配对<b>完成之后</b>，把不要的行筛掉</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>顺序为什么是这样</h3>
+    <pre>FROM  →  JOIN … ON  →  WHERE  →  GROUP BY  →  HAVING  →  SELECT  →  ORDER BY  →  LIMIT</pre>
+    <p>
+      真实执行顺序里，<code>WHERE</code> 排在 <code>ON</code> <b>后面</b>、<code>GROUP BY</code> <b>前面</b>。
+      所以：<code>WHERE</code> 里<b>看不见</b>聚合函数（第 7 章会撞上这个报错）；
+      而 <code>ON</code> 里写的条件，是在"配"的当下生效的。
+    </p>
+
+    <p class="redpen">
+      ⚠️ 一个真实差别：<code>LEFT JOIN</code> 时，把条件写在 <code>ON</code> 里和写在 <code>WHERE</code> 里
+      <b>结果完全不同</b> —— 写在 <code>WHERE</code> 里会把"右表配不上、整行是 NULL"的那些行<b>筛掉</b>，
+      于是 <code>LEFT JOIN</code> 白写了，退化成 INNER JOIN。这是统计时最常踩的坑。
+    </p>
+
+    <div class="selfcheck">
+      <b>合上书，你要能回答：</b>
+      <ol>
+        <li><code>ON</code> 和 <code>WHERE</code> 各管什么？一句话。</li>
+        <li>哪一句执行得更早？</li>
+        <li><code>LEFT JOIN</code> 里把条件塞进 <code>WHERE</code>，会发生什么？</li>
+      </ol>
+    </div>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#c3">← 第 3 章</button>
+      <button type="button" data-go="#c5">第 5 章 →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 第 5 章 ══════════════ -->
+  <section class="chap" id="c5" data-nav="第5章 · JOIN 什么时候在骗你">
+    <div class="chap-head">
+      <div class="chap-no">第 5 章</div>
+      <h2>JOIN 什么时候在骗你</h2>
+      <p class="chap-lede">这一章是本课<b>最实用</b>的一章 —— 因为它讲的是"不报错的错"。</p>
+    </div>
+
+    <p><code>ON</code> 写错的后果<b>不是一种，是两种</b>，而且都不报错：</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:30%">情况</th><th style="width:30%">实测结果</th><th>危险度</th></tr></thead>
+        <tbody>
+          <tr><td>id 空间<b>不重叠</b><br>（人 7/9、群 1/2）</td><td>错配 → <b>0 行</b></td><td>低：空的，一眼看得出来</td></tr>
+          <tr><td>id 空间<b>重叠</b><br>（两套都从 1 开始编号）</td><td>错配 → <b>照样出数据，看着还挺合理</b></td><td>🔴 <b>高：静默错误</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>你自己的库里就有这个雷（实测）</h3>
+    <p>
+      <code>prescriptions.db</code> 里 <code>prescriptions.id</code> 与 <code>ingredients.id</code> <b>都从 1 开始</b>。
+      把配对准写成 <code>p.id = pi.ingredient_id</code> 之后，查询<b>返回了 20 行</b>（麻黄汤配麻黄……），
+      看着像对、其实全错，而且<b>不报错</b>。
+    </p>
+
+    <h3>今天新测的一个更狠的例子</h3>
+    <p>用「学生 / 课程 / 选课」三张表，把 <code>ON</code> 的两头接反：</p>
+    <div class="row2">
+      <div>
+        <h3 style="margin-top:0">✅ 正确写法</h3>
+        <div class="out">student | course   | grade
+--------+----------+------
+韩立    | 数据库   | 88.5
+韩立    | 高数     | 76.0
+小明    | 数据库   | 92.0
+小明    | 机器学习 | 81.0
+小红    | 英语     | 59.0
+小刚    | 体育     | NULL
+（6 行）</div>
+      </div>
+      <div>
+        <h3 style="margin-top:0">❌ 两头接反</h3>
+        <div class="out">student | course
+--------+---------
+韩立    | 数据库
+小明    | 数据库
+韩立    | 高数
+小红    | 高数
+小美    | 机器学习
+小刚    | 体育
+（6 行）</div>
+      </div>
+    </div>
+
+    <p class="redpen">
+      <b>两张表都是 6 行。</b>用 SQL 自己对了一遍：正确结果里有 <b>2 行</b>在错误结果里找不到，
+      错误结果里凭空多了 <b>2 行</b>。<br>
+      而且破绽其实很扎眼：<b>小美根本没选过课</b>，却出现在了选课表里。
+      ⇒ <b>只数行数永远发现不了，必须看内容。</b>
+    </p>
+
+    <h3>诊断三步（本课最该带走的东西）</h3>
+    <ol>
+      <li><b>单独</b>数绳子表：<code>SELECT * FROM prescription_ingredients;</code> —— 实测 <b>49</b> 行</li>
+      <li>再数 JOIN 的结果行数 —— 也是 <b>49</b> 行</li>
+      <li>🔴 两个数一致 <b>≠</b> 配对正确 —— 还要<b>挑一行人工核对内容</b></li>
+      <li>数字明显对不上（空 / 多很多）→ 几乎一定是 <code>ON</code> 写错</li>
+    </ol>
+
+    <p class="note">
+      👉 所以 <b>JOIN 查出来是空的时候：先怀疑 <code>ON</code>，别怀疑"数据没了"。</b>
+      而 JOIN 查出来<b>不为空</b>的时候：也别急着高兴，核对一行内容再说。
+    </p>
+
+    <div class="selfcheck">
+      <b>合上书，你要能回答：</b>
+      <ol>
+        <li><code>ON</code> 接反的两种后果各是什么？哪种更危险？</li>
+        <li>「两数一致」为什么不等于「配对正确」？</li>
+        <li>诊断三步的第三步是什么？（这一问是重点）</li>
+      </ol>
+    </div>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#c4">← 第 4 章</button>
+      <button type="button" data-go="#c6">第 6 章 →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 第 6 章 ══════════════ -->
+  <section class="chap" id="c6" data-nav="第6章 · 换皮三跳">
+    <div class="chap-head">
+      <div class="chap-no">第 6 章</div>
+      <h2>搬回你自己的库：换皮三跳</h2>
+      <p class="chap-lede">下面用的就是你 7 月自己建的 <code>prescriptions.db</code> —— 结构一模一样，只是绳子换了名字。</p>
+    </div>
+
+    <p>这就是<b>迁移</b>，不是"新东西"：</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th>微信群例</th><th>你的方剂库</th></tr></thead>
+        <tbody>
+          <tr><td><code>persons</code>（人）</td><td><code>ingredients</code>（药材）</td></tr>
+          <tr><td><code>groups</code>（群）</td><td><code>prescriptions</code>（方剂）</td></tr>
+          <tr><td><code>group_members</code>（谁在哪个群）</td><td><code>prescription_ingredients</code>（哪方有哪药）</td></tr>
+          <tr><td><code>joined</code>（加入时间）</td><td><code>dosage</code>（用量）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>换皮 1（L1 复刻 · 照抄改名）</h3>
+    <pre>SELECT p.name, i.name, pi.dosage
+FROM prescriptions p
+JOIN prescription_ingredients pi ON p.id = pi.prescription_id
+JOIN ingredients i ON pi.ingredient_id = i.id;</pre>
+    <p class="note">跑之前<b>先猜</b>：会出多少行？—— 实测 <b>49 行</b>，因为关联表里正好 49 条绳子。</p>
+
+    <h3>换皮 2（L2 变式 · 反着查）</h3>
+    <p>「<b>甘草</b>出现在哪些方剂里？」—— 起点要换成哪张表？</p>
+    <pre>SELECT p.name, pi.dosage
+FROM ingredients i
+JOIN prescription_ingredients pi ON i.id = pi.ingredient_id
+JOIN prescriptions p ON pi.prescription_id = p.id
+WHERE i.name = '甘草';</pre>
+    <p class="note margin">
+      注意：<b>起点换了，两句 <code>ON</code> 也跟着换</b> —— 但配对关系没变（还是那两根绳子），
+      只是"从哪头出发"变了。这就是"变式"的意思。
+    </p>
+
+    <h3>换皮 3（L2 变式 · 统计）</h3>
+    <pre>SELECT p.name, COUNT(pi.ingredient_id)
+FROM prescriptions p
+LEFT JOIN prescription_ingredients pi ON p.id = pi.prescription_id
+GROUP BY p.id;</pre>
+    <p>
+      只讲一句：<code>LEFT JOIN</code> = "左边的表<b>一首都不能丢</b>，配不上的填 NULL"。
+      点破：如果把 <code>LEFT</code> 去掉，<b>药材数 0 的方剂会整行消失</b> —— 这是统计时最常见的坑。
+    </p>
+
+    <p class="note">
+      📌 <b>一个悬而未决的小问题</b>（下次课你自己数）：你的 <code>sql-notes.md</code> 第八节写的是
+      「8 首方剂、<b>37</b> 味药材、<b>48</b> 条关联」，但我实测是 <b>33</b> 味 / <b>49</b> 条。
+      <b>我没有改你的笔记</b> —— 你自己 <code>SELECT COUNT(*)</code> 数一遍再定。
+      （顺带这也是练习：<b>别轻信任何数字，包括笔记里的</b>。）
+    </p>
+
+    <div class="selfcheck">
+      <b>合上书，你要能回答：</b>
+      <ol>
+        <li>换皮 1 为什么是 49 行？这个数字由哪张表决定？</li>
+        <li>换皮 2 里，起点换成 <code>ingredients</code> 之后，两句 <code>ON</code> 为什么必须跟着换？</li>
+        <li><code>LEFT JOIN</code> 去掉 <code>LEFT</code> 之后，哪种方剂会消失？</li>
+      </ol>
+    </div>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#c5">← 第 5 章</button>
+      <button type="button" data-go="#c7">第 7 章 →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 第 7 章 ══════════════ -->
+  <section class="chap" id="c7" data-nav="第7章 · 预习：还没上的两块">
+    <div class="chap-head">
+      <div class="chap-no">第 7 章</div>
+      <h2>预习：还没上的两块</h2>
+      <p class="chap-lede">⚠️ 这两块<b>还没上</b>。这一章只要求你"知道要解决什么问题"，不要求会写。</p>
+    </div>
+
+    <p class="note">
+      <b>为什么先给你看：</b>上课时你会有"原来是这样"的位置。但<b>别在这里深挖</b> ——
+      提前把细节嚼一遍，上课就不新鲜了（生成效应会打折）。
+    </p>
+
+    <h3>① 分组统计：<code>GROUP BY</code> + 聚合函数</h3>
+    <p>要回答的问题是：「<b>每个群各有几个成员？</b>」—— 一行一行出结果不行，得"分堆"。</p>
+    <pre>SELECT cid, COUNT(*) AS n
+FROM enrollments
+GROUP BY cid
+ORDER BY n DESC;</pre>
+    <p>要点三句：</p>
+    <ul>
+      <li><code>COUNT(*)</code> 数行；<code>COUNT(列)</code> 只数<b>这一列不是 NULL</b> 的行 —— 两者不一样就说明有 NULL。</li>
+      <li><code>SELECT</code> 里只能出现<b>分组列 + 聚合函数</b>。写了别的列 SQLite 不报错，会随便挑一行给你（别的数据库直接报错）。</li>
+      <li>要筛"哪几堆"，用 <code>HAVING</code>；写成 <code>WHERE COUNT(*) &gt; 1</code> 会报 <code>misuse of aggregate</code> —— 因为 <code>WHERE</code> 执行时<b>还没分组</b>。</li>
+    </ul>
+
+    <h3>② 那个会骗人的 NULL：<code>= NULL</code> 永远查不出东西</h3>
+    <pre>SELECT sid, cid FROM enrollments WHERE grade = NULL;      -- 实测：0 行（而且不报错）
+SELECT sid, cid FROM enrollments WHERE grade IS NULL;     -- 实测：1 行 ✅</pre>
+    <p>
+      NULL 的意思是"不知道"，所以"等不等于不知道"的答案是"我也不知道"。
+      同理 <code>WHERE grade &lt;&gt; 80</code> <b>也不会</b>把 NULL 的行选出来。
+    </p>
+
+    <div class="selfcheck">
+      <b>上课前，你只要能做到：</b>
+      <ol>
+        <li>说出「分组统计要解决的问题是什么」（不是怎么写）。</li>
+        <li>看到 <code>misuse of aggregate function</code> 这个报错，知道该往哪个方向查。</li>
+        <li>记住 <code>= NULL</code> 是错的，正确的是 <code>IS NULL</code>。</li>
+      </ol>
+    </div>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#c6">← 第 6 章</button>
+      <button type="button" data-go="#c8">第 8 章 →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 第 8 章 ══════════════ -->
+  <section class="chap" id="c8" data-nav="第8章 · 本周作业 D8">
+    <div class="chap-head">
+      <div class="chap-no">第 8 章</div>
+      <h2>本周作业 D8：选修课三张表 + 一条 JOIN</h2>
+      <p class="chap-lede">本章给的不是答案，是<b>验收标准</b>和<b>自查清单</b>。答案得你自己写。</p>
+    </div>
+
+    <h3>任务原文</h3>
+    <p>
+      仿照第 2 章的三步推导法，自己设计一个<b>选修课报名</b>的关系图（学生 / 课程 / 选课），
+      三张 <code>CREATE TABLE</code> + 插 3 行数据 + <b>一条 JOIN 查询</b>跑通。
+    </p>
+
+    <h3>动手前的三步推导（自己填，别抄）</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:34%">问自己</th><th>选修课报名</th></tr></thead>
+        <tbody>
+          <tr><td>① 有几种「东西」？</td><td>？</td></tr>
+          <tr><td>② 每个事实跟着谁走？</td><td>？</td></tr>
+          <tr><td>③ 跟<b>两个</b>东西走的事实是什么？</td><td>？ ← 这就是绳子表</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>验收标准（三级）</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:12%">级别</th><th>通过标准</th></tr></thead>
+        <tbody>
+          <tr><td><b>L1</b></td><td>能不看笔记口述三步推导法，并说出 JOIN 的执行过程（一行行带 id 去换名字）</td></tr>
+          <tr><td><b>L2</b></td><td>30 分钟内独立建出选修课三张表 + 写出 JOIN 查询<b>并跑通</b></td></tr>
+          <tr><td><b>L3</b></td><td>能讲给别人听：「为什么多对多必须要第三张表」+「不存 id 直接存名字会怎样」</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="redpen">
+      ⚠️ 你说"我懂了"的时候，就是危险信号 —— 立刻去做下面的第 2 题（看懂 ≠ 学会）。
+    </p>
+
+    <h3>交作业前的自查清单</h3>
+    <ul>
+      <li>三张表里，<b>哪一张是绳子表</b>？它的主键是什么？（想想"同一个人不能重复选同一门课"怎么防）</li>
+      <li>一条 JOIN 跑出来<b>几行</b>？这个行数由哪张表决定？</li>
+      <li>把 <code>ON</code> 的两头<b>故意接反</b>再跑一次 —— 是 0 行，还是"看着合理的假数据"？</li>
+      <li>最后挑<b>一行</b>人工核对内容：它真的对得上吗？</li>
+    </ul>
+
+    <div class="selfcheck">
+      <b>交作业前，确认你能回答：</b>
+      <ol>
+        <li>你的三张表分别装什么事实？绳子表是哪张？</li>
+        <li>接反之后为什么没报错？（一句话）</li>
+        <li>你是怎么发现"数字对、内容错"的？</li>
+      </ol>
+    </div>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#c7">← 第 7 章</button>
+      <button type="button" data-go="#appA">附录 A →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 附录 A ══════════════ -->
+  <section class="chap" id="appA" data-nav="附录A · 复习卡">
+    <div class="chap-head">
+      <div class="chap-no">附录 A</div>
+      <h2>复习卡：本周该过的</h2>
+      <p class="chap-lede">同一个问题会在 <b>1 / 3 / 7 / 30 天</b>后再问你一次 —— 日期是算出来的，不用你记。</p>
+    </div>
+
+    <p>
+      去 <a href="../交互演示/复习台.html"><b>复习台</b></a> 打开就知道<b>今天该过哪几张</b>（逾期会红字跳出来）。
+      本周这几张与本课直接相关：
+    </p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:12%">卡</th><th style="width:44%">问</th><th>答（先自己答，再对）</th></tr></thead>
+        <tbody>
+          <tr><td>概念</td><td>什么是"绳子表"？为什么多对多必须用它？</td><td>一行 = 一条关系，不是一个人；名字会变会重复，所以只存 id</td></tr>
+          <tr><td>预测</td><td>三表 JOIN 不加 <code>WHERE</code> 会出几行？</td><td>3 行（所有群的成员）；补上 <code>WHERE groups.id = 1</code> → 2 行</td></tr>
+          <tr><td>找错</td><td><code>ON groups.id = group_members.uid</code> 错在哪？</td><td>群 id 对人 id，两头接反 → ① 不重叠时 0 行、不报错 ② <b>重叠时返回"看着合理"的假数据</b>，同样不报错</td></tr>
+          <tr><td>方法</td><td>JOIN 结果为空，你先怀疑什么？不为空呢？</td><td>为空 → 怀疑 <code>ON</code>；<b>不为空 → 也要核对一行内容</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      📄 打印版：<code>..\交互演示\复习台.pdf</code>（A4 四页，答案全部展开，可以盖住右边自测）。
+    </p>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#c8">← 第 8 章</button>
+      <button type="button" data-go="#appB">附录 B →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 附录 B ══════════════ -->
+  <section class="chap" id="appB" data-nav="附录B · 本周清单">
+    <div class="chap-head">
+      <div class="chap-no">附录 B</div>
+      <h2>本周清单（做完划掉）</h2>
+      <p class="chap-lede">这是"这一周该交付什么"的唯一清单。改了它，就等于改了这周。</p>
+    </div>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:8%">✓</th><th style="width:34%">事项</th><th style="width:14%">预计</th><th>完成标准</th></tr></thead>
+        <tbody>
+          <tr><td>☐</td><td>🔵 把流程可视化<b>发给导师</b></td><td>0.25 h</td><td>发之前先自己把三步讲一遍；并主动交代"这一步我现在用的是简化做法，还没换成您方案里的那种"</td></tr>
+          <tr><td>☐</td><td>① Linux 任务 1–5</td><td>2–3 h</td><td>5 个任务都在服务器上跑过 + 告诉我卡在第几个</td></tr>
+          <tr><td>☐</td><td>② 项目立项（仓库 + README 三段）</td><td>1–2 h</td><td>仓库链接发我</td></tr>
+          <tr><td>☐</td><td>③ D8 作业：选修课三张表 + 一条 JOIN</td><td>2 h</td><td>第 8 章的自查清单全过</td></tr>
+          <tr><td>☐</td><td>每天地板：LeetCode 1 题 + 1 commit</td><td>1.5–2 h/天</td><td>不许归零，也不补欠账</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      🪫 <b>这周真的只挤出 2 小时的最低版</b>：只做 <b>🔵 发 Demo</b>（15 分钟）+ <b>① Linux 任务 1–5</b>。
+      其余全部顺延，不用愧疚 —— 但也别骗自己"下周一起补"：挪过去就是挪过去。
+      <b>无论哪一档，发 Demo 都不许省</b> —— 它只要 15 分钟，而对面有个真人在等。
+    </p>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#appA">← 附录 A</button>
+      <button type="button" data-go="#appC">附录 C →</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ 附录 C ══════════════ -->
+  <section class="chap" id="appC" data-nav="附录C · 每天怎么切">
+    <div class="chap-head">
+      <div class="chap-no">附录 C</div>
+      <h2>每天 1.5 小时怎么切</h2>
+      <p class="chap-lede">按<b>下限</b>排（1.5 h/天），把 2 h/天当奖励 —— 别按 2 h 排，然后每周都欠账。</p>
+    </div>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:20%">时段</th><th style="width:24%">做什么</th><th>为什么是这个顺序</th></tr></thead>
+        <tbody>
+          <tr><td>前 20 分钟</td><td>LeetCode 1 题</td><td>脑子最清的时候做最费脑的事；做完就有"今天已经开工"的感觉</td></tr>
+          <tr><td>中 60 分钟</td><td>本周三件事里<b>当天的那个</b></td><td>一次只推一件。Linux / 立项 / D8 不要同一天换着做</td></tr>
+          <tr><td>后 10 分钟</td><td>commit + 在 <code>时间线账本.md</code> 记一行</td><td>不记就等于没发生 —— 下周写不出"这周干了什么"</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      英语线<b>单独算</b>（45 分钟/天，5.25 h/周），不挤进上面这 1.5 小时。
+      学校专业课<b>不可压缩</b>，导师要求优先。
+    </p>
+
+    <h3>推荐读法（本周书怎么用）</h3>
+    <ul>
+      <li><b>周一</b>：通读第 1 章（5 分钟）+ 全书目录扫一眼，知道这周要交付什么。</li>
+      <li><b>上课前</b>：读第 2、3 章，把思维导图上的节点标成"还没开始"。</li>
+      <li><b>上完课</b>：读第 4、5 章 —— 这时候你刚被"0 行 / 假数据"打过一次，最读得进去。</li>
+      <li><b>做作业前</b>：只读第 8 章的自查清单，别看答案（本章没有答案）。</li>
+      <li><b>周日</b>：翻附录 A，去复习台过一遍这周的卡。</li>
+    </ul>
+
+    <div class="chapnav no-print">
+      <button type="button" data-go="#appB">← 附录 B</button>
+      <button type="button" data-go="#cover">回到封面 ↑</button>
+    </div>
+  </section>
+
+  <div class="foot">
+    《W39 · 数据怎么连起来》· 2026.09.24 建 ｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">
+      依据：<code>每周目标.md</code>（W39）· <code>第3课-数据模型与JOIN.md</code> · <code>sql-notes.md</code> ·
+      <code>第3课-实跑输出-20260923.txt</code>
+      ｜ 同系列：<a href="../交互演示/函数卡.html">函数卡</a> ·
+      <a href="../交互演示/复习台.html">复习台</a> ·
+      <a href="../交互演示/全局思维导图.html">全局思维导图</a>
+    </span>
+  </div>
+</div>
+
+<script src="../交互演示/_全局进度.js"></script>
+<script>
+/* 本课思维导图的数据（同 _卡片模板.html，两处保持一致） */
+window.MM_DATA = {
+  lesson: {
+    label: 'JOIN · 数据模型', note: '第 3 课', state: 'root',
+    children: [
+      { label: '为什么要第三张表', state: 'doing', children: [
+        { label: '人 / 群 = 2 张表', note: '一个格子装一个事实', state: 'done' },
+        { label: '「谁在哪个群」跟两个人走', note: '放人表放不下，放群表也放不下', state: 'done' },
+        { label: '⇒ 绳子表', note: '一行 = 一条关系，不是一个人', state: 'current' }
+      ]},
+      { label: 'ON 和 WHERE 不是一回事', state: 'doing', children: [
+        { label: 'ON = 怎么配', note: '配对规则', state: 'done' },
+        { label: 'WHERE = 要哪些', note: '筛选 · 少了它 → 3 行而不是 2 行', state: 'current' }
+      ]},
+      { label: '执行过程', state: 'doing', children: [
+        { label: '拿 id 一行行去另一张表问名字', state: 'done' },
+        { label: '行数 = 配对成功的次数', note: '不是表里的行数', state: 'current' }
+      ]},
+      { label: '两个坑（都不报错）', state: 'doing', children: [
+        { label: '配不上 → 0 行', note: '空的，一眼看得出来', state: 'done' },
+        { label: 'id 重叠 → 假数据', note: '看着完全合理，最危险', state: 'current' }
+      ]}
+    ]
+  }
+};
+</script>
+<script src="../交互演示/_学习工具.js"></script>
+<script>
+/* ══ 书的导航：目录 / 上一章 / 下一章 / 进度 / 上次读到哪 ══════════
+   不造假分页 —— 页码交给浏览器的打印功能，这里只管"章"。 */
+(function () {
+  'use strict';
+  var KEY = 'lab.book.W39';
+  var blocks = Array.prototype.slice.call(document.querySelectorAll('.chap, #cover'));
+  var bar = document.querySelector('.bookbar');
+  var nowEl = document.getElementById('nowChap');
+  var progEl = document.getElementById('prog');
+  var pctEl = document.getElementById('pct');
+  var btnPrev = document.getElementById('btnPrev');
+  var btnNext = document.getElementById('btnNext');
+  var resume = document.getElementById('resume');
+
+  function titleOf(el) { return el.getAttribute('data-nav') || el.id; }
+  function idxAtTop() {                       // 当前章 = 最后一个已经滚过顶部的块
+    var k = 0;
+    for (var i = 0; i < blocks.length; i++) {
+      if (blocks[i].getBoundingClientRect().top <= 100) k = i;
+    }
+    return k;
+  }
+  function sync() {
+    var k = idxAtTop();
+    nowEl.textContent = titleOf(blocks[k]);
+    btnPrev.disabled = k === 0;
+    btnNext.disabled = k === blocks.length - 1;
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - window.innerHeight;
+    var r = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 1;
+    progEl.style.transform = 'scaleX(' + r + ')';
+    pctEl.textContent = Math.round(r * 100) + '%';
+    try { localStorage.setItem(KEY, String(k)); } catch (e) {}
+  }
+  function go(el) {
+    if (!el) return;
+    var top = el.getBoundingClientRect().top + window.scrollY - 56;
+    window.scrollTo({ top: top, behavior: 'smooth' });
+  }
+  function goIdx(k) { if (blocks[k]) go(blocks[k]); }
+
+  btnPrev.onclick = function () { goIdx(Math.max(0, idxAtTop() - 1)); };
+  btnNext.onclick = function () { goIdx(Math.min(blocks.length - 1, idxAtTop() + 1)); };
+  document.getElementById('btnToc').onclick = function () { go(document.getElementById('tocpage')); };
+  Array.prototype.forEach.call(document.querySelectorAll('[data-go]'), function (b) {
+    b.onclick = function () { go(document.querySelector(b.getAttribute('data-go'))); };
+  });
+  window.addEventListener('keydown', function (e) {
+    if (/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+    if (e.key === 'ArrowRight') { btnNext.click(); }
+    else if (e.key === 'ArrowLeft') { btnPrev.click(); }
+  });
+  var ticking = false;
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { sync(); ticking = false; });
+  }, { passive: true });
+  window.addEventListener('resize', sync);
+
+  /* 「上次读到哪」：只提示，不擅自跳 —— 自己决定要不要回去 */
+  try {
+    var last = parseInt(localStorage.getItem(KEY) || '', 10);
+    if (!isNaN(last) && last > 1 && blocks[last]) {
+      document.getElementById('resumeTxt').innerHTML =
+        '上次读到：<b>' + titleOf(blocks[last]) + '</b>';
+      resume.hidden = false;
+      document.getElementById('resumeGo').onclick = function () { resume.hidden = true; go(blocks[last]); };
+      document.getElementById('resumeNo').onclick = function () { resume.hidden = true; };
+    }
+  } catch (e) {}
+
+  sync();
+})();
+</script>
+</body>
+</html>

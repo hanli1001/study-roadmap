@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>函数卡 · 遇到再查，别背</title>
+<link rel="stylesheet" href="_主题.css">
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <header class="rec-head">
+    <h1>函数卡 · 遇到再查，别背</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="建">2026.09.24</span>
+      <span class="f" data-k="卡数" id="fldCount">— 张</span>
+      <span class="f" data-k="怎么用">搜名字 → 看场景 → 复制代码</span>
+    </div>
+    <p class="sub">
+      这套卡<b>不是拿来背的</b> —— 是写代码卡住时用来查的。
+      每张卡上的代码和输出，都由 <code>tools/build_fn_cards.py</code> <b>真的跑过一遍</b>再写进来，
+      所以卡里不会出现"看着合理、其实报错"的示例。
+    </p>
+
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span>
+      <b>② 编程主线</b><span class="sep">›</span>
+      <b>函数卡</b>
+      <a href="全局思维导图.html">全局思维导图 ↗</a>
+      <a href="../每周书/W39-数据怎么连起来.html">本周书 ↗</a>
+    </div>
+  </header>
+
+  <!-- ══ 使用说明（三条，看完就够）════════════════════════ -->
+  <section class="sec" id="how">
+    <h2 data-n="用法">这套卡怎么用（30 秒）</h2>
+    <table>
+      <thead><tr><th style="width:22%">你看到的</th><th>意思</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag now">本周</span></td>
+            <td><b>现在就得会</b> —— 第 3 课 + D8 作业里直接要用的。其余的先不用看。</td></tr>
+        <tr><td><span class="tag soon">本月</span></td>
+            <td>这个月大概率撞到（排序、聚合、文件、JSON）。<b>撞到再回来查</b>。</td></tr>
+        <tr><td><span class="tag">以后</span></td>
+            <td>先知道"有这么个东西"，别现在学。看到名字能想起来就行。</td></tr>
+        <tr><td><b>实测输出</b>（绿块）</td>
+            <td>脚本跑出来的<b>真实结果</b>，不是手写的。红块 = <b>故意让它报错</b>的现场，因为报错信息本身就是要认的东西。</td></tr>
+      </tbody>
+    </table>
+
+    <p class="note">
+      ⚠️ <b>抄之前先改表名。</b>卡里的示例跑在一份<b>样板数据</b>上（选修课三张表 <code>students / courses / enrollments</code>
+      ＋ 第 3 课的微信群三张表 <code>persons / groups / group_members</code>）——
+      换成你自己的库，表名和列名都要跟着改。这正是第 3 课教的<b>「换皮」</b>。
+    </p>
+    <p class="note">
+      内置函数<b>不做成背诵卡</b>（那条线已经关掉）——只留 8 张最常撞到的当查询用。
+      要补哪些，说一声就加。
+    </p>
+  </section>
+
+  <!-- ══ 查卡台 ══════════════════════════════════════════ -->
+  <section class="sec no-print" id="deck">
+    <h2 data-n="查询">查卡台</h2>
+
+    <div class="fnbar">
+      <input class="q" id="q" type="search" placeholder="搜函数名 / 一句话 / 场景…（按 / 直接跳进来）"
+             autocomplete="off" aria-label="搜索函数卡">
+      <span class="fnlbl">类别</span><div class="chips" id="catChips"></div>
+      <span class="fnlbl">阶段</span><div class="chips" id="stageChips"></div>
+      <label class="fnswitch"><input type="checkbox" id="hideOut"> 盖住输出自测</label>
+      <span class="fncount" id="count">—</span>
+    </div>
+
+    <div class="fn-grid" id="grid"></div>
+    <p class="note" id="empty" hidden>没有匹配的卡 —— 换个词，或者点一下上面的「全部」。</p>
+  </section>
+
+  <!-- ══ 打印用：全部卡（屏幕上不显示）══════════════════
+       为什么单独渲染一份：屏幕上是「筛过的」，打印件不能跟着筛选走 ——
+       否则打出来只有你搜的那几张（复习台那次就是这么踩的坑）。 -->
+  <div class="print-only" id="printAll"></div>
+
+  <div class="foot">
+    函数卡 v1 · 2026.09.24 ｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">
+      数据 <code>_函数卡数据.js</code>（由 <code>tools/build_fn_cards.py</code> 实测生成，别手改）
+      ｜ 主题 <code>_主题.css</code> ｜ 重跑：<code>python tools/build_fn_cards.py</code>
+    </span>
+  </div>
+</div>
+
+<script src="_函数卡数据.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ── 极简 markdown → HTML ──────────────────────────────
+     顺序不能反：先转义、再识别标记。反了就会把内容里的 < 当成标签。 */
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function md(s) {
+    return esc(s)
+      .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+  }
+
+  var CARDS = (window.LAB_FN_CARDS || []).slice();
+  var CATS = ['SQL', 'sqlite3', '标准库', '内置', '第三方'];
+  var STAGES = ['本周', '本月', '以后'];
+  var state = { q: '', cat: '全部', stage: '全部', hideOut: false };
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  /* ── 状态记忆：只记"盖住输出"这一个开关（自测习惯）── */
+  try {
+    var saved = JSON.parse(localStorage.getItem('lab.fncard.v1') || '{}');
+    if (saved.hideOut) state.hideOut = true;
+  } catch (e) { /* 隐私模式下 localStorage 会抛错，忽略即可 */ }
+  function persist() {
+    try { localStorage.setItem('lab.fncard.v1', JSON.stringify({ hideOut: state.hideOut })); } catch (e) {}
+  }
+
+  /* ── 一张卡 ─────────────────────────────────────────── */
+  function cardEl(c) {
+    var el = document.createElement('article');
+    el.className = 'fncard' + (c.err ? ' is-err' : '');
+
+    var head = document.createElement('div');
+    head.className = 'fnhead';
+    var nm = document.createElement('code');
+    nm.className = 'fnname';
+    nm.textContent = c.name;
+    head.appendChild(nm);
+    var tStage = document.createElement('span');
+    tStage.className = 'tag ' + (c.stage === '本周' ? 'now' : c.stage === '本月' ? 'soon' : '');
+    tStage.textContent = c.stage;
+    head.appendChild(tStage);
+    var tCat = document.createElement('span');
+    tCat.className = 'tag';
+    tCat.textContent = c.cat;
+    head.appendChild(tCat);
+    el.appendChild(head);
+
+    var brief = document.createElement('p');
+    brief.className = 'fnbrief';
+    brief.innerHTML = md(c.brief);
+    el.appendChild(brief);
+
+    var pre = document.createElement('pre');
+    pre.textContent = c.code;              // 代码块永远用 textContent（不能当 HTML 解析）
+    el.appendChild(pre);
+
+    var out = document.createElement('div');
+    out.className = 'fnout';
+    var lf = document.createElement('span');
+    lf.className = 'lf';
+    lf.textContent = c.err ? '实测：真的会这样报错' : '实测输出';
+    out.appendChild(lf);
+    var op = document.createElement('pre');
+    op.textContent = c.out;
+    out.appendChild(op);
+    el.appendChild(out);
+
+    if (c.where) {
+      var w = document.createElement('p');
+      w.className = 'fnwhere';
+      w.innerHTML = '📍 ' + md(c.where);
+      el.appendChild(w);
+    }
+    if (c.gotcha) {
+      var g = document.createElement('p');
+      g.className = 'fngotcha';
+      g.innerHTML = '⚠️ ' + md(c.gotcha);
+      el.appendChild(g);
+    }
+    if (c.extra) {
+      var x = document.createElement('p');
+      x.className = 'fngotcha';
+      x.innerHTML = md(c.extra);
+      el.appendChild(x);
+    }
+
+    var cp = document.createElement('button');
+    cp.className = 'fncopy';
+    cp.type = 'button';
+    cp.textContent = '复制';
+    cp.title = '复制这段代码';
+    cp.onclick = function () { copy(c.code, cp); };
+    el.appendChild(cp);
+
+    return el;
+  }
+
+  function copy(text, btn) {
+    var done = function () { btn.textContent = '已复制'; setTimeout(function () { btn.textContent = '复制'; }, 1400); };
+    var fail = function () { btn.textContent = '请手动选中'; setTimeout(function () { btn.textContent = '复制'; }, 1800); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { legacy(); });
+    } else { legacy(); }
+    function legacy() {                    // file:// 或旧浏览器：退回 execCommand
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      ok ? done() : fail();
+    }
+  }
+
+  /* ── 筛选 ───────────────────────────────────────────── */
+  function match(c) {
+    if (state.cat !== '全部' && c.cat !== state.cat) return false;
+    if (state.stage !== '全部' && c.stage !== state.stage) return false;
+    if (!state.q) return true;
+    var hay = [c.name, c.brief, c.where, c.gotcha, c.extra, c.code, c.cat, c.stage]
+      .join(' ').toLowerCase();
+    /* 空格分词，全部命中才算（"join 反" 这种搜法才用得上） */
+    return state.q.toLowerCase().split(/\s+/).every(function (t) { return hay.indexOf(t) >= 0; });
+  }
+
+  function render() {
+    var grid = $('#grid');
+    grid.innerHTML = '';
+    grid.className = 'fn-grid' + (state.hideOut ? ' hideout' : '');
+    var hit = CARDS.filter(match);
+    hit.forEach(function (c) { grid.appendChild(cardEl(c)); });
+    $('#empty').hidden = hit.length > 0;
+    $('#count').textContent = '显示 ' + hit.length + ' / 共 ' + CARDS.length + ' 张';
+  }
+
+  /* ── 打印版：全部卡，按类别分节（不受上面筛选影响）── */
+  function renderPrint() {
+    var host = $('#printAll');
+    CATS.forEach(function (cat) {
+      var list = CARDS.filter(function (c) { return c.cat === cat; });
+      if (!list.length) return;
+      var h = document.createElement('h2');
+      h.className = 'fnh2';
+      h.innerHTML = esc(cat) + ' <small>' + list.length + ' 张</small>';
+      host.appendChild(h);
+      var g = document.createElement('div');
+      g.className = 'fn-grid';
+      /* 本周的排最前 —— 打印出来第一眼看到的就是现在要会的 */
+      list.slice().sort(function (a, b) {
+        return STAGES.indexOf(a.stage) - STAGES.indexOf(b.stage);
+      }).forEach(function (c) { g.appendChild(cardEl(c)); });
+      host.appendChild(g);
+    });
+  }
+
+  /* ── 筛选按钮 ───────────────────────────────────────── */
+  function chipBar(host, values, key) {
+    ['全部'].concat(values).forEach(function (v) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (state[key] === v ? ' on' : '');
+      var n = v === '全部' ? CARDS.length : CARDS.filter(function (c) { return c[key] === v; }).length;
+      b.textContent = v + ' ' + n;
+      b.onclick = function () {
+        state[key] = v;
+        $$('.chip', host).forEach(function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+        render();
+      };
+      host.appendChild(b);
+    });
+  }
+
+  function boot() {
+    var n = CARDS.length;
+    var ok = CARDS.filter(function (c) { return c.ok || c.err; }).length;
+    $('#fldCount').textContent = n + ' 张（' + ok + ' 张已实测）';
+
+    chipBar($('#catChips'), CATS.filter(function (c) {
+      return CARDS.some(function (x) { return x.cat === c; });
+    }), 'cat');
+    chipBar($('#stageChips'), STAGES, 'stage');
+
+    var q = $('#q'), timer = null;
+    q.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { state.q = q.value.trim(); render(); }, 90);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+      else if (e.key === 'Escape' && document.activeElement === q) { q.value = ''; state.q = ''; render(); q.blur(); }
+    });
+
+    var ho = $('#hideOut');
+    ho.checked = state.hideOut;
+    ho.addEventListener('change', function () {
+      state.hideOut = ho.checked; persist(); render();
+    });
+
+    render();
+    renderPrint();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>
