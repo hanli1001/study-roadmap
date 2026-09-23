@@ -221,6 +221,12 @@ button.ghost:hover{ background:var(--pen-soft) }
 .guess > .q{ font-size:15px; font-weight:600; margin:0 0 9px }
 .guess.resolved{ border-style:solid; border-color:var(--ok); background:rgba(44,106,78,.055) }
 .guess.wrong{ border-style:solid; border-color:var(--red); background:var(--red-soft) }
+/* 答案区：点"看答案"才出现 —— 先自己回想，才叫检索练习 */
+.answer{
+  margin:10px 0; padding:10px 13px; font-size:14px; line-height:1.72;
+  background:rgba(255,255,255,.45); border:1px solid var(--rule); border-radius:4px;
+}
+.answer code{ background:var(--paper-2) }
 .try{ display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin-top:9px }
 
 /* 揭晓：句子像墨水渗进纸里（本世界自己的动效材质） */
@@ -423,6 +429,11 @@ html{ caret-color:var(--pen); scrollbar-color:var(--rule-2) transparent }
   .ink-in{ animation:none }
 }
 
+/* ══ 打印专用块：屏幕上不显示，Ctrl+P 时才出现 ═══════════
+   为什么需要它：主列表的内容**跟着"今天"变** —— 今天不是复习日就是空的。
+   但打印件不能跟着日期走（否则打出来是一张废纸），所以单独渲染一份"全部问答"。 */
+.print-only{ display:none }
+
 /* ══ 打印（走 tools/html2pdf.py）═══════════════════════ */
 @media print{
   @page{ size:A4; margin:14mm }
@@ -431,6 +442,12 @@ html{ caret-color:var(--pen); scrollbar-color:var(--rule-2) transparent }
   .sheet::before,.punch{display:none}
   .sec,.guess,.player,table,.mm{ break-inside:avoid }
   button,.player-bar{ display:none }
+  /* 打印时把答案**全部展开** —— 印出来是一张完整问答表，
+     自己用手盖住右边自测；否则打出来只有问题，等于废纸。 */
+  .answer[hidden]{ display:block !important }
+  .try{ display:none }
+  .print-only{ display:block }
+  .no-print{ display:none !important }
   a{ color:var(--ink); text-decoration:none }
   .sec > h2::before{ position:static; display:inline; width:auto; padding:0 6px 0 0 }
 }

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>复习台 · 1-3-7-30</title>
+<link rel="stylesheet" href="_主题.css">
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <header class="rec-head">
+    <h1>复习台 · 今天要过哪几张</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="今天" id="fToday">—</span>
+      <span class="f" data-k="起算日">2026.09.23</span>
+      <span class="f" data-k="节奏">1 · 3 · 7 · 30 天</span>
+    </div>
+    <p class="sub">
+      <b>打开就一个动作：过完今天这几张，然后关掉。</b> 日期是算出来的，不会过期变成废纸；
+      逾期没过的会红字跳出来 —— 上一版就是烂在这两点上（放了 9 天没人管，第 2 课的 404 三步排查法 17 天后彻底忘光）。
+    </p>
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span><b>② 编程主线</b><span class="sep">›</span>
+      <b>复习（跨全部课）</b>
+      <a href="全局思维导图.html" target="_blank">打开全局思维导图 ↗</a>
+    </div>
+  </header>
+
+  <!-- ══ 今天的进度 ══════════════════════════════════════ -->
+  <section class="sec no-print" id="today">
+    <h2 data-n="今天">今天的份</h2>
+    <div class="kv">
+      <span>本轮：<b id="tRound">—</b></span>
+      <span>共 <b id="tTotal">0</b> 张</span>
+      <span>已过 <b id="tDone" class="red">0</b> 张</span>
+      <span id="tNextWrap">下一次：<b id="tNext">—</b></span>
+    </div>
+    <div id="tList"></div>
+    <div class="try" style="margin-top:14px">
+      <button id="resetToday">把今天的勾全部清掉（重新过一遍）</button>
+      <span class="sub" style="margin:0">勾选会自动记住（localStorage），刷新不丢。</span>
+    </div>
+  </section>
+
+  <!-- ══ 逾期账 ═════════════════════════════════════════ -->
+  <section class="sec no-print" id="overdue" hidden>
+    <h2 data-n="逾期">⚠️ 逾期没过的</h2>
+    <p class="redpen" id="overdueMsg"></p>
+    <div id="overdueList"></div>
+  </section>
+
+  <!-- ══ 完整日历 ═══════════════════════════════════════ -->
+  <section class="sec" id="calendar">
+    <h2 data-n="日历">完整的 1-3-7-30 日历</h2>
+    <p>
+      同一张卡会被问 <b>4 次</b> —— 间隔越来越长，这是在跟遗忘曲线对着干。
+      每格显示"过了几张 / 共几张"。
+    </p>
+    <div class="tw">
+    <table id="calTable">
+      <thead><tr id="calHead"><th style="width:26%">哪一组的卡</th></tr></thead>
+      <tbody id="calBody"></tbody>
+    </table>
+    </div>
+    <p class="note" id="calNote"></p>
+
+    <h3>不会的怎么办</h3>
+    <p>
+      点「<b>没过，再来</b>」 —— 那张卡会<b>重新回到待过状态</b>，下次打开还会出现。
+      <b>不许因为"已经过过一次"就把它当过了。</b> 1-3-7-30 的意思不是"读过 4 遍"，
+      是"<b>4 次都能自己说出来</b>"。
+    </p>
+  </section>
+
+  <!-- ══ 诊断三步 ═══════════════════════════════════════ -->
+  <section class="sec" id="diag">
+    <h2 data-n="抽查">顺手带走：JOIN 的诊断三步</h2>
+    <ol id="diagList"></ol>
+    <p class="sub">这是第 3 课最实用的迁移技能 —— 下次 JOIN 查出来不对，从这三步走。</p>
+  </section>
+
+  <!-- ══ 打印专用：全部问答（屏幕上不显示，Ctrl+P 才出现）══
+       存在的理由：上面的"今天的份"跟着系统日期变，今天不是复习日就是空的 ——
+       打印件不能跟着日期走，否则打出来是废纸。 -->
+  <section class="sec print-only" id="allCards">
+    <h2 data-n="全部">全部问答（打印用）</h2>
+    <p>
+      共 <b id="allCount">0</b> 张。<b>用手盖住答案那一栏自测</b> —— 能自己说出来才算过。
+    </p>
+    <div id="allCardsBody"></div>
+  </section>
+
+  <div class="foot">
+    复习台 · 2026.09.23 建（T-24 / P-015 的修复件）｜ 数据源 <code>_全局进度.js</code> 的 <code>LabProgress.review</code>
+    <span class="sig">按 <b>Ctrl+P</b> 可直接打成 A4 贴墙上（打印时按钮会自动隐藏）｜ 主题 <code>_主题.css</code></span>
+  </div>
+</div>
+
+<script src="_全局进度.js"></script>
+<script src="_学习工具.js"></script>
+<script>
+(function () {
+  var R = LabProgress.review, ROUNDS = R.rounds, DATES = R.dates();
+  var ALL = [];
+  R.groups.forEach(function (g) {
+    g.cards.forEach(function (c) { ALL.push({ id: c.id, q: c.q, a: c.a, course: g.course }); });
+  });
+  var TOTAL_PER_ROUND = ALL.length;
+
+  var $ = Lab.$, el = Lab.el;
+  var KEY = 'lab.review.v1';
+
+  /* ── 日期工具 ───────────────────────────────────────── */
+  function iso(d) {
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+  var TODAY = iso(new Date());
+  function cnDate(s) {
+    var d = new Date(s + 'T00:00:00');
+    return (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日（周' + '日一二三四五六'.charAt(d.getDay()) + '）';
+  }
+  function daysBetween(a, b) {
+    return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5);
+  }
+
+  /* ── 极简行内标记：**粗** 与 `代码` ─────────────────── */
+  function md(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\n/g, '<br>');
+  }
+
+  /* ── 状态 ───────────────────────────────────────────── */
+  var state = Lab.store.get(KEY, {});
+  function keyOf(id, n) { return id + '@' + n; }
+  function mark(id, n, v) { state[keyOf(id, n)] = v; Lab.store.set(KEY, state); }
+  function isOk(id, n) { return state[keyOf(id, n)] === 'ok'; }
+
+  /* 本轮 = 已经到日期的**最后一个**复习档 */
+  var dueIdx = -1;
+  DATES.forEach(function (d, i) { if (d.iso <= TODAY) dueIdx = i; });
+  var nextIdx = -1;
+  DATES.forEach(function (d, i) { if (d.iso > TODAY && nextIdx < 0) nextIdx = i; });
+
+  /* ── 渲染今天 ───────────────────────────────────────── */
+  function renderToday() {
+    $('#fToday').textContent = cnDate(TODAY);
+    var host = $('#tList'); host.textContent = '';
+    var totalEl = $('#tTotal'), doneEl = $('#tDone'), roundEl = $('#tRound');
+
+    if (dueIdx < 0) {
+      roundEl.textContent = '还没开始';
+      totalEl.textContent = '0'; doneEl.textContent = '0';
+      var box = el('div', 'guess resolved');
+      box.appendChild(el('p', 'q', '今天不用复习 —— 第 1 次复习日是 ' + cnDate(DATES[0].iso) +
+        '（还有 ' + daysBetween(TODAY, DATES[0].iso) + ' 天）。'));
+      box.appendChild(el('p', null, '在那之前，正常学新东西就行。这张表会自己走，不用你记。'));
+      host.appendChild(box);
+      $('#tNextWrap').hidden = false;
+      $('#tNext').textContent = cnDate(DATES[0].iso);
+      $('#resetToday').hidden = true;
+      return;
+    }
+
+    var round = DATES[dueIdx];
+    roundEl.textContent = round.n + ' 天档（' + round.md + ' 周' + round.w + '）';
+    $('#tNextWrap').hidden = nextIdx < 0;
+    if (nextIdx >= 0) $('#tNext').textContent = DATES[nextIdx].n + ' 天档 · ' + cnDate(DATES[nextIdx].iso);
+
+    var pending = ALL.filter(function (c) { return !isOk(c.id, round.n); });
+    totalEl.textContent = TOTAL_PER_ROUND;
+    doneEl.textContent = (TOTAL_PER_ROUND - pending.length);
+
+    if (!pending.length) {
+      var done = el('div', 'guess resolved');
+      done.appendChild(el('p', 'q', '这一档全过了 —— ' + TOTAL_PER_ROUND + ' / ' + TOTAL_PER_ROUND + '。'));
+      done.appendChild(el('p', null, nextIdx >= 0
+        ? '下一次是 ' + DATES[nextIdx].n + ' 天档（' + cnDate(DATES[nextIdx].iso) + '）。可以关掉了。'
+        : '这是最后一档（30 天）。整套复习走完了。'));
+      host.appendChild(done);
+      return;
+    }
+
+    var lastCourse = null, k = 0;
+    pending.forEach(function (c) {
+      if (c.course !== lastCourse) {
+        lastCourse = c.course;
+        k = 0;                                  /* 编号按「组内第几张」走，标记过的卡不会让编号乱跳 */
+        host.appendChild(el('h3', null, c.course));
+      }
+      host.appendChild(card(c, round.n, k++));
+    });
+  }
+
+  function card(c, n, i) {
+    var box = el('div', 'guess');
+    var failed = state[keyOf(c.id, n)] === 'again';
+    if (failed) box.classList.add('wrong');
+    var q = el('p', 'q');
+    q.innerHTML = '<span style="color:var(--ink-3);font-weight:400">' + (i + 1) + '.</span> ' + md(c.q);
+    box.appendChild(q);
+
+    var ans = el('div', 'answer');
+    ans.hidden = true;
+    ans.innerHTML = md(c.a);
+    box.appendChild(ans);
+
+    var row = el('div', 'try');
+    var bShow = el('button', 'primary', '看答案');
+    var bOk = el('button', null, '会了');
+    var bNo = el('button', null, '没过，再来');
+    bShow.onclick = function () {
+      ans.hidden = !ans.hidden;
+      bShow.textContent = ans.hidden ? '看答案' : '收起答案';
+    };
+    bOk.onclick = function () { mark(c.id, n, 'ok'); Lab.ink(box); renderToday(); renderCalendar(); renderOverdue(); };
+    bNo.onclick = function () { mark(c.id, n, 'again'); renderToday(); renderCalendar(); renderOverdue(); };
+    if (failed) {
+      var tag = el('span', null, '上次标了「没过」');
+      tag.style.cssText = 'color:var(--red);font-size:12.5px;font-weight:600';
+      row.appendChild(tag);
+    }
+    [bShow, bOk, bNo].forEach(function (b) { row.appendChild(b); });
+    box.appendChild(row);
+    return box;
+  }
+
+  /* ── 渲染日历 ───────────────────────────────────────── */
+  function renderCalendar() {
+    var head = $('#calHead');
+    head.textContent = '';
+    head.appendChild(el('th', null, '哪一组的卡'));
+    DATES.forEach(function (d) {
+      var th = el('th', 'num', d.n + ' 天 · ' + d.md + ' 周' + d.w);
+      if (d.iso === TODAY) { th.style.background = 'var(--marker)'; th.style.color = 'var(--ink)'; }
+      else if (d.iso < TODAY) { th.style.color = 'var(--ink-3)'; }
+      head.appendChild(th);
+    });
+
+    var body = $('#calBody');
+    body.textContent = '';
+    R.groups.forEach(function (g) {
+      var tr = el('tr');
+      var td0 = el('td');
+      td0.innerHTML = '<b>' + g.course + '</b><br><span style="font-size:12px;color:var(--ink-3)">原学 ' +
+                      g.origin.replace(/-/g, '.') + ' · ' + g.cards.length + ' 张</span>';
+      tr.appendChild(td0);
+      DATES.forEach(function (d) {
+        var done = g.cards.filter(function (c) { return isOk(c.id, d.n); }).length;
+        var td = el('td', 'num');
+        var span = el('span', null, done + ' / ' + g.cards.length);
+        if (done === g.cards.length) span.style.color = 'var(--ok)';
+        else if (d.iso < TODAY) span.style.color = 'var(--red)';
+        else if (d.iso === TODAY) span.style.fontWeight = '700';
+        td.appendChild(span);
+        td.style.background = d.iso === TODAY ? 'rgba(240,215,122,.28)' : '';
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+    $('#calNote').innerHTML = '<b>起算日 ' + R.start.replace(/-/g, '.') + '</b>。' +
+      '第 1、2 课的卡<b>原本学于 2026.09.06</b>，它们的 1/3/7 三档<b>全部逾期且从未做过</b> —— ' +
+      '09.23 第 3 课当场重测，证实已经忘光。⇒ <b>重学即重新起算</b>（今晚重新过了这几张），旧账不勾销、但也不再挂着吓人。';
+  }
+
+  /* ── 渲染逾期 ───────────────────────────────────────── */
+  function renderOverdue() {
+    var rows = [];
+    DATES.forEach(function (d) {
+      if (d.iso >= TODAY) return;                       /* 今天和以后的不算逾期 */
+      ALL.forEach(function (c) {
+        if (!isOk(c.id, d.n)) rows.push({ c: c, d: d, late: daysBetween(d.iso, TODAY) });
+      });
+    });
+    var sec = $('#overdue');
+    if (!rows.length) { sec.hidden = true; return; }
+    sec.hidden = false;
+    rows.sort(function (a, b) { return b.late - a.late; });
+    $('#overdueMsg').innerHTML = '有 <b>' + rows.length + '</b> 格过了日子还没打勾。' +
+      '<b>最老的一格逾期 ' + rows[0].late + ' 天。</b> 别慌 —— 点下表里的卡直接补过，补完就少一格。';
+    var host = $('#overdueList'); host.textContent = '';
+    var byGroup = {};
+    rows.forEach(function (r) { (byGroup[r.c.course] = byGroup[r.c.course] || []).push(r); });
+    Object.keys(byGroup).forEach(function (k) {
+      var tr = el('div', 'redpen');
+      tr.innerHTML = '<b>' + k + '</b> —— ' +
+        byGroup[k].map(function (r) { return r.d.n + ' 天档（逾期 ' + r.late + ' 天）'; }).join('、') +
+        ' 共 ' + byGroup[k].length + ' 格没过。';
+      host.appendChild(tr);
+    });
+  }
+
+  /* ── 诊断三步 ───────────────────────────────────────── */
+  function renderDiag() {
+    var ol = $('#diagList');
+    R.diagnosis.forEach(function (t) { var li = el('li'); li.innerHTML = md(t); ol.appendChild(li); });
+  }
+
+  /* ── 打印专用的全量问答（答案一律展开）─────────────── */
+  function renderAll() {
+    var host = $('#allCardsBody');
+    R.groups.forEach(function (g) {
+      host.appendChild(el('h3', null, g.course + '（原学 ' + g.origin.replace(/-/g, '.') + '）'));
+      g.cards.forEach(function (c, i) {
+        var box = el('div', 'guess');
+        box.innerHTML = '<p class="q">' + (i + 1) + '. ' + md(c.q) + '</p>' +
+                        '<div class="answer">' + md(c.a) + '</div>';
+        host.appendChild(box);
+      });
+    });
+    $('#allCount').textContent = ALL.length;
+  }
+
+  function boot() {
+    renderToday(); renderCalendar(); renderOverdue(); renderDiag(); renderAll();
+    $('#resetToday').onclick = function () {
+      if (dueIdx < 0) return;
+      var round = DATES[dueIdx];
+      ALL.forEach(function (c) { delete state[keyOf(c.id, round.n)]; });
+      Lab.store.set(KEY, state);
+      renderToday(); renderCalendar(); renderOverdue();
+    };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>
