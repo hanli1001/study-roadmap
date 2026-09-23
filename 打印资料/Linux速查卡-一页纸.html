@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Linux 速查卡 · 一页纸</title>
+<style>
+  @page { size: A4; margin: 8mm 8mm 7mm 8mm; }
+  * { box-sizing: border-box; }
+  body { font: 10.3px/1.33 "Microsoft YaHei","Segoe UI",sans-serif; color: #111; margin: 0; }
+  h1 { font-size: 15.5px; margin: 0 0 1px; }
+  .sub { font-size: 9.4px; color: #555; margin-bottom: 4px; }
+  h2 { font-size: 11.2px; margin: 5px 0 2px; padding: 1.5px 5px; background: #ececec;
+       border-left: 4px solid #444; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
+  th, td { border: 1px solid #aaa; padding: 1.6px 3.5px; vertical-align: top; text-align: left; }
+  th { background: #f2f2f2; font-size: 9.6px; }
+  td { font-size: 9.9px; }
+  code { font-family: Consolas,"Cascadia Mono",monospace; font-size: 9.7px;
+         background: #f4f4f4; padding: 0 2px; border-radius: 2px; }
+  .danger { border-left: 3px solid #b00; background: #fdf3f3; padding: 4px 6px; font-size: 9.9px; margin: 3px 0; }
+  .good { border-left: 3px solid #0a7; background: #f2fbf7; padding: 4px 6px; font-size: 9.9px; margin: 3px 0; }
+  .cols { display: flex; gap: 8px; }
+  .col { flex: 1; }
+  .foot { font-size: 8.7px; color: #666; text-align: center; margin-top: 6px; }
+  .no { color: #b00; font-weight: 700; }
+  .yes { color: #0a7; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>Linux 速查卡 · 一页纸</h1>
+<div class="sub">韩立 · 2026.09.21 · 贴电脑旁 · 配套 <code>Linux/任务清单-在你自己服务器上练.md</code> · 服务器 123.58.220.17</div>
+
+<div class="danger">
+<b>🔴 先记这个，比记命令重要 —— 敲错一条就可能回不来</b>（Linux 没有回收站）
+<table style="margin-top:3px">
+  <tr><th style="width:44%">危险写法</th><th>为什么危险 / 怎么办</th></tr>
+  <tr><td><code>rm -rf *</code> / <code>rm -rf $VAR/</code></td><td>删光当前目录；<b>变量为空时等于 <code>rm -rf /</code></b> → 用 <code>${VAR:?}</code> 让空值报错</td></tr>
+  <tr><td><code>&gt; 已存在的文件</code></td><td><b>直接清空原文件，无确认</b> → 先 <code>cp 文件 文件.bak</code></td></tr>
+  <tr><td><code>kill -9 &lt;PID&gt;</code></td><td>强杀，进程没机会存盘 → 先 <code>kill &lt;PID&gt;</code>，等 5 秒</td></tr>
+  <tr><td><code>chmod -R 777 .</code></td><td>整个目录谁都能改 → 只 <code>chmod +x 某个脚本</code></td></tr>
+  <tr><td><code>docker rm -f $(docker ps -q)</code></td><td>删掉<b>所有</b>容器 → 先 <code>docker ps</code> 看清名字</td></tr>
+</table>
+<b>铁律：不确定的命令，先 <code>命令 --help</code> 看一遍。</b>
+这跟你写代码前的「静态三查」是同一个习惯 —— 只不过这里查的是"这条命令会改什么"。
+</div>
+
+<div class="cols">
+<div class="col">
+
+<h2>① 我要"找到"东西</h2>
+<table>
+  <tr><th style="width:52%">目的</th><th>命令</th></tr>
+  <tr><td>我在哪</td><td><code>pwd</code></td></tr>
+  <tr><td>这目录有啥（<b>含隐藏文件</b>）</td><td><code>ls -la</code></td></tr>
+  <tr><td>按文件名找</td><td><code>find / -name "api.py" 2&gt;/dev/null</code></td></tr>
+  <tr><td>按<b>内容</b>找</td><td><code>grep -rn "8009" --include="*.py" .</code></td></tr>
+  <tr><td>按名字找（快，走索引）</td><td><code>locate api.py</code></td></tr>
+  <tr><td>刚改过的文件</td><td><code>ls -lt | head -6</code></td></tr>
+</table>
+<div class="good"><b>find 按名字找，grep 按内容找 —— 两个不同的问法，别混。</b></div>
+
+<h2>② 我要"看"内容</h2>
+<table>
+  <tr><th style="width:52%">目的</th><th>命令</th></tr>
+  <tr><td>小文件全文</td><td><code>cat 文件</code></td></tr>
+  <tr><td>大文件翻页（<code>q</code> 退出）</td><td><code>less 文件</code></td></tr>
+  <tr><td>末尾 20 行</td><td><code>tail -20 文件</code></td></tr>
+  <tr><td><b>实时跟踪新日志</b>（最常用）</td><td><code>tail -f app.log</code></td></tr>
+  <tr><td>有多少行</td><td><code>wc -l 文件</code></td></tr>
+  <tr><td>只看含 ERROR 的行</td><td><code>grep ERROR app.log</code></td></tr>
+  <tr><td>含 ERROR 的<b>行数</b></td><td><code>grep -c ERROR app.log</code></td></tr>
+  <tr><td><b>不要</b>含 xxx 的行</td><td><code>... | grep -v grep</code></td></tr>
+</table>
+<div class="good"><b>排查问题 90% 的时候你要的是 <code>tail -f</code>，不是 <code>cat</code>。</b>
+<code>cat</code> 几百 MB 的日志会把终端卡死。</div>
+
+<h2>③ 把命令接起来（最值钱的符号）</h2>
+<table>
+  <tr><th style="width:30%">符号</th><th>意思</th></tr>
+  <tr><td><code>A | B</code></td><td><b>管道</b>：A 的输出 → 变成 B 的输入</td></tr>
+  <tr><td><code>A &gt; f</code></td><td>写入文件（<span class="no">会覆盖！</span>）</td></tr>
+  <tr><td><code>A &gt;&gt; f</code></td><td>追加到文件末尾（安全）</td></tr>
+  <tr><td><code>A 2&gt;&amp;1</code></td><td>把<b>错误</b>输出也一起收进来（cron 里必写）</td></tr>
+  <tr><td><code>$(命令)</code></td><td>命令替换：把输出当值用，如 <code>N=$(ls | wc -l)</code></td></tr>
+</table>
+<div class="good"><b>实战例</b>：<code>grep ERROR app.log | wc -l</code> → 只输出一个数字<br>
+<b>小命令拼起来能干大事</b> —— 这就是 Linux 的设计哲学。</div>
+
+</div>
+<div class="col">
+
+<h2>④ 我要"看状态"</h2>
+<table>
+  <tr><th style="width:52%">目的</th><th>命令</th></tr>
+  <tr><td><b>8009 端口被谁占了</b></td><td><code>ss -tlnp | grep 8009</code></td></tr>
+  <tr><td>老系统上的等价写法</td><td><code>netstat -tlnp | grep 8009</code></td></tr>
+  <tr><td>按端口找进程</td><td><code>lsof -i :8009</code></td></tr>
+  <tr><td>这进程跑了多久</td><td><code>ps -p &lt;PID&gt; -o pid,etime,cmd</code></td></tr>
+  <tr><td>按名字找进程</td><td><code>pgrep -af python</code></td></tr>
+  <tr><td>所有 python 进程数</td><td><code>pgrep -af python | wc -l</code></td></tr>
+  <tr><td>磁盘还剩多少</td><td><code>df -h</code></td></tr>
+  <tr><td><b>哪个目录最占地方</b></td><td><code>du -sh */ | sort -rh | head -3</code></td></tr>
+  <tr><td>内存/负载</td><td><code>free -h</code> · <code>uptime</code> · <code>top</code></td></tr>
+</table>
+<div class="good"><b>PID = 进程编号</b>，是 Linux 里"指认"一个进程的唯一方式。<br>
+一个端口同一时刻只能被一个进程监听 → "端口被占用"的本质是<b>"那个进程还没死"</b>。</div>
+
+<h2>⑤ 我要"重启 / 管服务"</h2>
+<table>
+  <tr><th style="width:42%">情况</th><th>命令</th></tr>
+  <tr><td>systemd 管的</td><td><code>systemctl restart &lt;服务名&gt;</code></td></tr>
+  <tr><td>看它的日志</td><td><code>journalctl -u &lt;服务名&gt; -f</code></td></tr>
+  <tr><td>docker 跑的</td><td><code>docker restart &lt;容器名&gt;</code></td></tr>
+  <tr><td>容器日志</td><td><code>docker logs --tail 50 &lt;容器名&gt;</code></td></tr>
+  <tr><td>先查清是谁在管</td><td><code>systemctl status &lt;名&gt;</code> / <code>docker ps</code></td></tr>
+</table>
+<div class="danger" style="margin-top:3px"><b>用错方式重启 = 起了个野进程，然后端口冲突。</b><br>
+重启后必须<b>验证</b>：<code>ss -tlnp | grep 8009</code> 看 PID 变没变 +
+<code>curl -s -o /dev/null -w "%{http_code}" localhost:8009/docs</code> 是不是 200。<br>
+<b>"命令没报错" ≠ "服务起来了"</b> —— 跟写代码要跑测试一个道理。</div>
+
+<h2>⑥ 权限：读懂 <code>-rwxr-xr-x</code></h2>
+<table>
+  <tr><th style="width:30%">写法</th><th>意思</th></tr>
+  <tr><td><code>r</code> <code>w</code> <code>x</code></td><td>读=4 · 写=2 · 执行=1</td></tr>
+  <tr><td><code>755</code></td><td><code>rwxr-xr-x</code> 脚本/目录</td></tr>
+  <tr><td><code>644</code></td><td><code>rw-r--r--</code> 配置文件，<b>谁都不能执行</b></td></tr>
+  <tr><td>查数字形式</td><td><code>stat -c "%a %n" 文件</code></td></tr>
+  <tr><td>给脚本加执行权</td><td><code>chmod +x 脚本.sh</code> → 然后 <code>./脚本.sh</code></td></tr>
+</table>
+<div class="good"><b>为什么必须写 <code>./</code></b>：当前目录默认不在 <code>PATH</code> 里 ——
+这是<b>安全设计</b>，防止你 cd 到别人目录敲个 <code>ls</code> 却跑了他放的恶意脚本。</div>
+
+<h2>⑦ 卡住时的第一反应</h2>
+<div class="good">
+<b>先 <code>命令 --help</code>，或 <code>man 命令</code>（<code>q</code> 退出）—— 而不是来问人。</b><br>
+要记的是<b>"有哪类工具"</b>，不是拼写：
+找东西 <code>find/grep</code> ｜ 看内容 <code>cat/less/tail</code> ｜
+看状态 <code>ps/ss/df/du</code> ｜ 改权限 <code>chmod/chown</code><br>
+这跟你写 Python 从来不背 <code>len()</code> 一样 —— <b>你知道"有个东西能数字符"就够了。</b>
+</div>
+
+</div>
+</div>
+
+<div class="foot">
+  来源：<code>职业探索/我的差距表-20260921.md</code>（3 条岗位明确要求 Linux）· 任务练习：<code>Linux/任务清单-在你自己服务器上练.md</code><br>
+  ⚠️ <code>ss</code> / <code>systemctl</code> / <code>journalctl</code> 是 Linux 专有，<b>Windows 的 Git Bash 里没有</b>，要在服务器上跑
+</div>
+
+</body>
+</html>

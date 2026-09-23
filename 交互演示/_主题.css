@@ -1,0 +1,436 @@
+/* ══════════════════════════════════════════════════════════════════
+   交互演示 · 主题 v2  「米黄方格纸 · 实验记录本」
+   2026-09-23 建 ｜ 用法：<link rel="stylesheet" href="_主题.css">
+
+   世界 = 米黄方格纸（用户 2026-09-23 指定）+ 实验记录本（结构）
+   一条纪律：**这不是卡片墙，是一页实验记录。**
+   所以页面用「页眉 + 编号条目 + 左边栏旁注 + 数据表 + 结论栏」组织，
+   不用一堆等大卡片。凡是"浮起来的盒子"，都是没想清楚的表现。
+   ══════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* ── 纸 ───────────────────────────────────────────── */
+  --paper:      #F4EFE2;   /* 米黄底（护眼：暖、低蓝光、不用纯白） */
+  --paper-2:    #EDE6D5;   /* 表头 / 输出条：比正文纸略深 */
+  --paper-3:    #E5DCC7;   /* 再深一档：按下 / 选中 */
+  --grid-fine:  rgba(43,42,38,.055);
+  --grid-bold:  rgba(43,42,38,.085);
+
+  /* ── 墨 ─────────────────────────────────────────────
+     三级墨色是"层级"，但每一级都得先过 WCAG AA（正文 4.5:1）——
+     实测过：#8E8878 只有 3.08:1，是**不合格**的，已换掉。 */
+  --ink:        #2B2A26;   /* 正文    纸 12.51:1 */
+  --ink-2:      #5A5546;   /* 次要    纸  6.48:1 · 深纸 5.98:1 */
+  --ink-3:      #676357;   /* 旁注/页脚 纸 5.23:1 · 深纸 4.82:1 */
+  --rule:       rgba(43,42,38,.16);
+  --rule-2:     rgba(43,42,38,.30);
+
+  /* ── 笔 ───────────────────────────────────────────── */
+  --pen:        #1F4E79;   /* 蓝黑墨水：结构、链接、当前项 */
+  --pen-soft:   rgba(31,78,121,.10);
+  --red:        #AE3B2C;   /* 红笔：错误、订正、死线 */
+  --red-soft:   rgba(174,59,44,.10);
+  --ok:         #2C6A4E;   /* 墨绿：通过 */
+  --marker:     rgba(240,215,122,.55); /* 荧光笔 */
+
+  /* ── 动作 ─────────────────────────────────────────── */
+  --ease: cubic-bezier(.16,1,.3,1);
+  --t-fast: 130ms;
+  --t-mid:  220ms;
+  --t-slow: 420ms;
+
+  --sheet: 940px;
+  --margin-col: 66px;      /* 左边栏（编号 / 旁注 / 红笔） */
+}
+
+*,*::before,*::after{box-sizing:border-box}
+
+/* ══ 纸：方格 ══════════════════════════════════════════
+   两级网格，22px 细 / 110px 粗 —— 方格纸的真实比例。
+   故意压得很淡：护眼要求"不抢、不闪"。 */
+html{background:var(--paper)}
+body{
+  margin:0; color:var(--ink);
+  font:15.5px/1.75 "Segoe UI","Microsoft YaHei","PingFang SC","Noto Sans SC",system-ui,sans-serif;
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid-bold) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-bold) 1px, transparent 1px),
+    linear-gradient(var(--grid-fine) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-fine) 1px, transparent 1px);
+  background-size:110px 110px,110px 110px,22px 22px,22px 22px;
+  background-attachment:fixed;
+  -webkit-text-size-adjust:100%;
+}
+/* 纸纹：极淡的颗粒，让底不像屏幕色块。固定层，只栅格化一次 */
+body::after{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+  mix-blend-mode:multiply;
+}
+@media print{ body::after{display:none} body{background-attachment:scroll} }
+
+/* ══ 页 ═══════════════════════════════════════════════
+   一页实验记录：左侧装订边（含打孔）+ 右边栏。 */
+.sheet{
+  position:relative; z-index:1;
+  max-width:var(--sheet); margin:0 auto;
+  padding:26px 26px 80px calc(var(--margin-col) + 22px);
+}
+.sheet::before{  /* 装订线 */
+  content:""; position:absolute; top:0; bottom:0; left:calc(var(--margin-col) + 4px);
+  width:1px; background:var(--rule);
+}
+.punch{  /* 打孔：装订边上的三个孔 */
+  position:absolute; left:14px; width:15px; height:15px; border-radius:50%;
+  background:var(--paper-2); box-shadow:inset 0 1px 2px rgba(43,42,38,.22);
+}
+
+/* ══ 记录头 ═══════════════════════════════════════════ */
+.rec-head{ border-bottom:2px solid var(--rule-2); padding-bottom:12px; margin-bottom:6px }
+h1{ font-size:28px; line-height:1.26; margin:0 0 10px; font-weight:650; letter-spacing:-.015em }
+.rec-fields{
+  display:flex; flex-wrap:wrap; gap:6px 26px;
+  font-size:12.5px; color:var(--ink-2); padding-top:9px; border-top:1px solid var(--rule);
+}
+.rec-fields b{ color:var(--ink); font-weight:600 }
+.rec-fields .f{ display:flex; gap:7px; align-items:baseline }
+.rec-fields .f::before{
+  content:attr(data-k); color:var(--ink-3); font-size:11.5px; letter-spacing:.04em;
+}
+.sub{ color:var(--ink-2); font-size:13.5px; margin:2px 0 0 }
+
+/* ══ 条目（section）═══════════════════════════════════
+   编号放在左边栏 —— 就是记录本的"条目号"，不是装饰数字。 */
+.sec{ margin:34px 0 0; position:relative }
+.sec > h2{
+  font-size:19px; font-weight:650; margin:0 0 10px; line-height:1.45;
+  letter-spacing:-.005em;
+}
+.sec > h2::before{
+  content:attr(data-n); position:absolute; left:calc(-1 * var(--margin-col) - 6px);
+  top:1px; width:var(--margin-col); text-align:right; padding-right:14px;
+  font-size:12.5px; font-weight:600; color:var(--pen); font-variant-numeric:tabular-nums;
+}
+.sec > h2::after{  /* 标题下的细规线：短一截，不拉满 */
+  content:""; display:block; width:34px; height:2px; background:var(--pen);
+  margin-top:7px; border-radius:1px;
+}
+h3{ font-size:14.5px; margin:20px 0 7px; font-weight:650; color:var(--ink) }
+p{ margin:9px 0 }
+a{ color:var(--pen); text-underline-offset:2.5px; text-decoration-thickness:1px }
+strong,b{ font-weight:650 }
+
+/* 左边栏旁注 */
+.note{
+  position:relative; margin:10px 0; padding:7px 11px 7px 13px;
+  background:var(--pen-soft); font-size:13px; color:var(--ink-2);
+}
+.note::before{  /* 一条 1px 的竖线不算 craft-floor 禁的那条（禁的是 >1px 彩色左边框） */
+  content:""; position:absolute; left:5px; top:7px; bottom:7px; width:2px; background:var(--pen); opacity:.5;
+}
+.note.margin{
+  background:none; padding:0; color:var(--ink-3); font-size:12.5px;
+  position:absolute; left:calc(-1 * var(--margin-col) - 6px); width:var(--margin-col);
+  text-align:right; padding-right:14px; margin:0;
+}
+.note.margin::before{display:none}
+
+/* 红笔：订正 / 死线 / 错误 */
+.red{ color:var(--red) }
+.redpen{
+  position:relative; padding:8px 12px; font-size:13.5px; color:var(--red);
+  border-top:1px solid var(--red); border-bottom:1px solid var(--red);
+  background:var(--red-soft);
+}
+.mark{ background:var(--marker); padding:.05em .18em; border-radius:2px }
+
+/* ══ 数据表 ═══════════════════════════════════════════ */
+.tw{ overflow-x:auto; margin:11px 0; -webkit-overflow-scrolling:touch }
+.tw > table{ margin:0 }
+table{ border-collapse:collapse; width:100%; font-size:14px; margin:11px 0 }
+caption{ caption-side:top; text-align:left; font-size:12.5px; color:var(--ink-3); padding-bottom:5px }
+th,td{ padding:6px 9px; text-align:left; vertical-align:top; border-bottom:1px solid var(--rule) }
+th{ background:var(--paper-2); font-size:12.5px; color:var(--ink-2); font-weight:600;
+    border-bottom:1.5px solid var(--rule-2); letter-spacing:.02em }
+tbody tr:hover{ background:rgba(31,78,121,.045) }
+td.num,th.num{ text-align:right; font-variant-numeric:tabular-nums }
+tfoot td{ border-top:1.5px solid var(--rule-2); border-bottom:none; font-weight:600 }
+
+/* ══ 代码 ═════════════════════════════════════════════ */
+code{
+  font-family:"Cascadia Mono",Consolas,"SF Mono",monospace; font-size:.875em;
+  background:var(--paper-2); padding:.1em .38em; border-radius:3px;
+  border:1px solid var(--rule);
+}
+pre{
+  background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+  padding:12px 14px; overflow-x:auto; margin:11px 0;
+  font-family:"Cascadia Mono",Consolas,"SF Mono",monospace;
+  font-size:12.8px; line-height:1.62; tab-size:2;
+}
+pre code{ background:none; border:none; padding:0; font-size:1em }
+.out{  /* 真实跑出来的输出：靠"另一种纸 + 等宽字"区分，不靠左边一条彩色竖线
+         （彩色 border-left 是全网卡片的通病，这里刻意不用） */
+  background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+  padding:10px 13px; margin:10px 0;
+  font-family:"Cascadia Mono",Consolas,monospace; font-size:12.6px; line-height:1.65;
+  white-space:pre-wrap; overflow-x:auto;
+}
+.out .cap{ display:block; font-family:inherit; color:var(--ink-3); font-size:11.5px; margin-bottom:5px }
+
+/* ══ 控件：记录本上的下划线填空，不是网页输入框 ═══════════ */
+.ctrls{ display:flex; flex-wrap:wrap; gap:12px 20px; margin:12px 0; align-items:flex-end }
+.ctrl{ display:flex; flex-direction:column; gap:3px }
+.ctrl > label{ font-size:11.5px; color:var(--ink-3); letter-spacing:.05em }
+input[type=number],input[type=text],select,textarea{
+  font:inherit; font-size:14px; color:var(--ink); background:transparent;
+  border:0; border-bottom:1.5px solid var(--rule-2); border-radius:0;
+  padding:3px 2px; min-width:74px; transition:border-color var(--t-fast) var(--ease);
+}
+input:focus,select:focus,textarea:focus{ outline:none; border-bottom-color:var(--pen) }
+input:hover,select:hover{border-bottom-color:var(--ink-2)}
+select{ cursor:pointer }
+textarea{
+  width:100%; min-height:76px; border:1.5px solid var(--rule-2); border-radius:4px;
+  padding:9px; font-family:"Cascadia Mono",Consolas,monospace; font-size:13px;
+  line-height:1.6; background:rgba(255,255,255,.28);
+}
+input[type=range]{ width:150px; accent-color:var(--pen) }
+input[type=checkbox]{ accent-color:var(--pen); width:15px; height:15px }
+
+button{
+  font:inherit; font-size:13.5px; font-weight:600; color:var(--ink);
+  background:var(--paper-2); border:1.5px solid var(--rule-2); border-radius:4px;
+  padding:6px 15px; cursor:pointer; transition:all var(--t-fast) var(--ease);
+}
+button:hover{ background:var(--pen-soft); border-color:var(--pen); color:var(--pen) }
+button:active{ transform:translateY(1px) }
+button:disabled{ opacity:.45; cursor:not-allowed; transform:none;
+  background:var(--paper); border-color:var(--rule); color:var(--ink-3) }
+button.primary{ background:var(--pen); border-color:var(--pen); color:#F7F4EC }
+button.primary:hover{ background:#173D5E; border-color:#173D5E; color:#fff }
+button.ghost{ background:transparent; border-color:transparent; color:var(--pen); padding:5px 8px }
+button.ghost:hover{ background:var(--pen-soft) }
+
+/* ══ 先猜 ═════════════════════════════════════════════ */
+.guess{
+  margin:14px 0; padding:14px 16px; background:rgba(255,255,255,.34);
+  border:1.5px dashed var(--rule-2); border-radius:5px;
+}
+.guess > .q{ font-size:15px; font-weight:600; margin:0 0 9px }
+.guess.resolved{ border-style:solid; border-color:var(--ok); background:rgba(44,106,78,.055) }
+.guess.wrong{ border-style:solid; border-color:var(--red); background:var(--red-soft) }
+.try{ display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin-top:9px }
+
+/* 揭晓：句子像墨水渗进纸里（本世界自己的动效材质） */
+.ink-in{ animation:ink var(--t-slow) var(--ease) both }
+@keyframes ink{
+  from{ opacity:0; filter:blur(3px); letter-spacing:.03em }
+  to  { opacity:1; filter:blur(0);   letter-spacing:normal }
+}
+
+/* ══ 进度轨道 + 停止标记（借自"剪辑台"挑战者：你停在哪，旗子就插在哪）══ */
+.rail{ margin:6px 0 20px; padding:34px 4px 4px; position:relative }
+.rail-line{ position:relative; height:2px; background:var(--rule); margin:0 8px }
+.rail-done{ position:absolute; left:0; top:0; height:2px; background:var(--pen); width:100%;
+            transform:scaleX(0); transform-origin:left center;
+            transition:transform 700ms var(--ease) }
+.rail-stops{ display:flex; justify-content:space-between; margin:0 8px; position:relative; top:-5px }
+.stop{ position:relative; flex:1; text-align:center; font-size:11px; color:var(--ink-3);
+       line-height:1.4; padding:0 2px }
+.stop::before{  /* 站点刻度 */
+  content:""; display:block; width:9px; height:9px; border-radius:50%; margin:0 auto 7px;
+  background:var(--paper); border:1.5px solid var(--rule-2); transition:all var(--t-mid) var(--ease);
+}
+.stop.done::before{ background:var(--pen); border-color:var(--pen) }
+.stop.now::before{ background:var(--red); border-color:var(--red); transform:scale(1.35) }
+.stop.now{ color:var(--red); font-weight:650 }
+.stop small{ display:block; font-size:10.5px; opacity:.8 }
+.flag{  /* 停止旗：插在"你现在这里" */
+  position:absolute; top:-15px; width:2px; height:15px; background:var(--red);
+  transform:translateX(-1px);
+}
+.flag::after{
+  content:attr(data-l); position:absolute; bottom:15px; left:0;
+  background:var(--red); color:#FFF6F3; font-size:10.5px; font-weight:600;
+  padding:2px 7px; border-radius:3px 3px 3px 0; white-space:nowrap;
+}
+
+/* 「你在这里」面包屑：每张卡都要能回答"我在全局哪一格" */
+.crumb{
+  display:flex; flex-wrap:wrap; align-items:center; gap:5px 8px;
+  font-size:12.5px; color:var(--ink-3); margin:12px 0 0;
+  padding:7px 11px; background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+}
+.crumb b{ color:var(--pen); font-weight:600 }
+.crumb .sep{ opacity:.45 }
+.crumb a{ margin-left:auto; text-decoration:none; font-size:12px; white-space:nowrap }
+.crumb a:hover{ text-decoration:underline }
+
+/* ══ 折叠块（每张卡里"我在全局哪一格"的收纳）═══════════ */
+details.where{ margin:12px 0 0; border:1px solid var(--rule); border-radius:4px;
+               background:var(--paper-2); overflow:hidden }
+details.where > summary{
+  cursor:pointer; padding:8px 13px; font-size:13px; color:var(--pen); font-weight:600;
+  list-style:none; display:flex; align-items:center; gap:8px; user-select:none;
+}
+details.where > summary::-webkit-details-marker{ display:none }
+details.where > summary::before{
+  content:""; width:7px; height:7px; border-right:1.8px solid var(--pen);
+  border-bottom:1.8px solid var(--pen); transform:rotate(-45deg); transition:transform var(--t-fast) var(--ease);
+  margin-top:-3px;
+}
+details.where[open] > summary::before{ transform:rotate(45deg); margin-top:-1px }
+details.where > summary:hover{ background:var(--pen-soft) }
+details.where > .body{ padding:4px 13px 14px; background:var(--paper); border-top:1px solid var(--rule) }
+
+/* ══ 筛选片 + 站点说明 ════════════════════════════════ */
+.chips{ display:flex; flex-wrap:wrap; gap:7px; margin:12px 0 4px }
+.chip{
+  font:inherit; font-size:12.5px; padding:4px 12px; border-radius:14px;
+  background:transparent; border:1.5px solid var(--rule-2); color:var(--ink-2); cursor:pointer;
+  transition:all var(--t-fast) var(--ease);
+}
+.chip:hover{ border-color:var(--pen); color:var(--pen) }
+.chip.on{ background:var(--pen); border-color:var(--pen); color:#F7F4EC; font-weight:600 }
+.detail{
+  font-size:13px; color:var(--ink-2); line-height:1.7; margin:10px 0 0;
+  padding:9px 13px; background:rgba(255,255,255,.34); border:1px solid var(--rule); border-radius:4px;
+  min-height:3.4em;
+}
+.detail b{ color:var(--ink) }
+
+/* ══ 思维导图 ═════════════════════════════════════════ */.mm{ margin:14px 0; overflow-x:auto }
+/* 图按容器宽度等比放大/缩小 —— 不用手调字号，也不会在宽屏上缩成一小团 */
+.mm svg{ display:block; width:100%; height:auto }
+.mm-node rect{ fill:var(--paper); stroke:var(--rule-2); stroke-width:1.3; rx:4 }
+.mm-node text{ font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+  font-size:12.5px; fill:var(--ink); dominant-baseline:middle }
+.mm-node .nt{ font-size:10.5px; fill:var(--ink-3) }
+.mm-link{ fill:none; stroke:var(--rule-2); stroke-width:1.4 }
+.mm-node.done rect{ stroke:var(--ok) }
+.mm-node.done text{ fill:var(--ink-2) }
+.mm-node.doing rect{ stroke:var(--pen); stroke-dasharray:5 3 }
+.mm-node.doing text{ fill:var(--pen); font-weight:600 }
+.mm-node.current rect{ stroke:var(--red); stroke-width:2; fill:rgba(240,215,122,.34) }
+.mm-node.current text{ fill:var(--ink); font-weight:700 }
+.mm-node.todo rect{ stroke:var(--rule); stroke-dasharray:2 3 }
+.mm-node.todo text{ fill:var(--ink-3) }
+.mm-node.root rect{ fill:var(--ink); stroke:var(--ink) }
+.mm-node.root text{ fill:var(--paper); font-weight:650 }
+.mm-key{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:11.5px; color:var(--ink-3); margin:8px 0 0 }
+.mm-key i{ display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px;
+           vertical-align:-1px; border:1.4px solid var(--rule-2) }
+.mm-key i.done{border-color:var(--ok)} .mm-key i.doing{border-color:var(--pen); border-style:dashed}
+.mm-key i.current{border-color:var(--red); background:rgba(240,215,122,.5); border-width:2px}
+.mm-key i.todo{border-color:var(--rule); border-style:dotted}
+
+/* ══ 配对流动：本页的"招牌动效"═════════════════════════
+   一个值沿手绘连线从 A 行走到 B 行 —— JOIN 的机制本身就是这个动作。 */
+.pair{ position:relative; margin:12px 0 }
+.pair svg.wire{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible }
+.pair svg.wire path{ fill:none; stroke:var(--pen); stroke-width:1.6; opacity:.5 }
+/* 走线道：连线从数据行上方拱过去时要有地方可走，
+   否则令牌会压住列名（这是量出来的，不是猜的） */
+.pair tr.lane td{ height:48px; border-bottom:1px solid var(--rule);
+                  background:rgba(255,255,255,.22) }
+.token{
+  position:absolute; font-family:"Cascadia Mono",Consolas,monospace; font-size:12px;
+  background:var(--marker); color:var(--ink); padding:1px 7px; border-radius:3px;
+  border:1px solid rgba(43,42,38,.3); white-space:nowrap; pointer-events:none;
+  transition:transform 620ms var(--ease), opacity 200ms linear;
+}
+tr.hit{ background:rgba(240,215,122,.45) !important; transition:background 200ms linear }
+tr.src{ background:var(--pen-soft) !important }
+
+/* ══ 步骤播放器 ═══════════════════════════════════════ */
+.player{ margin:14px 0; border:1px solid var(--rule); border-radius:5px; overflow:hidden;
+         background:rgba(255,255,255,.3) }
+.player-bar{ display:flex; align-items:center; gap:8px; padding:7px 10px;
+             background:var(--paper-2); border-bottom:1px solid var(--rule) }
+.player-bar .count{ margin-left:auto; font-size:12px; color:var(--ink-3);
+                    font-variant-numeric:tabular-nums }
+.player-body{ padding:14px; min-height:96px }
+.player-cap{ font-size:13.5px; color:var(--ink-2); margin-top:10px; min-height:2.6em }
+.step-on{ outline:2px solid var(--pen); outline-offset:2px; border-radius:3px;
+          background:var(--pen-soft) }
+
+/* ══ 立体小件 ═════════════════════════════════════════ */
+.row2{ display:grid; grid-template-columns:1fr 1fr; gap:18px }
+/* grid 子项默认 min-width:auto，里面的 <pre> 会把整页顶宽 —— 必须显式归零。
+   这是实测出来的：390px 下整页横向溢出 53px，来源就是这里。 */
+.row2 > *{ min-width:0 }
+pre,.out,.player,.detail,.guess,textarea{ max-width:100% }
+@media (max-width:640px){ .row2{ grid-template-columns:1fr } }
+.kv{ display:flex; flex-wrap:wrap; gap:6px 18px; font-size:13px; color:var(--ink-2); margin:8px 0 }
+.kv b{ color:var(--ink) }
+.foot{ margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
+       font-size:12px; color:var(--ink-3) }
+.foot .sig{ display:block; margin-top:5px }
+
+/* 目录（记录本前面的索引页） */
+.toc{ background:rgba(255,255,255,.3); border:1px solid var(--rule); border-radius:5px;
+      padding:12px 16px; margin:14px 0; font-size:13.5px }
+.toc a{ text-decoration:none; color:var(--ink) }
+.toc a:hover{ color:var(--pen); text-decoration:underline }
+.toc ol{ margin:5px 0 0; padding-left:20px } .toc li{ margin:3px 0 }
+.toc .dots{ border-bottom:1px dotted var(--rule-2); flex:1; margin:0 8px 4px }
+.toc .line{ display:flex; align-items:baseline }
+.toc .pg{ color:var(--ink-3); font-size:12px; font-variant-numeric:tabular-nums }
+
+/* 锚点跳转的落点要留出呼吸 */
+:target{ scroll-margin-top:20px }
+
+/* ══ 浏览器自己的那些面（最容易露馅的地方）═════════════ */
+::selection{ background:rgba(240,215,122,.75); color:var(--ink) }
+:focus-visible{ outline:2.5px solid var(--pen); outline-offset:2px; border-radius:3px }
+html{ caret-color:var(--pen); scrollbar-color:var(--rule-2) transparent }
+::-webkit-scrollbar{ width:11px; height:11px }
+::-webkit-scrollbar-track{ background:transparent }
+::-webkit-scrollbar-thumb{ background:var(--rule-2); border-radius:6px;
+                           border:3px solid var(--paper); background-clip:padding-box }
+::-webkit-scrollbar-thumb:hover{ background:var(--ink-3); background-clip:padding-box }
+
+/* 数字一律等宽，表格才对得齐 */
+.num,td.num,.rec-fields,.stop small{ font-variant-numeric:tabular-nums }
+
+/* ══ 窄屏：左栏折叠进正文 ═════════════════════════════ */
+@media (max-width:720px){
+  :root{ --margin-col:0px }
+  .sheet{ padding:18px 15px 64px 15px }
+  .sheet::before{ display:none }
+  .punch{ display:none }
+  .sec > h2::before{
+    position:static; width:auto; text-align:left; padding:0; margin-right:7px;
+    display:inline; color:var(--pen);
+  }
+  .note.margin{ position:static; width:auto; text-align:left; padding:0;
+                color:var(--ink-3); margin:6px 0 }
+  h1{ font-size:23px }
+  .sec > h2{ font-size:18px }
+  .rec-fields{ gap:4px 16px }
+  .stop small{ display:none }
+  /* 轨道在窄屏上会挤成一团 —— 改为横滑，宁可滑也不糊 */
+  .rail{ overflow-x:auto; padding-bottom:10px }
+  .rail-line,.rail-stops{ min-width:620px }
+}
+
+/* ══ 减少动效 ═════════════════════════════════════════ */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important;
+                        transition-duration:.01ms !important }
+  .ink-in{ animation:none }
+}
+
+/* ══ 打印（走 tools/html2pdf.py）═══════════════════════ */
+@media print{
+  @page{ size:A4; margin:14mm }
+  body{ background:var(--paper); font-size:11.5pt }
+  .sheet{ max-width:none; padding:0 }
+  .sheet::before,.punch{display:none}
+  .sec,.guess,.player,table,.mm{ break-inside:avoid }
+  button,.player-bar{ display:none }
+  a{ color:var(--ink); text-decoration:none }
+  .sec > h2::before{ position:static; display:inline; width:auto; padding:0 6px 0 0 }
+}

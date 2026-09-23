@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent 核心公式 · 上下文消融</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --txt:#e6e8ee; --dim:#98a0b3;
+    --ok:#4ade80; --bad:#f87171; --warn:#fbbf24; --accent:#60a5fa; --purple:#c084fc;
+  }
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:960px;background:var(--bg);color:var(--txt);
+    font:15px/1.7 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:21px;margin:0 0 4px}
+  h2{font-size:16px;margin:26px 0 8px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+  .slot{border-left:3px solid var(--warn);background:#1d1a12;padding:9px 11px;border-radius:0 8px 8px 0;
+    font-size:13.5px;color:#f0e2c0;margin:6px 0}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#1d2129;color:var(--dim);font-size:12.5px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;
+    border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:13px}
+  .ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}.acc{color:var(--accent)}.pur{color:var(--purple)}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+
+  /* 公式条 */
+  .formula{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin:10px 0}
+  .fx{flex:1;min-width:170px;background:#101a26;border:1px solid #1e3a5f;border-radius:9px;padding:10px 12px}
+  .fx b{display:block;font-size:15px;margin-bottom:3px}
+  .fx span{font-size:12.5px;color:var(--dim);line-height:1.5}
+
+  /* 开关 */
+  .sw{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);
+    border-radius:8px;margin:6px 0;cursor:pointer;user-select:none;transition:.15s}
+  .sw:hover{border-color:#3d4657}
+  .sw.off{background:#2a1518;border-color:#5c2b2b}
+  .sw .dot{width:34px;height:19px;border-radius:10px;background:#3a4252;position:relative;flex:none;transition:.15s}
+  .sw .dot::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
+    background:#8b95a8;transition:.15s}
+  .sw:not(.off) .dot{background:#1e4d33}
+  .sw:not(.off) .dot::after{left:17px;background:var(--ok)}
+  .sw .lbl{flex:1;font-size:14px}
+  .sw .state{font-size:12px;color:var(--dim);flex:none}
+
+  /* 消息列表 */
+  .msg{border:1px solid var(--line);border-radius:7px;padding:6px 9px;margin:5px 0;font-size:12.8px;
+    font-family:"Cascadia Mono",Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+  .m-sys{background:#161d2b;border-color:#26374f}
+  .m-user{background:#101a26;border-color:#1e3a5f}
+  .m-asst{background:#1c1a2b;border-color:#3b2f57}
+  .m-tool{background:#141d17;border-color:#26402d}
+  .m-gone{background:#241417;border-color:#4a2226;color:#8a6b6e;text-decoration:line-through}
+  .tag{font-size:11px;color:var(--dim);margin-right:6px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.grid2{grid-template-columns:1fr}}
+  .score{font-size:15px}
+  .score .big{font-size:30px;font-weight:700;line-height:1.1}
+  .bar{height:11px;border-radius:6px;background:#242a35;overflow:hidden;margin:5px 0}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#2563eb,#4ade80)}
+  button{background:#1d2129;color:var(--txt);border:1px solid var(--line);border-radius:7px;
+    padding:7px 12px;font-size:13.5px;cursor:pointer;font-family:inherit}
+  button:hover{border-color:var(--accent)}
+  button.sel{background:#16283d;border-color:var(--accent)}
+  select{background:#0b0e13;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-family:inherit;font-size:13.5px}
+  .reveal{background:#101a26;border:1px dashed #2b4a70;border-radius:8px;padding:10px;margin-top:8px;font-size:13.5px}
+</style>
+</head>
+<body>
+
+<h1>Agent 核心公式 · 上下文消融</h1>
+<div class="sub">2026.09.21 建 · 配套 <code>样例代码库/agent_上下文消融.py</code> · 数据来自本机 RTX 5060 实测（qwen2.5:3b，5 次重复 × 4 题 = 每组 20 个样本）</div>
+
+<!-- ─────────────── 公式 ─────────────── -->
+<div class="card">
+  <b>这本书（《深入理解 AI Agent》李博杰著）的整根脊椎，就一行公式</b>
+  <div class="formula">
+    <div class="fx"><b>🧠 LLM</b><span>大脑<br>负责理解、推理、决策</span></div>
+    <div class="fx"><b>👁️ 上下文 Context</b><span>眼睛<br>它在每个决策点能看到的全部信息：系统提示 / 历史 / 工具定义 / 工具返回结果</span></div>
+    <div class="fx"><b>🤲 工具 Tools</b><span>手脚<br>感知环境、执行操作、和外部世界交互</span></div>
+  </div>
+  <div class="slot" style="border-color:var(--accent);background:#101a26;color:#cfe4ff">
+    书里进到生产环境后把它改写成 <b>Agent = Model + Harness</b>，
+    而 <b>Harness = 上下文管理 + 工具接口 + 约束 + 验证 + 纠正</b>。
+    后面三项，就是「能跑的 Demo」和「可靠产品」之间的那道沟。
+  </div>
+</div>
+
+<!-- ─────────────── ① 先猜 ─────────────── -->
+<h2>① 先猜（先预测再看答案，记得更牢）</h2>
+<div class="card">
+  <p style="margin:4px 0 10px">下面四个开关，<b>各抽掉一样</b>，Agent 还能答对几道题（满分 20）？点一下看真实数字：</p>
+  <div id="guessBtns" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+  <div id="guessOut" class="reveal" style="display:none"></div>
+</div>
+
+<!-- ─────────────── ② 能拧的开关 ─────────────── -->
+<h2>② 能拧的开关（改完左边上下文立刻变，右边同步出实测分）</h2>
+<div class="card">
+  <div class="grid2">
+    <div>
+      <div id="switches"></div>
+      <div style="margin-top:10px;font-size:13px;color:var(--dim)">
+        看哪道题：<select id="taskSel"></select>
+      </div>
+    </div>
+    <div>
+      <b style="font-size:13.5px">这一组在真实实验里拿了</b>
+      <div class="score" style="margin-top:6px">
+        <span class="big" id="scoreNum">20</span>
+        <span style="color:var(--dim);font-size:14px"> / 20 题</span>
+      </div>
+      <div class="bar"><i id="scoreBar" style="width:100%"></i></div>
+      <div id="scoreNote" style="font-size:13px;color:var(--dim);min-height:44px"></div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px">
+    <b style="font-size:13.5px">模型每一步真正看到的上下文（左边窗口）</b>
+    <div id="msgList" style="margin-top:8px"></div>
+  </div>
+  <div class="slot" id="ablationHint"></div>
+</div>
+
+<!-- ─────────────── ③ 逐步回放 ─────────────── -->
+<h2>③ 看得见的过程：一次真实循环是怎么转的</h2>
+<div class="card">
+  <p style="margin:4px 0 10px;font-size:13.5px;color:var(--dim)">
+    任务：<code id="replayQ"></code>　—　这是<b>真实跑出来的轨迹</b>，不是示意。点「下一步」逐步走：
+  </p>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+    <button id="btnNext">▶ 下一步</button>
+    <button id="btnReset">↺ 重来</button>
+    <span id="stepLabel" style="font-size:13px;color:var(--dim)"></span>
+  </div>
+  <div id="replayBox"></div>
+</div>
+
+<!-- ─────────────── ④ 实测矩阵 ─────────────── -->
+<h2>④ 实测矩阵（本机跑出来的原始结果）</h2>
+<div class="card">
+  <table>
+    <tr><th>消融组</th><th>单查·摄影</th><th>单查·围棋</th><th>单查·烘焙</th><th>两步·求差</th><th>总分</th><th>结论</th></tr>
+    <tr><td><b>完整</b>（基准线）</td><td class="ok">5/5</td><td class="ok">5/5</td><td class="ok">5/5</td><td class="ok">5/5</td><td><b>20/20</b></td><td>—</td></tr>
+    <tr><td>砍掉工具定义</td><td class="bad">0/5</td><td class="bad">0/5</td><td class="bad">0/5</td><td class="bad">0/5</td><td class="bad"><b>0/20</b></td><td>掉 20 · 命脉</td></tr>
+    <tr><td>砍掉工具结果</td><td class="bad">0/5</td><td class="bad">0/5</td><td class="bad">0/5</td><td class="bad">0/5</td><td class="bad"><b>0/20</b></td><td>掉 20 · 命脉</td></tr>
+    <tr><td>砍掉系统提示</td><td class="ok">5/5</td><td class="ok">5/5</td><td class="ok">5/5</td><td class="ok">5/5</td><td><b>20/20</b></td><td class="warn">无变化！</td></tr>
+    <tr><td>砍掉历史</td><td class="ok">5/5</td><td class="ok">5/5</td><td class="ok">5/5</td><td class="bad">0/5</td><td><b>15/20</b></td><td>只伤两步题</td></tr>
+  </table>
+
+  <p style="margin:12px 0 4px"><b>这张表最容易看错的三个地方</b></p>
+  <ol style="font-size:13.8px">
+    <li><b class="warn">系统提示抽掉居然没影响</b>（20/20）。我本来以为一定会崩 —— 实测 qwen2.5 已经被训得很会调工具，那段话是冗余的。</li>
+    <li><b class="warn">「砍掉历史」只有两步题挂了</b>（那一列 <code>5/5 5/5 5/5 0/5</code>）。
+        单步任务本来就不需要上一句 —— 逐列看才知道<b>哪类任务依赖哪类上下文</b>。</li>
+    <li><b class="warn">我自己的系统提示曾经是有害的</b>。第一版多写了一句「算数也请用计算工具」，
+        结果基准线在两步题上 0/5：3B 模型被这句推进了它驾驭不了的路径（传「被减数-减数」这种中文表达式）。
+        删掉那句之后同一道题 5/5。一句「贴心」的话反而害了它。</li>
+  </ol>
+</div>
+
+<!-- ─────────────── ⑤ 我踩的坑 ─────────────── -->
+<h2>⑤ 这实验差点得出错误结论的两个坑（留着，别删）</h2>
+<div class="card">
+  <p style="margin:4px 0 6px"><b class="bad">坑一 · 题目正巧等于模型的「默认猜测」</b></p>
+  <p style="font-size:13.8px;margin:0 0 12px">
+    最初围棋的报名人数是 <code>23</code>。「砍掉工具结果」那一组，模型拿不到任何数据，
+    却 <b>5/5 次全答 23</b> —— 连真值 61 的摄影题也答 23。
+    说明 <b>23 是它没信息时的默认猜测</b>，而围棋真值恰好也是 23 →
+    那一格变成「蒙对」，这道题在该组<b>完全失效</b>。
+    把围棋换成 31 之后，那一列才老老实实变成 <code>0/5</code>。<br>
+    <span class="warn">教训：出题时要问一句「这题答对，是真会，还是可能蒙对？」</span>
+  </p>
+
+  <p style="margin:0 0 6px"><b class="bad">坑二 · 一次运行的差异会盖过真实效应</b></p>
+  <p style="font-size:13.8px;margin:0">
+    只跑 1 遍时，同一个「完整」组一次 4/4、一次 2/4（温度都是 0）。
+    加到 <b>5 次重复 × 4 题 = 20 样本</b> 后结果才稳定下来。<br>
+    <span class="warn">教训：没有重复，你分不清「设计带来的提升」和「随机波动」——
+    这正是这本书第 7 章「Agent 的评估」要讲的事。</span>
+  </p>
+</div>
+
+<!-- ─────────────── ⑥ 环境坑 ─────────────── -->
+<h2>⑥ 本机跑这个实验的真实环境坑</h2>
+<div class="card">
+  <p style="font-size:13.8px;margin:0 0 8px">
+    <b>Ollama 的模型 runner 会崩。</b> 报错原文：
+    <code>model runner has unexpectedly stopped, this may be due to resource limitations</code>。
+  </p>
+  <p style="font-size:13.8px;margin:0 0 8px">
+    原因：本机是 <b>RTX 5060 Laptop，8G 显存里已用约 5.4G</b>，只剩约 2.7G；而 qwen2.5:3b 要 3.36G。
+    Ollama <b>默认给模型开 32768 的上下文</b>，KV cache 白吃一大片显存 —— 顶着跑几十次就崩。
+  </p>
+  <p style="font-size:13.8px;margin:0">
+    修法：请求里加 <code>"num_ctx": 4096</code>。加完之后 <b>30 次突发调用零失败</b>，
+    完整实验（100 次调用）稳定跑完。<br>
+    <span class="warn">注意：崩过之后模型还会继续「回答」，但全是垃圾 ——
+    比如对每道题都答 <code>23</code>。这种假数据比报错更危险，必须看 <code>ollama ps</code> 和原始错误。</span>
+  </p>
+</div>
+
+<!-- ─────────────── ⑦ 一句话 ─────────────── -->
+<h2>⑦ 一句话带走</h2>
+<div class="card" style="border-color:#1e3a5f;background:#101a26">
+  <p style="margin:0;font-size:15px">
+    同一个模型、同一批题目，<b>只把上下文里的某一样拿掉，成绩就从 20/20 掉到 0/20</b>。<br>
+    模型没换，换的是它「看得见什么」。<br>
+    <span class="acc">这就是「上下文决定能力上限」，也是你刚刚亲眼看到的 —— 不是听我说的。</span>
+  </p>
+</div>
+
+<div class="foot">
+  配套代码：<code>样例代码库/agent_上下文消融.py</code> · 原始日志：<code>样例代码库/_run-agent消融.txt</code><br>
+  出处：<a href="https://github.com/bojieli/ai-agent-book" style="color:var(--accent)">bojieli/ai-agent-book</a> 第 1 章 · 本卡片是实验 1-1 的本地零成本迷你复刻
+</div>
+
+<script>
+"use strict";
+// ── 真实实测数据（来自 _run-agent消融.txt，别手改）──
+var MEASURED = {
+  "": 20,                    // 什么都不砍 = 基准线
+  "no_toolspec": 0,          // 砍掉工具定义
+  "no_toolresult": 0,        // 砍掉工具结果
+  "no_system": 20,           // 砍掉系统提示
+  "no_history": 15           // 砍掉历史
+};
+var PER_TASK = {
+  "":            {"单查·摄影":5,"单查·围棋":5,"单查·烘焙":5,"两步·求差":5},
+  "no_toolspec": {"单查·摄影":0,"单查·围棋":0,"单查·烘焙":0,"两步·求差":0},
+  "no_toolresult":{"单查·摄影":0,"单查·围棋":0,"单查·烘焙":0,"两步·求差":0},
+  "no_system":   {"单查·摄影":5,"单查·围棋":5,"单查·烘焙":5,"两步·求差":5},
+  "no_history":  {"单查·摄影":5,"单查·围棋":5,"单查·烘焙":5,"两步·求差":0}
+};
+// 只有「单独砍一个」这 5 组是实测的；组合没测过，必须如实说
+var FIELD = "no_toolspec";   // 用来拼组合键的顺序
+
+var SWITCHES = [
+  {k:"no_system",     label:"系统提示（告诉它「你是助手、要调工具」）"},
+  {k:"no_toolspec",   label:"工具定义（那份「有哪些工具可用」的说明书）"},
+  {k:"no_toolresult", label:"工具结果回灌（查到的数据喂回给模型）"},
+  {k:"no_history",    label:"历史（上一轮说过的话）"}
+];
+var TASKS = ["单查·摄影", "单查·围棋", "单查·烘焙", "两步·求差"];
+var TASK_Q = {
+  "单查·摄影":"选修课「摄影」现在有多少人报名？只回答数字。",
+  "单查·围棋":"选修课「围棋」现在有多少人报名？只回答数字。",
+  "单查·烘焙":"选修课「烘焙」现在有多少人报名？只回答数字。",
+  "两步·求差":"「摄影」比「篮球」多多少人报名？"
+};
+var TASK_A = {          // 真实回答
+  "单查·摄影":"61","单查·围棋":"31","单查·烘焙":"38","两步·求差":"61 - 55 = 6"
+};
+var TASK_WANT = {       // 真值
+  "单查·摄影":"61","单查·围棋":"31","单查·烘焙":"38","两步·求差":"6"
+};
+
+var state = {no_system:false, no_toolspec:false, no_toolresult:false, no_history:false};
+var curTask = "两步·求差";
+
+function key(){                       // 把四个开关拼成实测数据的键
+  var on = SWITCHES.filter(function(s){return state[s.k];}).map(function(s){return s.k;});
+  return on.length === 0 ? "" : (on.length === 1 ? on[0] : "MIX:" + on.join("+"));
+}
+
+// ── ① 先猜 ──
+var GUESS = [
+  {k:"no_toolspec",   q:"抽掉「工具定义」——模型不知道有工具可用"},
+  {k:"no_toolresult", q:"抽掉「工具结果」——工具调了，但结果不给它看"},
+  {k:"no_system",     q:"抽掉「系统提示」——不告诉它自己是助手"},
+  {k:"no_history",    q:"抽掉「历史」——上一轮说的全忘掉"}
+];
+(function(){
+  var box = document.getElementById("guessBtns");
+  GUESS.forEach(function(g){
+    var b = document.createElement("button");
+    b.textContent = g.q;
+    b.onclick = function(){
+      var out = document.getElementById("guessOut");
+      out.style.display = "block";
+      var v = MEASURED[g.k];
+      var verdict = v === 20 ? "<span class='warn'>居然没影响！</span>"
+                             : "<span class='bad'>掉得很惨</span>";
+      out.innerHTML = "<b>实测答案：</b>" + v + "/20 题　" + verdict +
+        "<br><span style='color:var(--dim);font-size:12.5px'>" +
+        "（每组 4 道题 × 5 次重复 = 20 个样本，判分由代码做，不看模型脸色）</span>";
+    };
+    box.appendChild(b);
+  });
+})();
+
+// ── ② 开关 ──
+(function(){
+  var box = document.getElementById("switches");
+  SWITCHES.forEach(function(s){
+    var d = document.createElement("div");
+    d.className = "sw";
+    d.innerHTML = "<div class='dot'></div><div class='lbl'>" + s.label +
+                  "</div><div class='state'></div>";
+    d.onclick = function(){ state[s.k] = !state[s.k]; render(); };
+    d.dataset.k = s.k;
+    box.appendChild(d);
+  });
+  var sel = document.getElementById("taskSel");
+  TASKS.forEach(function(t){
+    var o = document.createElement("option");
+    o.value = t; o.textContent = t;
+    if (t === curTask) o.selected = true;
+    sel.appendChild(o);
+  });
+  sel.onchange = function(){ curTask = sel.value; render(); };
+})();
+
+function buildMessages(){
+  // 还原「模型每一步真正看到了什么」。砍掉的东西用划线灰条显示，让人看见缺口。
+  var out = [];
+  if (state.no_system) {
+    out.push({c:"m-gone", t:"[system] 已被抽掉 —— 模型不知道自己是助手、要调工具"});
+  } else {
+    out.push({c:"m-sys", t:"[system] 你是一个办事的助手。需要数据时必须调用工具，不要凭空回答。得出结果后，用一句话回答，并把最终数字写出来。"});
+  }
+  out.push({c:"m-user", t:"[user] " + TASK_Q[curTask]});
+
+  if (state.no_toolspec) {
+    out.push({c:"m-asst", t:"[assistant] （这一组没给 tools 参数，模型根本不知道有工具可调）"});
+    out.push({c:"m-gone", t:"✗ 不会发生：tool_calls 请求"});
+    out.push({c:"m-asst", t:"[assistant] " + (curTask==="两步·求差"
+      ? "这个问题需要具体的报名数据来回答，我没有这些数据。"
+      : "（凭空编一个数字，实测答的是 250 / 235 / 300 这种）")});
+    return out;
+  }
+
+  out.push({c:"m-asst", t:"[assistant] 我要调工具 [tool_calls] 查询报名({" + (curTask==="两步·求差"?"course: 摄影":"course: " + curTask.slice(3)) + "})"});
+  if (state.no_toolresult) {
+    out.push({c:"m-gone", t:"[tool] 结果被抽成空字符串 —— 查是查了，模型什么也没拿到"});
+    out.push({c:"m-asst", t:"[assistant] （没有数据，只能瞎猜。实测：5/5 次都答 23 —— 这是它的默认猜测）"});
+    return out;
+  }
+  var val = {"单查·摄影":"摄影 当前报名 61 人","单查·围棋":"围棋 当前报名 31 人","单查·烘焙":"烘焙 当前报名 38 人"};
+  if (curTask === "两步·求差") {
+    out.push({c:"m-tool", t:"[tool] 摄影 当前报名 61 人"});
+    out.push({c:"m-asst", t:"[assistant] [tool_calls] 查询报名({course: 篮球})"});
+    out.push({c:"m-tool", t:"[tool] 篮球 当前报名 55 人"});
+    if (state.no_history) {
+      out.push({c:"m-gone", t:"✗ 历史被抽掉：上面那两条 tool 结果在下一步会消失，模型忘了 61 和 55"});
+      out.push({c:"m-asst", t:"[assistant] （忘了数字 → 实测这一步答的是「0」或「2人」）"});
+      return out;
+    }
+    out.push({c:"m-asst", t:"[assistant] 61 - 55 = 6"});
+    return out;
+  }
+  out.push({c:"m-tool", t:"[tool] " + val[curTask]});
+  out.push({c:"m-asst", t:"[assistant] " + TASK_A[curTask]});
+  return out;
+}
+
+function render(){
+  // 开关外观
+  var sws = document.querySelectorAll(".sw");
+  for (var i=0;i<sws.length;i++){
+    var k = sws[i].dataset.k;
+    var off = state[k];
+    sws[i].className = "sw" + (off ? " off" : "");
+    sws[i].querySelector(".state").textContent = off ? "已抽掉" : "留着";
+  }
+  // 上下文列表
+  var box = document.getElementById("msgList");
+  box.innerHTML = "";
+  buildMessages().forEach(function(m){
+    var d = document.createElement("div");
+    d.className = "msg " + m.c;
+    d.textContent = m.t;
+    box.appendChild(d);
+  });
+  // 得分
+  var k2 = key();
+  var num = document.getElementById("scoreNum");
+  var bar = document.getElementById("scoreBar");
+  var note = document.getElementById("scoreNote");
+  if (k2.indexOf("MIX:") === 0) {
+    num.textContent = "?";
+    bar.style.width = "0%";
+    note.innerHTML = "<span class='warn'>这个组合<b>没测过</b>。</span><br>" +
+      "我只单独砍了每一样，共 5 组实测。组合要自己跑一遍才对 —— " +
+      "别拿没测过的组合当结论。";
+  } else {
+    var v = MEASURED[k2];
+    var per = PER_TASK[k2][curTask];
+    num.textContent = v;
+    bar.style.width = (v/20*100) + "%";
+    var extra = (k2 === "")
+      ? "基准线：四个组件都在。"
+      : ("当前题目「" + curTask + "」在这一组是 " + per + "/5。");
+    note.innerHTML = extra + (v === 20 && k2 !== "" ? "<br><span class='warn'>这一组居然没掉分。</span>" : "");
+  }
+  // 提示
+  var hint = document.getElementById("ablationHint");
+  if (k2 === "no_system") {
+    hint.innerHTML = "★ 注意：抽掉系统提示<b>一点没掉分</b>。模型已经被训得很会调工具了，那段话是冗余的 —— 反直觉，但是实测。";
+    hint.style.borderColor = "var(--warn)";
+  } else if (k2 === "no_history") {
+    hint.innerHTML = "★ 注意：这一组只有<b>两步题</b>挂了（0/5），三道单步题全对 —— 单步任务本来就不需要上一句。";
+    hint.style.borderColor = "var(--warn)";
+  } else if (k2 === "no_toolresult") {
+    hint.innerHTML = "★ 注意：查是查了，结果不给它看 → 20 题全错。说明<b>「有工具」不等于「用得上工具」</b>，回灌那一环不能省。";
+    hint.style.borderColor = "var(--warn)";
+  } else if (k2 === "no_toolspec") {
+    hint.innerHTML = "★ 注意：连工具的存在都不知道 → 20 题全错，而且答得很自信（250 / 235 / 300）。<b>幻觉最危险的地方就是它听起来一样确定。</b>";
+    hint.style.borderColor = "var(--warn)";
+  } else {
+    hint.innerHTML = "拨动上面的开关，左边会实时显示「模型这一步到底看到了什么」。";
+    hint.style.borderColor = "var(--warn)";
+  }
+}
+
+// ── ③ 逐步回放（真实轨迹）──
+var REPLAY = [
+  {add:[{c:"m-sys", t:"[system] 你是一个办事的助手。需要数据时必须调用工具，不要凭空回答。得出结果后，用一句话回答，并把最终数字写出来。"}],
+   note:"第 0 步 · 起始上下文：一条系统提示 + 用户的问题。此时模型还没做任何事。"},
+  {add:[{c:"m-user", t:"[user] 「摄影」比「篮球」多多少人报名？"}],
+   note:"第 0 步（续）· 用户的提问进上下文。模型此刻只看到这两条。"},
+  {add:[{c:"m-asst", t:"[assistant] [tool_calls] 查询报名({course: 摄影})"}],
+   note:"第 1 步 · 模型没有硬答，而是先要工具。★ 这一轮它不产出文字，只产出「我要调工具」这个请求。"},
+  {add:[{c:"m-tool", t:"[tool] 摄影 当前报名 61 人"}],
+   note:"第 1 步（续）· 工具真的被执行了，返回值被追加进上下文。★ 这就是「工具结果回灌」——抽掉它，模型就白调了。"},
+  {add:[{c:"m-asst", t:"[assistant] [tool_calls] 查询报名({course: 篮球})"}],
+   note:"第 2 步 · 模型读了上一条，知道还差一个数。★ 它靠的就是「历史」——抽掉历史，这一步它就不知道该查第二个。"},
+  {add:[{c:"m-tool", t:"[tool] 篮球 当前报名 55 人"}],
+   note:"第 2 步（续）· 第二个数进上下文。现在上下文里有 61 和 55 两个数，都在。"},
+  {add:[{c:"m-asst", t:"[assistant] 61 - 55 = 6"}],
+   note:"第 3 步 · 模型不再要工具（tool_calls 为空），循环收口，吐出最终答案。★ 实测这句 5/5 次全对。"}
+];
+var rIdx = 0;
+function renderReplay(){
+  document.getElementById("replayQ").textContent = TASK_Q["两步·求差"];
+  var box = document.getElementById("replayBox");
+  box.innerHTML = "";
+  for (var i=0;i<rIdx;i++){
+    REPLAY[i].add.forEach(function(m){
+      var d = document.createElement("div");
+      d.className = "msg " + m.c; d.textContent = m.t; box.appendChild(d);
+    });
+  }
+  var lab = document.getElementById("stepLabel");
+  if (rIdx === 0){ lab.textContent = "还没开始"; }
+  else {
+    var d2 = document.createElement("div");
+    d2.className = "slot"; d2.style.borderColor = "var(--accent)";
+    d2.style.background = "#101a26"; d2.style.color = "#cfe4ff";
+    d2.textContent = REPLAY[rIdx-1].note;
+    box.appendChild(d2);
+    lab.textContent = rIdx + " / " + REPLAY.length;
+  }
+  document.getElementById("btnNext").disabled = (rIdx >= REPLAY.length);
+}
+document.getElementById("btnNext").onclick = function(){ if (rIdx < REPLAY.length){ rIdx++; renderReplay(); } };
+document.getElementById("btnReset").onclick = function(){ rIdx = 0; renderReplay(); };
+
+render();
+renderReplay();
+</script>
+</body>
+</html>

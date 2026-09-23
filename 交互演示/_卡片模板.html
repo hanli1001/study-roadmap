@@ -3,125 +3,378 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>卡片模板 · 遇到陌生函数就复制这一份</title>
-<style>
-  :root{
-    --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --txt:#e6e8ee; --dim:#98a0b3;
-    --ok:#4ade80; --bad:#f87171; --warn:#fbbf24; --accent:#60a5fa;
-  }
-  *{box-sizing:border-box}
-  body{margin:0 auto;max-width:900px;background:var(--bg);color:var(--txt);
-    font:15px/1.7 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
-  h1{font-size:20px;margin:0 0 4px}
-  h2{font-size:16px;margin:26px 0 8px;padding-left:9px;border-left:3px solid var(--accent)}
-  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
-  .slot{border-left:3px solid var(--warn);background:#1d1a12;padding:9px 11px;border-radius:0 8px 8px 0;
-    font-size:13.5px;color:#f0e2c0;margin:6px 0}
-  table{border-collapse:collapse;width:100%;font-size:14px}
-  th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
-  th{background:#1d2129;color:var(--dim);font-size:12.5px}
-  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;
-    border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:13px}
-  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
-    font-family:"Cascadia Mono",Consolas,monospace;font-size:12.6px;line-height:1.5}
-  ol,ul{margin:6px 0;padding-left:22px}
-  li{margin:3px 0}
-  .ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
-  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
-  textarea{width:100%;min-height:70px;background:#0b0e13;color:var(--txt);border:1px solid var(--line);
-    border-radius:8px;padding:9px;font:13px/1.5 "Cascadia Mono",Consolas,monospace}
-</style>
+<title>卡片模板 · 米黄方格纸 · 实验记录本（v2）</title>
+<link rel="stylesheet" href="_主题.css">
 </head>
 <body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
 
-<h1>卡片模板 · 遇到陌生函数就复制这一份</h1>
-<div class="sub">2026.09.20 建 · 触发条件：你在写代码时卡在某个函数/语法上（"这个到底返回什么？"）</div>
+  <!-- ══ 记录头：标题 + 三个字段 ══════════════════════════
+       不要"导读小字"压在标题上面 —— 标题自己说话。 -->
+  <header class="rec-head">
+    <h1>卡片模板 · 遇到新东西就复制这一份</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="建">2026.09.23</span>
+      <span class="f" data-k="世界">米黄方格纸 · 实验记录本</span>
+      <span class="f" data-k="依赖"><code>_主题.css</code> + <code>_学习工具.js</code> + <code>_全局进度.js</code></span>
+    </div>
+    <p class="sub">
+      复制本文件 → 改名放进 <code>交互演示/</code> → 改标题、改 <code>MM_DATA</code>、填 6 个条目。
+      也可以只跟我说一句「这节讲 XXX」，我按这份结构给你出。
+    </p>
 
-<div class="card">
-  <b>两步用法</b>
-  <ol>
-    <li>复制本文件 → 改名放进 <code>交互演示/</code>（例：<code>dict.get用法.html</code>）</li>
-    <li>把下面 6 个「<span class="warn">填这里</span>」替换成那个函数的内容；顺手在 <code>样例代码库/</code> 建同名 <code>.py</code></li>
-  </ol>
-  <div class="slot" style="border-color:var(--accent);background:#101a26;color:#cfe4ff">
-    也可以只跟我说一句「我又卡在 XXX 了」—— 我按这份结构给你出，你不用自己填。
+    <!-- 你在这里：每张卡都必须能回答"我在全局哪一格" -->
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span>
+      <b>② 编程主线</b><span class="sep">›</span>
+      <b>SQL / JOIN</b>
+      <a href="全局思维导图.html" target="_blank">打开全局思维导图 ↗</a>
+    </div>
+
+    <!-- 折叠：要看全局轨道就展开，不看也不占地方 -->
+    <details class="where">
+      <summary>我在全局的哪一格（展开看轨道）</summary>
+      <div class="body">
+        <div data-global-rail></div>
+        <div class="note" style="margin-top:12px">
+          这一段是<b>自动</b>的 —— 数据来自 <code>_全局进度.js</code>，全站只有那一份。
+          进度变了只改那里，所有卡片的这条轨道同时变。
+        </div>
+      </div>
+    </details>
+  </header>
+
+  <!-- ══ 本课思维导图（每份预习 HTML 的固定件）═══════════
+       预习时把全部节点标成 todo；上完课回来把状态改掉（done / doing / current）。
+       状态靠"笔触"区分，不靠彩虹色：实线=已过关，虚线=在学，红框+荧光=你现在这里，点线=没开始。 -->
+  <section class="sec" id="mm">
+    <h2 data-n="导图">本课思维导图</h2>
+    <p>
+      上课前先看这张图 —— 你要学的<b>不是一堆语法，是下面这四块</b>。
+      看完能说出「这课在解决什么问题」，预习就算够了；细节上课再说。
+    </p>
+    <div class="mm" data-mm="lesson" aria-label="本课思维导图"></div>
+    <div class="mm-key">
+      <span><i class="done"></i>已过关</span>
+      <span><i class="doing"></i>在学</span>
+      <span><i class="current"></i>你现在这里</span>
+      <span><i class="todo"></i>还没开始</span>
+    </div>
+  </section>
+
+  <!-- ══ 条目 1 先猜 ═════════════════════════════════════ -->
+  <section class="sec" id="s1">
+    <h2 data-n="1">先猜，再看答案</h2>
+    <p class="note">
+      先猜不是走流程 —— 猜错反而记得更牢（回忆失败本身就有用）。<b>答案先别给。</b>
+    </p>
+    <div class="guess">
+      <p class="q">这三个空，你先填一遍再往下看：</p>
+      <pre>SELECT persons.name
+FROM   ______                                  -- ① 起点：我要查"几号群"，站哪张表？
+JOIN   ______ ON ______ = ______               -- ② 拿群 id 去绳子表配对
+JOIN   ______ ON ______ = ______               -- ③ 绳子上的 uid，去哪张表换名字？
+WHERE  ______;                                 -- ④ 只要 1 号群</pre>
+      <div class="try">
+        <button class="primary" id="reveal">揭晓我填的对不对</button>
+        <span class="sub" id="revealMsg" style="margin:0"></span>
+      </div>
+      <div id="revealBox" hidden>
+        <table>
+          <thead><tr><th style="width:16%">空</th><th>答案</th><th style="width:34%">为什么</th></tr></thead>
+          <tbody>
+            <tr><td>①</td><td><code>groups</code></td><td>我要查"几号群"，主干就是群表</td></tr>
+            <tr><td>②</td><td><code>group_members</code> ON <code>groups.id</code> = <code>group_members.gid</code></td><td>拿群 id 去绳子表配 <code>gid</code></td></tr>
+            <tr><td>③</td><td><code>persons</code> ON <code>group_members.uid</code> = <code>persons.id</code></td><td>绳子上的 <code>uid</code> 去人表换名字</td></tr>
+            <tr><td>④</td><td><code>groups.id = 1</code></td><td>没这一句，你会得到<b class="red">所有群的所有成员</b></td></tr>
+          </tbody>
+        </table>
+        <p class="redpen">实测：不写 ④ → 出 <b>3 行</b>；补上 ④ → 出 <b>2 行</b>。差的这一行就是"筛选"和"配对"的区别。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 条目 2 能拧的参数 ═══════════════════════════════ -->
+  <section class="sec" id="s2">
+    <h2 data-n="2">能拧的参数：改完立刻变，不用点"运行"</h2>
+    <p>至少给 3 个参数，每个都要<b>真的</b>影响下面的结果 —— 拧了没反应的控制等于装饰。</p>
+    <div class="ctrls">
+      <div class="ctrl"><label for="gid">查几号群 gid</label>
+        <input type="number" id="gid" value="1" min="1" max="2"></div>
+      <div class="ctrl"><label for="showAll">是否加 WHERE</label>
+        <select id="showAll"><option value="1">加（只看这个群）</option><option value="0">不加（全部群）</option></select></div>
+      <div class="ctrl"><label for="who">名字来自</label>
+        <select id="who"><option value="persons">persons（对）</option><option value="groups">groups（错，看后果）</option></select></div>
+    </div>
+    <div class="row2">
+      <div>
+        <h3>你拧出来的 SQL</h3>
+        <pre id="sqlOut"></pre>
+      </div>
+      <div>
+        <h3>跑出来的结果</h3>
+        <div class="out" id="resOut"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 条目 3 看得见的过程 ═════════════════════════════ -->
+  <section class="sec" id="s3">
+    <h2 data-n="3">看得见的过程：一步一步，别跳</h2>
+    <p>
+      抽象的东西必须看得见 —— 数据库做的事，就是<b>拿着一个数字，一行一行去另一张表问名字</b>。
+      下面这个动画演的就是这件事。
+    </p>
+
+    <h3>① 配对流动：<code>1</code> 这个值怎么走到人的名字上</h3>
+    <div class="pair" id="pairBox">
+      <table>
+        <thead><tr><th colspan="3" style="background:var(--pen-soft)">groups（群名仓库）</th>
+                   <th colspan="4" style="background:var(--paper-2)">group_members（绳子表）</th>
+                   <th colspan="2" style="background:var(--pen-soft)">persons（名字仓库）</th></tr>
+          <tr><th>id</th><th>name</th><th></th><th>uid</th><th>gid</th><th>joined</th><th></th><th>id</th><th>name</th></tr></thead>
+        <tbody>
+          <tr class="lane"><td colspan="9"></td></tr>
+          <tr id="g1" class="src"><td>1</td><td>高数自习</td><td></td><td>7</td><td>1</td><td>03-01</td><td></td><td>7</td><td>小明</td></tr>
+          <tr><td>2</td><td>游戏开黑</td><td></td><td>9</td><td>1</td><td>03-02</td><td></td><td>9</td><td>小红</td></tr>
+          <tr><td></td><td></td><td></td><td>7</td><td>2</td><td>04-11</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="try">
+      <button class="primary" id="runWire">▶ 让 1 走过去</button>
+      <button id="clearWire">清空连线</button>
+      <span class="sub" style="margin:0">值沿着<b>手绘连线</b>从左边走到右边；落到哪一行，哪一行就亮。</span>
+    </div>
+
+    <h3 style="margin-top:26px">② 单步播放：JOIN 的四步</h3>
+    <div id="playerHost"></div>
+  </section>
+
+  <!-- ══ 条目 4 能复制的真代码 ═══════════════════════════ -->
+  <section class="sec" id="s4">
+    <h2 data-n="4">能复制的真代码</h2>
+    <p>把上面拧出来的参数，翻译成能直接粘进 Python 的一段：</p>
+    <pre id="pyOut"></pre>
+    <div class="try"><button class="primary" id="copyPy">复制这段 Python</button>
+      <span class="sub" id="copyMsg" style="margin:0"></span></div>
+  </section>
+
+  <!-- ══ 条目 5 你先自己写 ═══════════════════════════════ -->
+  <section class="sec" id="s5">
+    <h2 data-n="5">你先自己写（不写不算学完）</h2>
+    <p>
+      反过来查：<b><code>小红</code> 在哪些群里？</b> 起点要换成哪张表？
+      自己写一条 SQL 贴进来，点检查 —— 只看思路，不直接给答案。
+    </p>
+    <textarea id="mySql" placeholder="SELECT ... FROM ... JOIN ... ON ... WHERE ...;"></textarea>
+    <div class="try">
+      <button class="primary" id="checkSql">检查我的思路</button>
+      <button id="hintSql">给个提示（不给答案）</button>
+    </div>
+    <div class="out" id="checkOut" hidden></div>
+  </section>
+
+  <!-- ══ 条目 6 复习卡 ═══════════════════════════════════ -->
+  <section class="sec" id="s6">
+    <h2 data-n="6">课后复习卡（进 1-3-7-30）</h2>
+    <table>
+      <thead><tr><th style="width:14%">卡</th><th style="width:46%">问</th><th>答</th></tr></thead>
+      <tbody>
+        <tr><td>概念</td><td>什么是"绳子表"？为什么多对多必须用它？</td><td>一行 = 一条关系，不是一个人；名字会变会重复，所以只存 id</td></tr>
+        <tr><td>预测</td><td>三表 JOIN 不加 <code>WHERE</code> 会出几行？</td><td>= 绳子表的行数（配对成功的次数），不是某张表的行数</td></tr>
+        <tr><td>找错</td><td><code>ON groups.id = group_members.uid</code> 错在哪？</td><td>群 id 对人 id，两头接反 → 0 行不报错；<b class="red">id 重叠时还会返回"看着合理"的假数据</b></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="foot">
+    卡片模板 v2 · 2026.09.23 ｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">主题 <code>_主题.css</code> ｜ 组件 <code>_学习工具.js</code> ｜ 全局数据 <code>_全局进度.js</code></span>
   </div>
 </div>
 
-<h2>先判一下：值得做卡片吗？（3 秒判断）</h2>
-<table>
-  <tr><th style="width:52%">情况</th><th>做什么</th></tr>
-  <tr><td>参数多 / 行为随参数变（切片、<code>range</code>、格式化、正则）</td><td><b>做卡片</b> ✅</td></tr>
-  <tr><td>过程/状态变化（JOIN、递归、事务、事件循环）</td><td><b>做卡片</b> ✅</td></tr>
-  <tr><td>同一件事你已经问过第二次</td><td><b>做卡片</b> ✅</td></tr>
-  <tr><td>就是"名字记不住"，看完就懂</td><td class="warn">不做卡片，写进速查卡 + 复习卡即可</td></tr>
-</table>
+<script src="_全局进度.js"></script>
+<script>
+/* ══ 本课思维导图的数据 ══════════════════════════════════
+   预习时全部标 todo；上完课回来改状态。 */
+window.MM_DATA = {
+  lesson: {
+    label: 'JOIN · 数据模型', note: '第 3 课', state: 'root',
+    children: [
+      { label: '为什么要第三张表', state: 'doing', children: [
+        { label: '人 / 群 = 2 张表', note: '一个格子装一个事实', state: 'done' },
+        { label: '"谁在哪个群" 跟两个人走', note: '放人表放不下，放群表也放不下', state: 'current' },
+        { label: '⇒ 绳子表', note: '一行 = 一条关系，不是一个人', state: 'current' }
+      ]},
+      { label: 'ON 和 WHERE 不是一回事', state: 'doing', children: [
+        { label: 'ON = 怎么配', note: '配对规则', state: 'doing' },
+        { label: 'WHERE = 要哪些', note: '筛选 · 少了它 → 3 行而不是 2 行', state: 'current' }
+      ]},
+      { label: '执行过程', state: 'todo', children: [
+        { label: '拿 id 一行行去另一张表问名字', state: 'todo' },
+        { label: '行数 = 配对成功的次数', note: '不是表里的行数', state: 'todo' }
+      ]},
+      { label: '两个坑（都不报错）', state: 'todo', children: [
+        { label: '配不上 → 0 行', note: '空的，一眼看得出来', state: 'todo' },
+        { label: 'id 重叠 → 假数据', note: '看着完全合理，最危险', state: 'todo' }
+      ]}
+    ]
+  }
+};
+</script>
+<script src="_学习工具.js"></script>
+<script>
+(function () {
+  function boot() {
+    /* ── 真数据：就是上面那张表，前端算，不写死结果 ── */
+    var GROUPS  = [{ id: 1, name: '高数自习' }, { id: 2, name: '游戏开黑' }];
+    var MEMBERS = [{ uid: 7, gid: 1, joined: '03-01' }, { uid: 9, gid: 1, joined: '03-02' },
+                   { uid: 7, gid: 2, joined: '04-11' }];
+    var PERSONS = [{ id: 7, name: '小明' }, { id: 9, name: '小红' }];
 
-<h2>卡片的 6 个格子（缺一不可）</h2>
+    var $ = Lab.$, el = Lab.el;
 
-<div class="card">
-  <b>① 先猜</b> <span class="sub" style="margin:0">（生成效应：先预测再看答案，记得更牢）</span>
-  <div class="slot">填这里：抛一个"改参数会怎样"的预测题，配一个输入框 + 揭晓按钮</div>
-</div>
+    /* ── 条目 1：揭晓（先猜再对答案，别一上来就给）── */
+    $('#reveal').onclick = function () {
+      var box = $('#revealBox');
+      box.hidden = !box.hidden;
+      $('#revealMsg').textContent = box.hidden
+        ? '' : '对照一下 —— 填错的那几个空，才是今天真正要学的东西。';
+      $('#reveal').textContent = box.hidden ? '揭晓我填的对不对' : '收起来，我再想想';
+      if (!box.hidden) Lab.ink(box);
+    };
 
-<div class="card">
-  <b>② 能拧的参数（至少 3 个）</b>
-  <div class="slot">填这里：<code>&lt;input type=number&gt;</code> / <code>&lt;select&gt;</code> / 可增删的行 —— 每个参数都要真的影响下面的结果</div>
-</div>
+    /* ── 条目 2：拧参数 → 实时出 SQL 和结果 ── */
+    function build() {
+      var gid = +$('#gid').value, useWhere = $('#showAll').value === '1', who = $('#who').value;
+      var sql = 'SELECT persons.name, groups.name\n' +
+                'FROM groups\n' +
+                'JOIN group_members ON groups.id = group_members.gid\n' +
+                'JOIN persons ON group_members.uid = persons.id' +
+                (useWhere ? '\nWHERE groups.id = ' + gid : '') + ';';
+      $('#sqlOut').textContent = sql;
+      $('#pyOut').textContent = py();
 
-<div class="card">
-  <b>③ 并排看变化（改完立刻变，不用点"运行"）</b>
-  <div class="slot">填这里：输入区 | 输出区 并排。参数一变，输出同步刷新</div>
-</div>
+      var rows = [];
+      MEMBERS.forEach(function (m) {
+        if (useWhere && m.gid !== gid) return;
+        var g = GROUPS.find(function (x) { return x.id === m.gid; });
+        var p = PERSONS.find(function (x) { return x.id === m.uid; });
+        if (!g || !p) return;
+        rows.push([who === 'persons' ? p.name : g.name, g.name]);
+      });
+      var box = $('#resOut'); box.textContent = '';
+      var cap = el('span', 'cap', rows.length + ' 行  ← ' +
+        (useWhere ? '只算 gid=' + gid + ' 的配对' : '所有群的配对都算上'));
+      box.appendChild(cap);
+      box.appendChild(document.createTextNode(
+        rows.length ? rows.map(function (r) { return '(' + r.map(function (x) { return '"' + x + '"'; }).join(', ') + ')'; }).join('\n')
+                    : '（0 行）'));
+    }
+    ['gid', 'showAll', 'who'].forEach(function (id) { $('#' + id).addEventListener('input', build); });
+    build();
 
-<div class="card">
-  <b>④ 看得见的过程（中间步骤高亮）</b>
-  <div class="slot">填这里：这个函数内部一步一步做了什么？哪一步被跳过、哪一步报错 —— 用颜色标出来</div>
-  <div class="sub" style="margin:6px 0 0">参考已做好的：<code>交互演示/JOIN配对过程.html</code> 的「③ 看得见的过程」区</div>
-</div>
+    /* ── 条目 3①：配对流动（招牌动效）──
+       右上那张表的列：1=groups.id 2=groups.name 3=空 | 4=uid 5=gid 6=joined 7=空 | 8=persons.id 9=persons.name */
+    var pairBox = $('#pairBox');
+    function cells(rowIdx) { return Lab.$$('tbody tr:not(.lane)', pairBox)[rowIdx].querySelectorAll('td'); }
+    $('#runWire').onclick = function () {
+      clearWire();
+      var c = cells(0);
+      Lab.wire(pairBox, c[0], c[4], { text: 'id 1 → gid', keep: true })   /* 群 id 去配绳子上的 gid */
+        .then(function () { return delay(340); })
+        .then(function () {
+          return Lab.wire(pairBox, c[3], c[7], {                         /* 绳子上的 uid 去人表换名字 */
+            text: 'uid 7 → id', keep: true,
+            onArrive: function () { c[8].classList.add('hit'); }
+          });
+        });
+    };
+    function clearWire() {
+      Lab.$$('svg.wire, .token', pairBox).forEach(function (n) { n.remove(); });
+      Lab.$$('tr', pairBox).forEach(function (n) { n.classList.remove('hit', 'src'); });
+    }
+    $('#clearWire').onclick = clearWire;
+    function delay(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-<div class="card">
-  <b>⑤ 能复制的真代码</b>
-  <div class="slot">填这里：把你在页面上拧出来的参数，翻译成能直接粘进 Python 的一行代码，配「复制」按钮</div>
-</div>
+    /* ── 条目 3②：单步播放器 ── */
+    Lab.player('#playerHost', {
+      root: '#s3',
+      hint: '按「下一步」开始 —— 一步一步看数据库到底做了什么。',
+      steps: [
+        { cap: '① 从 groups 拿出 1 行：id=1，高数自习。这一步只动 groups 表。',
+          on: '#g1' },
+        { cap: '② 拿着 1，去 group_members.gid 一行一行比 —— 命中 (7,1) 和 (9,1)，(7,2) 不要。',
+          on: '#g1' },
+        { cap: '③ 每条命中的行，拿 uid 去 persons.id 换名字：7→小明，9→小红。',
+          on: '#g1' },
+        { cap: '④ 拼成两行交出去。结果 2 行 = 配对成功的次数，不是任何一张表的行数。',
+          on: '#g1' }
+      ]
+    });
 
-<div class="card">
-  <b>⑥ 你先自己写（不写不算学完）</b>
-  <div class="slot">填这里：留一道小题 + 一个 textarea + 一个"对照思路（不直接给答案）"按钮</div>
-  <div class="sub" style="margin:6px 0 0">
-    ⚠️ 校验器别犯我犯过的错：<b>认独立单词，别用 <code>/on/</code> 这种子串匹配</b>
-    —— <code>persons</code> 里的 "on" 会被误判。用 <code>text.match(/[a-z_]+/g).includes("on")</code>
-  </div>
-</div>
+    /* ── 条目 4：真代码 ── */
+    function py() {
+      var gid = +$('#gid').value, useWhere = $('#showAll').value === '1';
+      return 'import sqlite3\n' +
+             'conn = sqlite3.connect("prescriptions.db")\n' +
+             'cur = conn.cursor()\n' +
+             'cur.execute("""\n' +
+             '    SELECT persons.name, groups.name\n' +
+             '    FROM groups\n' +
+             '    JOIN group_members ON groups.id = group_members.gid\n' +
+             '    JOIN persons       ON group_members.uid = persons.id\n' +
+             (useWhere ? '    WHERE groups.id = ?\n' : '') +
+             '""", (' + (useWhere ? String(gid) : '') + ',) if ' + useWhere + ' else ())\n' +
+             'for row in cur.fetchall():\n' +
+             '    print(row)\n' +
+             'conn.close()';
+    }
+    $('#copyPy').onclick = function () {
+      var txt = $('#pyOut').textContent;
+      (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+        .then(function () { $('#copyMsg').textContent = '✅ 已复制'; })
+        .catch(function () { $('#copyMsg').textContent = '⚠️ 浏览器不让自动复制，请手动选中上面的代码'; });
+    };
 
-<h2>配套的 .py 模板（四段式）</h2>
-<pre>"""样例代码库 · &lt;函数名&gt;() —— 「一句话说清它干什么」
-
-用法：python 样例代码库/&lt;函数名&gt;用法.py
-配套：交互演示/&lt;函数名&gt;用法.html
-"""
-
-# ① 最小可运行：一行能看出它干什么
-print(&lt;函数&gt;(...))
-
-# ② 改参数看变化：至少 3 组输入 → 输出
-for x in [...]:
-    print(x, "→", &lt;函数&gt;(x))
-
-# ③ 边界情况：空值 / 越界 / 类型不对，会怎样（报什么错）
-# ④ 轮到你了：留 3 道题，最后一行放参考答案（注释形式）</pre>
-
-<h2>做完别忘的三件事</h2>
-<ol>
-  <li>写进 <code>逐日学习计划</code> 的「内置函数打卡」那一行（记忆曲线表）</li>
-  <li>在卡片底部署名日期，并在 <code>改动路线.md</code> 的变更记录里补一行</li>
-  <li>给 <code>样例代码库/&lt;函数名&gt;用法.py</code> 跑一遍 —— 跑通才算做完</li>
-</ol>
-
-<div class="foot">
-  卡片模板 · 2026.09.20 · 依据：教学法 v3 武器一（6 块固定结构）· 遇到新函数就复制这一份
-</div>
-
+    /* ── 条目 5：自己写的检查器（认独立单词，别用子串匹配）── */
+    $('#checkSql').onclick = function () {
+      var t = $('#mySql').value, words = (t.toLowerCase().match(/[a-z_]+/g) || []);
+      var box = $('#checkOut'); box.hidden = false;
+      var need = [
+        ['from', '起点用哪张表？ —— 查"小红在哪些群"，起点应该是 persons'],
+        ['join', '要用 JOIN 把中间那张绳子表接进来'],
+        ['on', 'JOIN 后面必须有 ON —— 配对规则不能省'],
+        ['where', '要限定某个人，就得有 WHERE']
+      ];
+      var miss = need.filter(function (n) { return words.indexOf(n[0]) < 0; });
+      if (!miss.length) {
+        box.textContent = '✅ 四个关键词都在。接下来自己核对两件事：\n' +
+          '   ① ON 的两边有没有接反（谁的 id 配谁的列）\n' +
+          '   ② 起点到底是 persons 还是 groups —— 先想清楚"我要的主干是谁"';
+      } else {
+        box.textContent = '还差 ' + miss.length + ' 处，自己先补，别急着问：\n' +
+          miss.map(function (m, i) { return '   ' + (i + 1) + '. 少了 ' + m[0].toUpperCase() + ' —— ' + m[1]; }).join('\n');
+      }
+      Lab.ink(box);
+    };
+    $('#hintSql').onclick = function () {
+      var box = $('#checkOut'); box.hidden = false;
+      box.textContent = '提示（不是答案）：\n' +
+        '   · 我要的答案是"群名"，所以最后 SELECT 的是 groups.name\n' +
+        '   · "小红"是人的名字，所以从哪里出发？\n' +
+        '   · 中间那张绳子表，是唯一同时知道"谁"和"哪个群"的表 —— 必须经过它';
+      Lab.ink(box);
+    };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
 </body>
 </html>

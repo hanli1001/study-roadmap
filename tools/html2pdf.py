@@ -30,6 +30,19 @@ def find_browser() -> str:
     raise SystemExit("找不到 Edge/Chrome —— 装一个或用浏览器手动「打印 → 另存为 PDF」")
 
 
+def file_url(p: Path) -> str:
+    r"""Windows 绝对路径 → Edge 能吃的 file URL。
+
+    ⚠️ 别改回 p.as_uri()！实测（2026-09-21，Edge headless=new）：
+        file:///E:\项目学习\打印资料\x.html      → 成功，出 PDF
+        file:///E:/%E9%A1%B9%E7%9B%AE.../x.html  （as_uri 的编码正斜杠形式）
+                                                → **静默不产出任何文件，退出码还是 0**
+    这条坑极其阴险：命令不报错、也不出文件，容易被当成"生成好了"。
+    所以 to_pdf() 里必须验文件大小，不能只看退出码。
+    """
+    return "file:///" + str(p)
+
+
 def to_pdf(browser: str, src: Path, profile: Path) -> bool:
     out = src.with_suffix(".pdf")
     if out.exists():
@@ -43,13 +56,19 @@ def to_pdf(browser: str, src: Path, profile: Path) -> bool:
         "--no-pdf-header-footer",          # 不要浏览器自带的页眉页脚
         f"--user-data-dir={profile}",
         f"--print-to-pdf={out}",
-        src.as_uri(),
+        file_url(src),
     ]
     subprocess.run(cmd, capture_output=True, timeout=90)
-    for _ in range(20):                    # 等文件落盘
+    # 等文件落盘。别把轮询调太短：中文内容多、表格大的页面可能 10 秒以上才写完，
+    # 实测 6 秒会把已经生成好的 PDF 误判成"失败"（文件其实随后就出现了）。
+    for _ in range(90):                    # 90 × 0.5s = 最多等 45 秒
         if out.exists() and out.stat().st_size > 0:
-            return True
-        time.sleep(0.3)
+            # 再确认一次大小稳定，避免把"正在写"当成"写完了"
+            size = out.stat().st_size
+            time.sleep(0.4)
+            if out.exists() and out.stat().st_size == size:
+                return True
+        time.sleep(0.5)
     return False
 
 

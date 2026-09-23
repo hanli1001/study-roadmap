@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>今日清单 · 2026.09.23（周三）</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#2a2f3a; --txt:#e6e8ee; --dim:#98a0b3;
+    --ok:#4ade80; --bad:#f87171; --warn:#fbbf24; --accent:#60a5fa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0 auto;max-width:900px;background:var(--bg);color:var(--txt);
+    font:15px/1.7 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;padding:20px 16px 70px}
+  h1{font-size:20px;margin:0 0 4px}
+  h2{font-size:16px;margin:26px 0 8px;padding-left:9px;border-left:3px solid var(--accent)}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+  th{background:#1d2129;color:var(--dim);font-size:12.5px}
+  code{font-family:"Cascadia Mono",Consolas,monospace;background:#0b0e13;
+    border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:13px;
+    word-break:break-all}
+  pre{background:#0b0e13;border:1px solid var(--line);border-radius:9px;padding:12px;overflow-x:auto;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:12.6px;line-height:1.5;margin:6px 0}
+  ol,ul{margin:6px 0;padding-left:22px}
+  li{margin:3px 0}
+  .ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+  .dim{color:var(--dim)}
+  .foot{color:var(--dim);font-size:12.5px;text-align:center;margin-top:24px}
+
+  /* 已完成的一件 */
+  .won{background:#0f2018;border:1px solid #1f4d38;border-left:3px solid var(--ok);
+    border-radius:8px;padding:12px 14px;margin-bottom:16px}
+  .won b{color:var(--ok)}
+
+  /* 跳转目录（JS 按 h2 自动生成） */
+  .toc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .toc a{font-size:12.6px;color:var(--accent);text-decoration:none;background:#101a26;
+    border:1px solid #2b4a70;border-radius:99px;padding:2px 10px}
+  .toc a:hover,.toc a:focus{background:#16263a}
+  h2{scroll-margin-top:12px}
+
+  /* 清单 */
+  .task{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}
+  .task:last-child{border-bottom:none}
+  .task input{margin-top:5px;width:17px;height:17px;flex:0 0 auto;accent-color:var(--ok)}
+  .task label{flex:1;cursor:pointer}
+  .task.done label{opacity:.42;text-decoration:line-through}
+  .meta{font-size:12.5px;color:var(--dim);display:block}
+  .bar{height:6px;background:#0b0e13;border:1px solid var(--line);border-radius:99px;overflow:hidden;margin:10px 0 2px}
+  .bar > i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+
+  /* 卡片 */
+  .chead{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .chead b{font-size:15.5px}
+  .tag{font-size:11px;padding:1px 7px;border-radius:99px;border:1px solid;white-space:nowrap}
+  .tag.deep{color:var(--accent);border-color:#2b4a70;background:#101a26}
+  .tag.look{color:var(--dim);border-color:var(--line);background:#12151b}
+  .why{font-size:12.5px;color:var(--dim);margin:0 0 8px}
+
+  /* grep 拧一拧 */
+  .flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:6px;margin:8px 0}
+  .flag{display:flex;gap:7px;align-items:flex-start;background:#12151b;border:1px solid var(--line);
+    border-radius:7px;padding:6px 8px;font-size:12.8px}
+  .flag input{margin-top:4px;accent-color:var(--accent);flex:0 0 auto}
+  .flag span{color:var(--dim)}
+  .preview{background:#0b0e13;border:1px solid #2b4a70;border-radius:8px;padding:10px 12px;
+    font-family:"Cascadia Mono",Consolas,monospace;font-size:13.2px;word-break:break-all}
+  .preview .p{color:var(--accent)}
+  .shots{margin-top:8px;font-size:12.8px}
+  .shots summary{cursor:pointer;color:var(--warn)}
+  details summary{cursor:pointer;color:var(--warn);font-size:13px}
+</style>
+</head>
+<body>
+
+<h1>今日清单 · 2026.09.23（周三）</h1>
+<div class="sub">
+  W39 还剩 <b>4 天</b>（到 09.27 周日）｜ 编程主线 1.5–2 h/天（<span class="dim">不含英语那 45 分钟</span>）<br>
+  本周主轴 = 🔵 物联网线 ｜ <b>今天主轴 = Linux</b>（因为物联网线在等导师回复）
+</div>
+
+<div class="won">
+  <b>✅ 今天已经赢了一件：物联网 Demo 发给导师了。</b><br>
+  <span class="dim">4 天零信号结束。现在等回复 —— </span><b>期间这条线不占今天的时间</b><span class="dim">。
+  导师一回复立刻告诉我，可能要重排。</span>
+</div>
+
+<div class="card" style="padding:10px 13px">
+  <b style="font-size:13px">跳到你要的那一段：</b>
+  <div class="toc" id="toc"></div>
+</div>
+
+<h2>一、今天做什么（点一下打勾，会自动记住）</h2>
+<div class="card">
+  <div id="tasks">
+    <div class="task"><input type="checkbox" id="t1"><label for="t1">
+      <b>① Linux 微课 1 · 任务 1–5</b>　<span class="warn">← 今天主轴</span>
+      <span class="meta">在你自己服务器上（123.58.220.17）· 约 2–3 h · 参考 <code>Linux/任务清单…md</code></span>
+    </label></div>
+    <div class="task"><input type="checkbox" id="t2"><label for="t2">
+      <b>② 项目立项</b>：建仓库 + README 三段（解决什么问题 / 给谁用 / 怎么算成功）
+      <span class="meta">约 1–2 h · 不写代码，只想清楚 + 建仓库</span>
+    </label></div>
+    <div class="task"><input type="checkbox" id="t3"><label for="t3">
+      <b>③ 第 3 课 JOIN</b>（你约我上课）+ 课后交 D8 作业：选修课三张表 + 一条 JOIN
+      <span class="meta">1 节课 + 约 2 h · 教案早就绪，挂了半个月</span>
+    </label></div>
+    <div class="task"><input type="checkbox" id="t4"><label for="t4">
+      <b>地板</b>：LeetCode 1 题 + 1 个 commit
+      <span class="meta">约 30 min · 地板是下限，不是目标；做不完也不许归零</span>
+    </label></div>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="sub" id="barTxt" style="margin:0"></div>
+</div>
+
+<h2>二、你在上课 → 按时间切</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:34%">什么时候</th><th>只做这一件就够了</th></tr>
+    <tr><td><b>课间 10 分钟</b></td><td>SSH 登进去，只做<b>任务 1</b>（<code>pwd</code> / <code>ls -la</code> / <code>cd ~</code>）—— 目标就一个：<b>搞清楚自己在哪</b></td></tr>
+    <tr><td><b>回宿舍整块 1.5–2 h</b></td><td>任务 2 → 5 一口气做完。中间<b>卡住超过 10 分钟就跳过</b>，记下是第几个，回来告诉我</td></tr>
+    <tr><td><b>睡前 20 分钟</b></td><td>LeetCode 1 题 + 1 个 commit。<b>别开新摊子</b>（项目立项挪到明天也行）</td></tr>
+  </table>
+  <div class="sub" style="margin:10px 0 0">
+    ⚠️ <b>今天最容易犯的错</b>：课上想着"回去一起做"，回宿舍又从任务 1 重来。<b>课间那 10 分钟不是浪费，是热身。</b>
+  </div>
+</div>
+
+<h2>三、今天可能卡住你的东西（卡片）</h2>
+<div class="sub">
+  按你自己卡片模板里的「<b>3 秒判断</b>」分了类 ——
+  <span class="tag deep">值得做真卡片</span> 参数多 / 行为随参数变 / 有过程状态　
+  <span class="tag look">看一眼就懂</span> 只是名字记不住，速查即可
+</div>
+
+<div class="card">
+  <div class="chead"><span class="tag deep">值得做真卡片</span><b>grep</b><span class="dim">按「内容」找东西</span></div>
+  <p class="why">今天任务 2 就要用。它是 <b>参数最多、最容易拼错</b>的一个 —— 而且有个真坑下面会讲。</p>
+
+  <div class="flags" id="flags"></div>
+  <div class="preview">$ <span id="cmd" class="p">grep "8009" .</span></div>
+  <div class="sub" style="margin:8px 0 0">左边勾一个，上面这行就是你要敲的完整命令。</div>
+
+  <div class="shots">
+    <details><summary>⚠️ 真坑：grep 默认是「子串匹配」，不是「找这个词」</summary>
+      <p>实测（我在本机真跑的）：一个文件里有两行 ——</p>
+      <pre>1  端口 8009 在监听
+2  颜色值 0.800927443 是小数</pre>
+      <pre>$ grep -c "8009" 文件        →  2      ← 小数里的 8009 也被算进来了
+$ grep -cw "8009" 文件       →  1      ← 加了 -w，只剩真端口</pre>
+      <p>🔑 <b>这跟我们修过的两个 bug 是同一类</b>：导师那份示例代码里的
+      <code>"助餐" in "助餐,健康监测"</code>、还有卡片校验器的 <code>/on/</code> 把 <code>persons</code> 误判。
+      <b>「包含」不等于「是」</b> —— 找的时候想一下：我要的是子串还是整词？</p>
+    </details>
+    <details><summary>⚠️ 另一个真坑：<code>-r</code> 会钻进 <code>.venv</code> / <code>node_modules</code></summary>
+      <p>实测：在本机项目里搜 <code>8009</code>，<b>8 条命中全来自依赖目录</b>，一条有用的都没有。</p>
+      <pre>$ grep -rn "8009" --include="*.py" .                    →  8 条，全是 .venv 里的噪音
+$ grep -rn "8009" --include="*.py" --exclude-dir=.venv .  →  0 条（干净了）</pre>
+      <p>你服务器上对应的是 <code>.venv</code> / <code>node_modules</code> / <code>.git</code> —— <b>搜之前先把它们排掉</b>。</p>
+    </details>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chead"><span class="tag look">看一眼就懂</span><b>find / locate</b><span class="dim">按「名字」找东西</span></div>
+  <p class="why">跟 grep 是两个不同的问法：<b>find 按名字，grep 按内容</b>。别混。</p>
+  <table>
+    <tr><th style="width:44%">写法</th><th>意思 / 坑</th></tr>
+    <tr><td><code>find / -name "api.py"</code></td><td>从根目录按名字找。<b>慢</b>，且会刷一堆没权限的报错 → 尾巴加 <code>2>/dev/null</code></td></tr>
+    <tr><td><code>locate api.py</code></td><td>走数据库，<b>快得多</b>；但<b>刚建的文件可能还没索引</b>，找不到不代表没有</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <div class="chead"><span class="tag deep">值得做真卡片</span><b>2&gt;/dev/null</b><span class="dim">把「报错」扔掉</span></div>
+  <p class="why">今天任务 1、2 都会看到它。<b>不理解它会以为命令写错了。</b></p>
+  <table>
+    <tr><th style="width:44%">写法</th><th>意思</th></tr>
+    <tr><td><code>命令 &gt; 文件</code></td><td>把<b>正常输出</b>写进文件（1 号口）</td></tr>
+    <tr><td><code>命令 2&gt; 文件</code></td><td>把<b>报错</b>写进文件（2 号口）</td></tr>
+    <tr><td><code>命令 2&gt;/dev/null</code></td><td>把报错<b>扔进黑洞</b>（<code>/dev/null</code> = 垃圾桶）</td></tr>
+    <tr><td><code>命令 &gt; f 2&gt;&amp;1</code></td><td>正常和报错<b>都</b>收进同一个文件（cron 里必写）</td></tr>
+  </table>
+  <p class="why" style="margin:8px 0 0">实测对照：不带重定向时屏幕刷 <code>grep: /root: No such file or directory</code>；加上 <code>2&gt;/dev/null</code> 之后<b>干干净净什么都不显示</b>。</p>
+</div>
+
+<div class="card">
+  <div class="chead"><span class="tag look">看一眼就懂</span><b>看文件的四件工具</b><span class="dim">任务 3</span></div>
+  <p class="why">分工很清楚，记住「什么时候用哪个」就行：</p>
+  <table>
+    <tr><th style="width:30%">工具</th><th>什么时候用</th></tr>
+    <tr><td><code>cat 文件</code></td><td>文件<b>很小</b>时。几百 MB 的日志用它会<b>把终端卡死</b></td></tr>
+    <tr><td><code>less 文件</code></td><td>大文件翻页。按 <code>q</code> 退出（很多人卡在这儿出不来）</td></tr>
+    <tr><td><code>tail -20 文件</code></td><td>只看<b>末尾 20 行</b></td></tr>
+    <tr><td><code>tail -f app.log</code></td><td><b>实时跟踪</b>新日志 —— 排查问题 90% 的时候你要的是这个</td></tr>
+    <tr><td><code>wc -l 文件</code></td><td>数有多少行</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <div class="chead"><span class="tag deep">值得做真卡片</span><b>管道 <code>|</code> 与重定向</b><span class="dim">任务 4</span></div>
+  <p class="why"><b>迷你课 1 最值钱的一个符号。</b>理解了它，你就能把小命令拼成大工具。</p>
+  <pre>$ grep -rn "sqlite3" --include="*.py" . | wc -l
+113                                        ← 直接变成一个数字</pre>
+  <table>
+    <tr><th style="width:26%">符号</th><th>意思</th></tr>
+    <tr><td><code>A | B</code></td><td><b>管道</b>：A 的输出 → 变成 B 的输入</td></tr>
+    <tr><td><code>A &gt; f</code></td><td>写入文件（<span class="bad">会覆盖！先把原文件 cp 备份</span>）</td></tr>
+    <tr><td><code>A &gt;&gt; f</code></td><td>追加到末尾（安全）</td></tr>
+    <tr><td><code>$(命令)</code></td><td>把命令的输出当值用，例：<code>N=$(ls | wc -l)</code></td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <div class="chead"><span class="tag deep">值得做真卡片</span><b>du -sh */ | sort -rh | head</b><span class="dim">任务 5 · 谁占地方</span></div>
+  <p class="why"><b>三个命令拼起来</b>才解决问题 —— 正好是上一张卡片的实战。</p>
+  <pre>$ du -sh */ | sort -rh | head -4
+500M    _ref/          ← du -sh */  每个目录有多大
+3.9M    打印资料/       ← sort -rh   按体积从大到小排
+3.5M    交互演示/       ← head -4    只看前 4 个
+212K    rag/</pre>
+  <table>
+    <tr><th style="width:32%">拆开看</th><th>各干什么</th></tr>
+    <tr><td><code>du -sh */</code></td><td>算每个子目录的总大小（<code>-s</code> 只要总数，<code>-h</code> 人类可读）</td></tr>
+    <tr><td><code>sort -rh</code></td><td><b>-h</b> 让它看得懂 M/G（不然 500M 会被当成字符串排在 3.9M 前面）</td></tr>
+    <tr><td><code>df -h</code></td><td>整个磁盘还剩多少 —— 和 du 不是一回事</td></tr>
+  </table>
+</div>
+
+<h2>四、第 3 课 + D8 作业：会敲到的</h2>
+<div class="card">
+  <div class="chead"><span class="tag deep">值得做真卡片</span><b>sqlite3 四步</b><span class="dim">有过程 / 有状态 → 够格</span></div>
+  <p class="why">D8 作业你要自己建三张表 —— 一定会敲到这四步。<b>顺序错了就报错。</b></p>
+  <pre>import sqlite3
+conn = sqlite3.connect("demo.db")     # ① 连上（文件不存在会自动建）
+cur  = conn.cursor()                  # ② 拿一个游标（真正干活的是它）
+cur.executescript("""CREATE TABLE ...; INSERT ...;""")   # ③ 执行
+conn.commit()                         # ④ 提交！忘了这句 = 白干
+conn.close()                          # ⑤ 关上（跟 conn.close() 漏写那个坑一样）</pre>
+  <table>
+    <tr><th style="width:32%">函数</th><th>返回什么 / 坑</th></tr>
+    <tr><td><code>sqlite3.connect(path)</code></td><td>返回 <b>Connection</b>。用 <code>":memory:"</code> 是内存库，跑完就没，不污染文件</td></tr>
+    <tr><td><code>conn.cursor()</code></td><td>返回 <b>Cursor</b>。查询结果都从它身上拿</td></tr>
+    <tr><td><code>cur.execute(sql)</code></td><td>返回 <b>游标本身</b>（可以链式调）；<b>不是结果</b></td></tr>
+    <tr><td><code>cur.fetchall()</code></td><td>返回<b>列表</b>，每个元素是一个 tuple（一行）</td></tr>
+    <tr><td><code>cur.fetchone()</code></td><td>返回<b>一个 tuple</b>；没数据了返回 <code>None</code></td></tr>
+    <tr><td><code>conn.commit()</code></td><td><b>写操作不 commit = 没生效</b>。这是最常见的"我明明插进去了啊"</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <div class="chead"><span class="tag look">看一眼就懂</span><b>JOIN / LEFT JOIN / COUNT</b><span class="dim">第 3 课正课</span></div>
+  <p class="why">这几条有专门的交互卡（<code>交互演示/SQL基础③-JOIN详解.html</code>），上课时我会带你推。</p>
+  <table>
+    <tr><th style="width:34%">写法</th><th>一句话</th></tr>
+    <tr><td><code>JOIN 表B ON A.id = B.a_id</code></td><td>只留<b>两边都配得上</b>的行。查出来是空 → <b>先怀疑 ON，别怀疑数据没了</b></td></tr>
+    <tr><td><code>LEFT JOIN</code></td><td>左边的表<b>一行都不能丢</b>，配不上的填 <code>NULL</code></td></tr>
+    <tr><td><code>COUNT(列)</code></td><td>数<b>这一列非 NULL 的</b>行数 —— 和 <code>COUNT(*)</code> 不一样</td></tr>
+    <tr><td><code>GROUP BY 列</code></td><td>按这列<b>分堆</b>，每堆算一次聚合</td></tr>
+  </table>
+</div>
+
+<h2>五、LeetCode 地板：模式③ 滑动窗口</h2>
+<div class="card">
+  <div class="chead"><span class="tag deep">值得做真卡片</span><b>float("inf")</b><span class="dim">为什么用它当"最大"</span></div>
+  <p class="why">滑动窗口求"最短"时几乎必用。乍看很怪，理解了就一句话。</p>
+  <pre>best = float("inf")        # 一开始没有任何答案 → 先设成"无穷大"
+for ...:
+    best = min(best, 当前长度)   # 任何真实长度都比它小，第一轮就能被替换掉
+print(best)                # 如果还是 inf → 说明压根没找到答案（这是个有用的信号）</pre>
+  <table>
+    <tr><th style="width:32%">写法</th><th>类型 / 坑</th></tr>
+    <tr><td><code>float("inf")</code></td><td>类型是 <b>float</b>。比任何数值都大，但<b>不是</b>整数</td></tr>
+    <tr><td><code>-float("inf")</code></td><td>求"最大"时当初始值</td></tr>
+    <tr><td>反过来的坑</td><td>求最大值时初始设 <code>0</code> → <b>全是负数就全错</b>（这跟模式②里你用 <code>max</code> 当水位那个坑是同一类）</td></tr>
+  </table>
+</div>
+<div class="card">
+  <div class="chead"><span class="tag look">看一眼就懂</span><b>while left &lt; right</b><span class="dim">模式②已过关，今天只复习</span></div>
+  <p class="why">滑动窗口和双指针共用同一套边界写法。你在模式②已经踩过 <code>max_area</code> 死循环那个坑了 —— <b>写之前先静态三查</b>。</p>
+</div>
+
+<h2>六、卡住时的第一反应</h2>
+<div class="card">
+  <table>
+    <tr><th style="width:26%">卡在哪</th><th>第一反应（不是来问我）</th></tr>
+    <tr><td>Linux 命令</td><td><code>命令 --help</code> 或 <code>man 命令</code>（<code>q</code> 退出）</td></tr>
+    <tr><td>Python 函数</td><td><code>help(函数)</code> / <code>dir(对象)</code> —— 在 REPL 里直接问它</td></tr>
+    <tr><td>SQL 查出来是空</td><td><b>先怀疑 <code>ON</code></b>，不是怀疑数据没了</td></tr>
+    <tr><td>写循环</td><td><b>静态三查</b>：变量推进吗？有终止条件吗？动了题目前提吗？</td></tr>
+    <tr><td>真的卡死</td><td>跳过，记下<b>是第几个任务</b> —— 那就是你的水平线，比做完更重要</td></tr>
+  </table>
+  <div class="sub" style="margin:10px 0 0">
+    ⚠️ <b>先自己试 3 分钟再看提示。</b>试不出来看一眼答案不丢人 —— 但<b>直接翻答案</b>等于没做。
+  </div>
+</div>
+
+<div class="foot">
+  今日清单 · 2026.09.23（周三）· W39 第 3 天 ｜
+  依据：<code>每周目标.md</code>（W39）· <code>Linux/任务清单-在你自己服务器上练.md</code> 微课 1 · <code>第3课-数据模型与JOIN.md</code><br>
+  所有命令输出都是本机<b>真实实测</b>取的，不是编的。卡片判断依据：<code>交互演示/_卡片模板.html</code> 的「3 秒判断」。
+</div>
+
+<script>
+// ---------- 跳转目录：按页面上的 h2 自动生成（不手写，改标题不会忘同步）----------
+(function toc(){
+  var box = document.getElementById('toc');
+  var hs = [].slice.call(document.querySelectorAll('h2'));
+  if(!box || !hs.length) return;
+  hs.forEach(function(h, i){
+    var id = 'sec' + (i + 1);
+    h.id = id;
+    var a = document.createElement('a');
+    a.href = '#' + id;
+    // 只取标题里「一、」后面的主名，去掉括号里的说明，链接才短
+    a.textContent = h.textContent
+      .replace(/^[一二三四五六七八九十]+、/, '')
+      .replace(/[（(].*$/, '')
+      .trim();
+    box.appendChild(a);
+  });
+})();
+
+// ---------- grep 参数拧一拧 ----------
+var FLAGS = [
+  {f:'-r',                     d:'递归进子目录（不加就只能搜当前目录）'},
+  {f:'-n',                     d:'显示行号（排查时几乎必加）'},
+  {f:'-i',                     d:'忽略大小写（error / ERROR 都算）'},
+  {f:'-w',                     d:'整词匹配（排掉 0.800927443 这种假命中）'},
+  {f:'-c',                     d:'只输出「命中多少行」一个数字（和 -n 同用没意义）'},
+  {f:'-v',                     d:'反向：输出「不」匹配的行'},
+  {f:'--include="*.py"',       d:'只在这些文件里搜'},
+  {f:'--exclude-dir=.venv',    d:'跳过依赖目录（不然满屏噪音）'}
+];
+
+(function buildFlags(){
+  var box = document.getElementById('flags');
+  if(!box) return;
+  FLAGS.forEach(function(o, i){
+    var w = document.createElement('label');
+    w.className = 'flag';
+    w.innerHTML = '<input type="checkbox" data-i="' + i + '"><span><code>' +
+                  o.f.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+                  '</code><br>' + o.d + '</span>';
+    box.appendChild(w);
+  });
+  box.addEventListener('change', renderCmd);
+  renderCmd();
+})();
+
+function renderCmd(){
+  var on = [];
+  document.querySelectorAll('#flags input:checked').forEach(function(c){
+    on.push(FLAGS[+c.dataset.i].f);
+  });
+  // ⚠️ 读用户输入必须在任何重绘之前（W-14 的坑）
+  var cmd = 'grep ' + (on.length ? on.join(' ') + ' ' : '') + '"8009" .';
+  document.getElementById('cmd').textContent = cmd;
+}
+
+// ---------- 清单打勾 + 进度（localStorage，失败也不影响用）----------
+(function tasks(){
+  var KEY = 'dsh-todo-20260923';
+  var boxes = [].slice.call(document.querySelectorAll('#tasks input'));
+  if(!boxes.length) return;
+
+  function load(){
+    try{ return JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ return []; }
+  }
+  function save(v){ try{ localStorage.setItem(KEY, JSON.stringify(v)); }catch(e){} }
+
+  function paint(){
+    var n = 0;
+    boxes.forEach(function(b){
+      var row = b.closest('.task');
+      if(b.checked){ n++; row.classList.add('done'); } else { row.classList.remove('done'); }
+    });
+    var pct = Math.round(n / boxes.length * 100);
+    document.getElementById('bar').style.width = pct + '%';
+    document.getElementById('barTxt').textContent =
+      n + ' / ' + boxes.length + ' 完成（' + pct + '%）' +
+      (n === boxes.length ? ' —— 今天的都做完了，去睡觉' : '');
+  }
+
+  var st = load();
+  boxes.forEach(function(b, i){ b.checked = !!st[i]; });
+  paint();
+
+  document.getElementById('tasks').addEventListener('change', function(){
+    save(boxes.map(function(b){ return b.checked; }));
+    paint();   // 先取完值再重绘 —— 但这里 paint() 不碰 checkbox，安全
+  });
+})();
+</script>
+
+</body>
+</html>

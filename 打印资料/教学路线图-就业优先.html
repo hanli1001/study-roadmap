@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>教学路线图 · 就业优先版</title>
+<style>
+  @page { size: A4; margin: 9mm 9mm 8mm 9mm; }
+  * { box-sizing: border-box; }
+
+  :root{
+    --ink:#14171a; --muted:#5b6470; --rule:#d3d8dd; --rule2:#e6e9ed;
+    --red:#a3170f; --redbg:#fdf4f3; --green:#0a6b4f; --greenbg:#f2faf6;
+    --amber:#8a5a00; --amberbg:#fdf8ef; --neutral:#f4f5f7;
+  }
+
+  html,body{ margin:0; padding:0; }
+  body{
+    font:10.5px/1.32 "Microsoft YaHei","Segoe UI",sans-serif;
+    color:var(--ink); background:#fff;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::selection, body ::selection{ background:#cfe4ff; color:#0b1a2b; }
+
+  /* ---------- 屏幕预览：把 A4 当成一张纸 ---------- */
+  @media screen{
+    body{ background:#e9ebee; padding:20px 0; }
+    .page{
+      width:210mm; min-height:297mm; margin:0 auto; background:#fff; padding:9mm;
+      box-shadow:0 1px 2px rgba(16,20,26,.10), 0 10px 28px rgba(16,20,26,.13);
+    }
+  }
+  @media print{ .page{ width:auto; min-height:0; margin:0; padding:0; box-shadow:none; } }
+
+  /* ---------- 报头 ---------- */
+  h1{ font-size:17.5px; font-weight:800; letter-spacing:.4px; margin:0; line-height:1.12; }
+  .kicker{ font-size:11.2px; font-weight:700; color:var(--red); letter-spacing:1.6px; margin:0 0 2px; }
+  .sub{ font-size:9.4px; color:var(--muted); margin-top:2px; }
+  .rule{ height:2px; background:var(--ink); margin:5px 0 0; }
+  .rule.thin{ height:1px; background:var(--rule); margin:4px 0 0; }
+
+  h2{ font-size:11.4px; font-weight:800; margin:8px 0 0; padding-bottom:2px;
+      border-bottom:1.5px solid var(--ink); letter-spacing:.2px; }
+  h2 .hint{ font-weight:400; font-size:9.3px; color:var(--muted); letter-spacing:0; }
+
+  /* ---------- 倒推链（脊柱） ---------- */
+  .tl{ position:relative; margin:4px 0 0; padding-left:92px; }
+  .tl::before{ content:""; position:absolute; left:80px; top:7px; bottom:7px; width:1.5px; background:var(--rule); }
+  .tl .row{ position:relative; padding:2.6px 0; }
+  .tl .row::before{ content:""; position:absolute; left:-12px; top:7.5px;
+      width:6px; height:6px; border-radius:50%; background:#aeb6bf;
+      box-shadow:0 0 0 1.6px #fff; }
+  .tl .row.key::before{ background:var(--red); }
+  .tl .row.now::before{ background:var(--ink); width:7px; height:7px; top:7px; left:-12.5px; }
+  .tl .d{ position:absolute; left:-92px; width:70px; text-align:right;
+      font-size:9.6px; font-weight:700; color:var(--muted); letter-spacing:.1px; top:3px; }
+  .tl .row.key .d{ color:var(--red); }
+  .tl .row.now .d{ color:var(--ink); }
+  .tl .t{ font-size:10.1px; }
+  .tl .t b{ font-weight:800; }
+  .tl .row.key{ background:var(--redbg);
+      margin-left:-6px; padding-left:6px; border-radius:2px; }
+  .tl .row.now{ background:var(--neutral); margin-left:-6px; padding-left:6px;
+      padding-right:6px; border-radius:2px; font-weight:700; }
+
+  /* ---------- 通用表格 ---------- */
+  table{ width:100%; border-collapse:collapse; margin-top:3.5px; }
+  th,td{ border:1px solid var(--rule); padding:2.2px 4.5px; vertical-align:top; text-align:left; }
+  th{ background:var(--neutral); font-size:9.5px; font-weight:800; letter-spacing:.3px; }
+  td{ font-size:10px; }
+  tr.sub-row td{ background:#fafbfc; color:var(--muted); font-size:9.5px; }
+  td.stage{ font-weight:800; text-align:center; font-size:10.8px; width:28px; }
+  td.when{ font-size:9.6px; color:var(--ink); font-weight:700; width:92px; }
+  code{ font-family:Consolas,"Cascadia Mono",monospace; font-size:9.7px;
+        background:var(--neutral); padding:0 2.5px; border-radius:2px; }
+
+  /* ---------- 提示块：着色底 + 顶部细线（不用左粗边） ---------- */
+  .box{ margin-top:6px; padding:6px 8px 7px; border-radius:2px; border-top:2px solid; }
+  .box > .bt{ font-size:10.8px; font-weight:800; display:block; margin-bottom:2px; letter-spacing:.2px; }
+  .box.red{ background:var(--redbg); border-top-color:var(--red); }
+  .box.red .bt{ color:var(--red); }
+  .box.green{ background:var(--greenbg); border-top-color:var(--green); }
+  .box.green .bt{ color:var(--green); }
+  .box.amber{ background:var(--amberbg); border-top-color:var(--amber); }
+  .box.amber .bt{ color:var(--amber); }
+  .box ul{ margin:2px 0 0; padding-left:15px; }
+  .box li{ margin:1.6px 0; }
+  .no{ color:var(--red); font-weight:800; }
+  .yes{ color:var(--green); font-weight:800; }
+
+  .strip{ display:flex; gap:0; margin-top:6px; border:1px solid var(--rule); border-radius:2px; overflow:hidden; }
+  .strip > div{ flex:1; padding:5.5px 8px; }
+  .strip > div + div{ border-left:1px solid var(--rule); }
+  .strip .lab{ font-size:9.1px; font-weight:800; color:var(--muted); letter-spacing:.5px; display:block; }
+  .strip .val{ font-size:10.1px; font-weight:700; }
+  .strip .old{ color:var(--muted); text-decoration:line-through; font-weight:400; }
+
+  .foot{ font-size:8.8px; color:var(--muted); margin-top:9px; padding-top:5px; border-top:1px solid var(--rule2); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="kicker">就业优先版 · 路线 v4</p>
+  <h1>教学路线图 —— 从毕业那天往回排</h1>
+  <div class="sub">
+    韩立 · 安中医 计科 讯飞班 25 级 · 建立 <b>2026.09.22（W39）</b> ·
+    配套 <code>每周目标.md</code>（每周一更新）· 完整版 <code>learning-roadmap.md</code>
+  </div>
+  <div class="rule"></div>
+
+  <h2>① 倒推链 <span class="hint">—— 这条线决定「现在」做什么。不再问「接下来该学什么」，改成从 2029.06 往回排</span></h2>
+  <div class="tl">
+    <div class="row"><span class="d">2029.06</span><span class="t">毕业入职</span></div>
+    <div class="row"><span class="d">2028.09–11</span><span class="t"><b>秋招</b> —— 简历要有 <b>1–2 段实习 + 一个能讲 10 分钟的项目</b></span></div>
+    <div class="row"><span class="d">2028.07–08</span><span class="t">大三暑期实习 —— <b>转正主通道</b></span></div>
+    <div class="row key"><span class="d">2028.03</span><span class="t"><b>分岔口：考研 or 就业</b> —— 凭实习结果定，<b>二选一，不是并行</b></span></div>
+    <div class="row"><span class="d">2027.07–08</span><span class="t">大二暑假 —— 第一段实习 / 项目打磨</span></div>
+    <div class="row key"><span class="d">2027.03</span><span class="t"><b>简历上必须有东西可写</b> ← 倒推链上的<b>第一根死线</b></span></div>
+    <div class="row key"><span class="d">2027.01</span><span class="t"><b>作品 v1 上线公网</b>（自己写的 · 有评测数字）</span></div>
+    <div class="row"><span class="d">2026.10</span><span class="t">项目立项（建仓库 + README 三段）</span></div>
+    <div class="row now"><span class="d">▶ 现在</span><span class="t">2026.09.22 —— 距 2027.03 还有 <b>23 周</b>。一个应用从立项到能写进简历要 2–3 个月 ⇒ <b>立项必须现在做</b></span></div>
+  </div>
+
+  <div class="box red">
+    <span class="bt">这就是 v4 要修的第一个错</span>
+    v3 把「RAG 系统上线」排在 <b>2027.06</b> —— 作品出现得比死线还晚，<b>2027 春投实习时简历是空的</b>。
+    ⇒ <b>作品不是学习的成果，作品是学习的载体</b>；边做边学比「学完再做」快，而且只有前者的产物<b>属于你</b>。
+  </div>
+
+  <h2>② 三段路线 <span class="hint">—— 每段的验收都必须是「别人能验证」的东西</span></h2>
+  <table>
+    <tr><th style="width:30px">阶段</th><th style="width:96px">时间</th><th>主目标</th><th style="width:212px">验收（别人能验证的）</th></tr>
+    <tr>
+      <td class="stage">A</td><td class="when">2026.10<br>–2027.01</td>
+      <td><b>自己设计、自己写、上线一个 AI 应用 v1</b>（公网可访问）</td>
+      <td>公网 URL 能打开 + README 里有<b>评测数字</b>（含怎么测的）</td>
+    </tr>
+    <tr class="sub-row">
+      <td></td><td>副目标</td>
+      <td>Linux 15 任务（<code>Linux/任务清单…md</code>）· SQL JOIN 补齐（P-009）</td>
+      <td>微课 1–2 过关 · 自己建三张表做一条 JOIN</td>
+    </tr>
+    <tr class="sub-row">
+      <td></td><td>地板（每天）</td>
+      <td>LeetCode <b>1 题</b>（不追 150 的进度，不补欠账）+ <b>1 个 commit</b></td>
+      <td>提交记录 —— 地板是下限，不是目标</td>
+    </tr>
+    <tr>
+      <td class="stage">B</td><td class="when">2027.02<br>–06</td>
+      <td>作品 <b>v2</b>（评估 / 可观测 / 界面）+ <b>简历初版</b> + 投 10 家日常实习</td>
+      <td><b>真的投出去 10 份 + 至少 1 次面试</b></td>
+    </tr>
+    <tr>
+      <td class="stage">C</td><td class="when">2027.07<br>–08</td>
+      <td><b>第一段实习</b>（小公司 / 远程 / 日常实习都算）—— Java 降为可选</td>
+      <td>1 段实习（或等价实践）+ 5 次以上面试经历</td>
+    </tr>
+  </table>
+
+  <h2>③ 本周（W39 · 09.21–09.27）三件事 <span class="hint">—— 最多 3 个，写满 3 个不许再加</span></h2>
+  <table>
+    <tr><th style="width:22px">#</th><th>目标</th><th style="width:300px">怎么算完成</th></tr>
+    <tr><td class="stage">1</td><td><b>Linux 微课 1</b>：任务 1–5（在你自己服务器上）</td><td>5 个任务跑过 + <b>合上文档能说出任务 3 的命令</b> + 告诉我卡在第几个</td></tr>
+    <tr><td class="stage">2</td><td><b>项目立项</b>：建仓库 + 写 README</td><td>README 有<b>三段</b>：解决什么问题 / 给谁用 / 怎么算成功</td></tr>
+    <tr><td class="stage">3</td><td><b>第 3 课上课（SQL JOIN）+ D8 作业</b></td><td>你约时间 → 课后交「选修课报名三张表 + 一条 JOIN」</td></tr>
+  </table>
+
+  <div class="box amber">
+    <span class="bt">本周明确「不做」—— 这一栏比做清单更能防摊大饼</span>
+    <span class="no">✕</span> PyTorch / 深度学习（41% 的本科可投岗<b>不要它</b>，补它要几个月；那是<b>硕士岗</b>要求）&nbsp;·&nbsp;
+    <span class="no">✕</span> Java / Spring Boot（本科可投 17 条 JD 里只有 <b>2 条</b>要）&nbsp;·&nbsp;
+    <span class="no">✕</span> 前端 Vue（MVP 用 Streamlit 就够）&nbsp;·&nbsp;
+    <span class="no">✕</span> 囤课 / 收藏教程（<b>收藏 ≠ 学会</b>）
+  </div>
+
+  <h2>④ 「考研当备选」的真相 <span class="hint">—— 这句话是有成本的，别把它当免费的保险</span></h2>
+  <div class="box red">
+    <span class="bt">逐科比对后，v3 那句「双轨准备 · 无浪费」是<b>高估</b>的</span>
+    <table style="margin-top:3px;background:#fff">
+      <tr><th style="width:50%">就业线<b>覆盖</b>的考研科目</th><th>就业线<b>不</b>覆盖的</th></tr>
+      <tr>
+        <td><span class="yes">✓</span> 数据结构（LeetCode 天天练）<br><span class="yes">✓</span> 计算机网络（阶段 A 有）<br><span style="color:#8a5a00;font-weight:800">~</span> 英语（CET4/6 线，与考研英语部分重叠）</td>
+        <td><span class="no">✕</span> <b>考研数学</b>（数一/数二）← <b>最大的一块，也最不能临时抱佛脚</b><br><span class="no">✕</span> 计算机组成原理（线上没有）<br><span class="no">✕</span> 操作系统（线上没有）<br><span class="no">✕</span> 政治（纯考研专用，也没必要提前）</td>
+      </tr>
+    </table>
+    <div class="rule thin"></div>
+    <b>⇒ 真实成本 90% 在数学。那这个保险怎么买？最便宜的一档是免费的：</b><br>
+    你课表上本来就有 <b>高数 / 线代 / 概率 / 操作系统 / 计算机组成原理</b> ——
+    <b>认真上这几门学校课 = 最便宜的考研保险，额外时间成本为零。</b>
+    这不是让你现在准备考研，是让你<b>别把学校课当负担混过去</b>。
+    <div class="rule thin"></div>
+    <b>⏰ 而且 2028.03 是分岔口，不是「到时候再说」：</b>
+    秋招 <b>2028.09–11</b> 与考研初试 <b>2028.12</b> <b>只差 3 个月</b> ⇒ 零基础临阵转考研不可能。
+    2028.03 的决定<b>基本等同于二选一</b>（想转算法/研究岗的话，考研是<b>必需</b>而非选项 —— 但那条要在 2027 年就启动数学）。
+  </div>
+
+  <div class="strip">
+    <div><span class="lab">已达成</span><span class="val">pytest 27 passed</span></div>
+    <div><span class="lab">最大缺口</span><span class="val">一个「从零自己做的」AI 应用</span></div>
+    <div><span class="lab">唯一的新规矩</span><span class="val"><span class="old">我写你看</span> → 你写我审</span></div>
+  </div>
+
+  <div class="foot">
+    依据：<code>职业探索/JD-20条.md</code>（27 条合肥真实 JD）· <code>职业探索/全国对照-牛客-20260921.md</code>（484 条全国 JD）·
+    <code>职业探索/我的差距表-20260921.md</code>（作者归属核查 + 缺口排序）· <code>政策与趋势-20260921.md</code>。
+    所有 JD 结论都标了样本量与关键词，引用请一并带上。<br>
+    ⚠️ 未知项：学员每周可投入时长（看板 1.3 仍空）· 项目载体（领域）未定 · 安中医硕士专业目录是否含计算机方向
+    <code>[未验证]</code> —— 这三项都标在 <code>每周目标.md</code> 的「待你定」里。
+  </div>
+
+</div>
+</body>
+</html>

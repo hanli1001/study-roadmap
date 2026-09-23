@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI Agent 学习路线图 · 一页纸</title>
+<style>
+  @page { size: A4; margin: 10mm 10mm 9mm 10mm; }
+  * { box-sizing: border-box; }
+  body { font: 11.4px/1.48 "Microsoft YaHei","Segoe UI",sans-serif; color: #111; margin: 0; }
+  h1 { font-size: 18px; margin: 0 0 2px; }
+  .sub { font-size: 10.4px; color: #555; margin-bottom: 7px; }
+  h2 { font-size: 12.2px; margin: 9px 0 4px; padding: 2px 6px; background: #ececec;
+       border-left: 4px solid #444; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
+  th, td { border: 1px solid #aaa; padding: 3px 4px; vertical-align: top; text-align: left; }
+  th { background: #f2f2f2; font-size: 10.5px; }
+  td { font-size: 10.9px; }
+  code { font-family: Consolas,"Cascadia Mono",monospace; font-size: 10.6px;
+         background: #f4f4f4; padding: 0 2px; border-radius: 2px; }
+  .warn { border-left: 4px solid #b00; background: #fdf3f3; padding: 5px 7px; font-size: 10.9px; margin: 5px 0; }
+  .good { border-left: 4px solid #0a7; background: #f2fbf7; padding: 5px 7px; font-size: 10.9px; margin: 5px 0; }
+  .info { border-left: 4px solid #06c; background: #f2f7fd; padding: 5px 7px; font-size: 10.9px; margin: 5px 0; }
+  .unk  { border-left: 4px solid #a80; background: #fdfaf0; padding: 5px 7px; font-size: 10.9px; margin: 5px 0; }
+  ul, ol { margin: 3px 0 3px 16px; padding: 0; }
+  li { margin: 1.5px 0; }
+  .cols { display: flex; gap: 10px; }
+  .col { flex: 1; }
+  .foot { font-size: 9.6px; color: #666; text-align: center; margin-top: 7px; }
+  .lv { font-weight: 700; white-space: nowrap; }
+  .g { color: #0a7; } .b { color: #06c; } .p { color: #708; } .y { color: #a80; } .r { color: #b00; } .o { color: #c60; }
+  .yes { color: #0a7; font-weight: 700; } .no { color: #b00; font-weight: 700; } .later { color: #a80; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>AI Agent 学习路线图 · 一页纸</h1>
+<div class="sub">韩立 · 2026.09.21 · 对应 <code>_ref/ai-agent-book-README.md</code> 与 <code>_ref/LEARNING-zh.md</code>（均来自原仓库原文）· 配套 <code>交互演示/Agent核心公式-上下文消融.html</code></div>
+
+<h2>① 这本书是什么（事实，非评价）</h2>
+<table>
+  <tr><td style="width:22%"><b>书名</b></td><td>《深入理解 AI Agent：设计原理与工程实践》· 李博杰 著</td></tr>
+  <tr><td><b>仓库</b></td><td><code>github.com/bojieli/ai-agent-book</code> · 49.5k star · Apache-2.0 <b>完全免费</b> · 15 种语言</td></tr>
+  <tr><td><b>体量</b></td><td>10 章正文（中文约 1MB ≈ <b>50 万字</b>）+ <b>109 个配套实验</b> + 思考题参考答案</td></tr>
+  <tr><td><b>核心公式</b></td><td><b>Agent = LLM + 上下文 + 工具</b>；进生产改写为 <b>Agent = Model + Harness</b>，<br>Harness = 上下文管理 + 工具接口 + 约束 + 验证 + 纠正。<span class="g">后三项就是「能跑的 Demo」与「可靠产品」的那道沟。</span></td></tr>
+  <tr><td><b>官方落地建议</b></td><td>「第 1–5 章足以做出一个可用的 coding agent」</td></tr>
+</table>
+
+<h2>② 十章难度地图（官方分级）＋ <span style="font-weight:400">你现在要不要读</span></h2>
+<table>
+  <tr><th style="width:4%">章</th><th style="width:23%">主题</th><th style="width:11%">官方难度</th><th>一句话核心</th><th style="width:13%">你现在</th></tr>
+  <tr><td>1</td><td>AI Agent 入门</td><td class="lv g">🟢 入门级</td><td>Agent = LLM + 上下文 + 工具；Harness 才是竞争力</td><td class="yes">✔ 现在读</td></tr>
+  <tr><td>2</td><td>上下文工程</td><td class="lv g">🟢 入门级</td><td>全书最关键一章：上下文决定能力上限，前缀越稳缓存命中越高</td><td class="yes">✔ 现在读</td></tr>
+  <tr><td>3</td><td>用户记忆和知识库</td><td class="lv b">🔵 进阶级</td><td>把上下文从单次会话延伸成跨会话积累的持久知识</td><td class="yes">✔ 接着你的 RAG 读</td></tr>
+  <tr><td>4</td><td>工具</td><td class="lv b">🔵 进阶级</td><td>感知工具控信息量，执行工具控风险；MCP 协议</td><td class="later">△ 稍后</td></tr>
+  <tr><td>5</td><td>Coding Agent 与通用 Agent</td><td class="lv p">🟣 高级</td><td>代码是「能创造新工具的工具」</td><td class="later">△ 要较强编程能力</td></tr>
+  <tr><td>6</td><td>交互：观察与动作空间扩展</td><td class="lv p">🟣 高级</td><td>异步 / 语音 / Computer Use / 机器人</td><td class="later">△ 需懂 HTTP·WebSocket</td></tr>
+  <tr><td>7</td><td>Agent 的评估</td><td class="lv y">🟡 工程级</td><td>没有评估，就分不清「设计带来的提升」和「随机波动」</td><td class="later">△ 做项目时再读</td></tr>
+  <tr><td>8</td><td>模型后训练</td><td class="lv r">🔴 专家级</td><td>SFT 记忆、RL 泛化；数据与环境比算法更重要</td><td class="no">✘ 跳过（要训练机器）</td></tr>
+  <tr><td>9</td><td>Agent 的持续进化</td><td class="lv o">🟠 应用级</td><td>从运行轨迹获得学习信号</td><td class="later">△ 以后</td></tr>
+  <tr><td>10</td><td>多 Agent 协作</td><td class="lv o">🟠 应用级</td><td>多 Agent 的每个决策都能在单 Agent 三要素里找到对应</td><td class="later">△ 以后</td></tr>
+</table>
+
+<div class="cols">
+<div class="col">
+
+<h2>③ 你现在的水平线（对照书的前置要求）</h2>
+<table>
+  <tr><th style="width:52%">书要求的前置</th><th>你的状态</th></tr>
+  <tr><td>能读懂并修改中等复杂度的 Python</td><td class="later">🔄 正在路上<br><span style="font-size:10px;color:#555">（这正是你主线在干的事）</span></td></tr>
+  <tr><td>用过 ChatGPT / Claude 类 LLM 产品</td><td class="yes">✅ 有</td></tr>
+  <tr><td>熟悉至少一款 AI 辅助编程工具</td><td class="yes">✅ 你就是这么学的</td></tr>
+  <tr><td>命令行 / Git / JSON / REST API 常识</td><td class="yes">✅ 大部分（REST 待补）</td></tr>
+</table>
+<div class="good"><b>结论</b>：第 1–2 章够得着；<b>第 3 章正好接上你已经做的 RAG</b>。<br>
+你已过关的东西：SQL JOIN · pytest（27 passed）· 哈希模式（23/23）· 双指针（25/25）· 朴素 RAG（Recall@1 <b>87%</b>）。<br>
+<span style="font-size:10.4px">—— 尤其那个 87%：它就是你读第 3 章时<b>现成的对照组</b>。别人是空手读，你是带着一条基线去读的。</span>
+</div>
+
+<h2>④ 三条入口 ＋ 推荐顺序</h2>
+<div class="info"><b>A · 书的官方起点</b>（推荐下一步）　<span class="g">✅ <b>已在你机器上实测跑通</b></span><br>
+第 1 章正文 + 实验 <code>chapter1/context</code>（一个系统性"上下文消融"实验）<br>
+<b class="yes">零成本</b>：注册表里<b>真的有 <code>ollama</code>，且 <code>requires_key=False</code></b>；<br>
+<code>main.py</code> 帮助原文写着「<b>ollama 为本地免费</b>」（主 README 的 provider 表没宣传它）。<br>
+<b>实测结果</b>：<code>--provider ollama --model qwen2.5:3b</code> → 注册 4 个工具、
+模型自主调用 <code>calculate</code> → 答出 <b>2000</b>（(128+372)×4，正确）。2 轮迭代，全程本地。</div>
+
+<div class="info"><b>B · 接着你现有的活干</b><br>
+第 3 章 <code>sparse-embedding</code>（从零实现 BM25 稀疏检索）<br>
++ <code>retrieval-pipeline</code>（稠密 + 稀疏 + 神经重排序 = 混合检索）<br>
+用途：把你自己的 <b>Recall@1 从 87% 往上提</b> —— 有数字可量，不是空谈。</div>
+
+<div class="info"><b>C · 最省力，先建立直觉</b> <span class="g">（<b>已完成</b>）</span><br>
+本地复刻实验 1-1 的消融思想，用你的 qwen2.5:3b 跑，零成本：<br>
+<code>样例代码库/agent_上下文消融.py</code> · 卡片 <code>交互演示/Agent核心公式-上下文消融.html</code><br>
+实测结果：抽掉「工具定义」或「工具结果」，成绩从 <b>20/20 → 0/20</b>。</div>
+
+<div class="good"><b>推荐顺序：C（已完成）→ A（建立整本书的骨架）→ B（回到自己的 RAG 上验证第 3 章）</b><br>
+理由：A 是作者指定的起点，先有骨架再挑章节才不会迷路；B 紧贴你手头正在做的事，学完立刻能验证。</div>
+
+</div>
+<div class="col">
+
+<h2>⑤ 三条实话（省得你走弯路）</h2>
+<div class="warn"><b>1. 这本书不是入门教材，别想着按顺序啃完。</b><br>
+正文约 50 万字 + 109 个实验。官方"入门级"是<b>相对有编程基础的人</b>说的。<br>
+正确用法：当成<b>项目库 + 字典</b> —— 卡在哪查哪，想做什么找对应实验。</div>
+<div class="warn"><b>2. 作者明说：配套代码不用逐行读。</b><br>
+原话：「本书的配套代码全部由 coding agent 根据书稿生成，作者也不会逐行阅读。关键是把架构、核心组件和设计原则想清楚，然后让 AI 去写代码……」<br>
+<span style="font-size:10.4px">—— 这条对你是好消息：你现在的学法（我写你验 / 你写我审）本来就对路。</span></div>
+<div class="warn"><b>3. 第 8 章直接跳过。</b><br>
+全书唯一需要机器学习与模型训练经验的一章；而且你这台机器 <b>8G 显存做不了训练</b>，投入产出比为零。</div>
+
+<h2>⑥ 本机环境清单（我已实测）</h2>
+<table>
+  <tr><th style="width:26%">项</th><th>状态</th></tr>
+  <tr><td>Python</td><td><b>3.13.9</b> ✅ 书要求 3.11–3.13</td></tr>
+  <tr><td>uv</td><td><b>0.11.13</b> ✅ 书推荐 uv（有锁文件，环境可复现）</td></tr>
+  <tr><td>Ollama 模型</td><td><code>bge-m3</code> 1.2G · <code>qwen2.5:3b</code> 1.9G ✅<br><b>qwen2.5:3b 支持工具调用</b>（我实测通过）</td></tr>
+  <tr><td>磁盘</td><td>E: 剩 385G ✅</td></tr>
+  <tr><td>GPU</td><td class="no">RTX 5060 Laptop 8G ⚠️ 日常已用 5.4G，只剩约 2.7G</td></tr>
+</table>
+<div class="warn"><b>显存这一条会咬人，务必记住</b><br>
+Ollama <b>默认给模型开 32768 的上下文</b>，KV cache 白吃一大片显存。<br>
+实测后果：跑几十次后 runner 直接崩，报 <code>model runner has unexpectedly stopped</code>；
+<b>崩了之后模型还会继续"回答"，但全是垃圾</b>（每道题都答 23）—— 假数据比报错危险。<br>
+解法：请求里加 <code>"num_ctx": 4096</code>。加了之后 30 次突发调用零失败。</div>
+
+<h2>⑦ 两个必须知道的坑（我都实测撞过）</h2>
+<div class="warn"><b>坑 1 · 书上 <code>--provider ollama</code> 在 Windows 上开箱即坏</b><br>
+注册表把 ollama 的地址写死成 <code>http://localhost:11434/v1</code>。<br>
+但本机 <code>localhost</code> 解析到 IPv6 <code>::1</code>，而 Ollama 的 <code>/v1</code> 在 <code>::1</code> 上<b>直接断开连接</b>
+（<code>WinError 10054</code> / <code>APIConnectionError</code>）。<br>
+<b>解法</b>：跑之前设环境变量<br>
+<code>OLLAMA_BASE_URL=http://127.0.0.1:11434/v1</code><br>
+<span style="font-size:10.3px">（<code>curl http://localhost:11434/v1/models</code> 返回 200，所以很容易误判成"服务没问题"——
+但 curl 和 httpx 的解析路径不一样，别用 curl 的结果给 SDK 背书）</span></div>
+
+<div class="warn"><b>坑 2 · 书里有个 bug，会把真错误藏起来</b><br>
+<code>chapter1/context/agent.py</code> 只写了 <code>from openai import OpenAI</code>，
+<b>没有 <code>import openai</code></b>，但异常处理里用了 <code>openai.APITimeoutError</code> →
+<b>一旦 API 出错，异常处理器自己先崩</b>，你看到的是 <code>NameError: name 'openai' is not defined</code>，
+真正的错误信息（上面那条 IPv6 连接失败）被完全掩盖。<br>
+我从 <code>_ref/</code> 的本地副本加了这一行（原仓库未改），加完才看到真错误。</div>
+
+<h2>⑧ 我还不确定的地方（诚实标注）</h2>
+<div class="unk">
+<b>未验证</b>：109 个实验里究竟有多少个真正适配 ollama。<br>
+已确证的是 <b>provider 注册表层面支持</b>，并且<b>实验 1-1 实测跑通</b>；<br>
+其余章节逐个是否适配，需要一个个试。<br><br>
+<b>一个已知的坑先告诉你</b>：书的 ollama 默认模型是 <code>qwen3:8b</code>（约 5G），<br>
+<b>你的显存装不下</b> → 必须手动加 <code>--model qwen2.5:3b</code>。<br><br>
+<b>未验证</b>：实验 1-1 里那个 <code>parse_pdf</code>（读 PDF）和 <code>code_interpreter</code>
+（跑代码）两个工具，在 qwen2.5:3b 上表现如何 —— 我只跑通了 <code>calculate</code> 这条路径。
+</div>
+
+</div>
+</div>
+
+<div class="foot">
+  资料来源：<code>github.com/bojieli/ai-agent-book</code> 的 README.md、docs/zh-CN/LEARNING.md、chapter1–3/README.md、
+  agentbook/providers/registry.py、chapter1/context/main.py（均为 2026-09-21 读取的仓库原文）<br>
+  本机实测数字来自 <code>样例代码库/_run-agent消融.txt</code>（100 次模型调用，5 次重复 × 4 题 × 5 组）
+</div>
+
+</body>
+</html>
