@@ -594,3 +594,7 @@ html{ caret-color:var(--pen); scrollbar-color:var(--rule-2) transparent }
   .fncard{ margin:0 0 7px; break-inside:avoid }
   .fn-grid::after{ content:""; display:block; clear:both }
 }
+
+/* 标签 + 它的按钮组要作为一个整体换行 ——
+   否则窄一点时会出现「类别」孤零零留在上一行、按钮全掉到下一行（实测见过）。 */
+.fnset{ display:inline-flex; align-items:center; gap:5px; flex-wrap:wrap }
