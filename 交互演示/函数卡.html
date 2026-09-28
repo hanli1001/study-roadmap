@@ -16,6 +16,7 @@
     <h1>函数卡 · 遇到再查，别背</h1>
     <div class="rec-fields">
       <span class="f" data-k="建">2026.09.24</span>
+      <span class="f" data-k="补">2026.09.28 补齐路线后半段（LLM API / Agent / RAG / 数据 / FastAPI，+47 张）</span>
       <span class="f" data-k="卡数" id="fldCount">— 张</span>
       <span class="f" data-k="怎么用">搜名字 → 看场景 → 复制代码</span>
     </div>
@@ -35,31 +36,54 @@
     </div>
   </header>
 
-  <!-- ══ 使用说明（三条，看完就够）════════════════════════ -->
+  <!-- ══ 使用说明 ═══════════════════════════════════════ -->
   <section class="sec" id="how">
     <h2 data-n="用法">这套卡怎么用（30 秒）</h2>
+
+    <!-- 路线覆盖表：卡数由页面按数据自己算出来，不写死 ——
+         免得以后加了卡、这里变成一句假话（上一版就是"数据库 65%、LLM/Agent 0 张"而没人发现） -->
+    <h3>这套卡覆盖你路线的哪几段</h3>
+    <table id="routeTable">
+      <thead><tr><th style="width:36%">路线段</th><th style="width:11%">卡数</th><th>为什么要有它</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p class="note">
+      🔴 <b>这张表是为了防止上一版的毛病</b>：第一版 79 张里数据库占 65%，而 <b>LLM API / Agent / RAG 一张都没有</b> ——
+      原因是我拿「这一周正在上的课」当了锚。现在改成按<b>你的整条路线</b>分段，哪一段空着，一眼就看得出来。
+    </p>
+
+    <h3>四个阶段标记怎么读</h3>
     <table>
-      <thead><tr><th style="width:22%">你看到的</th><th>意思</th></tr></thead>
+      <thead><tr><th style="width:16%">标记</th><th>意思</th></tr></thead>
       <tbody>
-        <tr><td><span class="tag now">本周</span></td>
-            <td><b>现在就得会</b> —— 第 3 课 + D8 作业里直接要用的。其余的先不用看。</td></tr>
-        <tr><td><span class="tag soon">本月</span></td>
-            <td>这个月大概率撞到（排序、聚合、文件、JSON）。<b>撞到再回来查</b>。</td></tr>
+        <tr><td><span class="tag now">现在</span></td>
+            <td><b>手上这件事直接要用</b> —— 第 3 课 + D8 作业。其余的先不用看。</td></tr>
+        <tr><td><span class="tag soon">近期</span></td>
+            <td>这一两周会撞到（排序、聚合、文件、JSON、日期）。<b>撞到再回来查</b>。</td></tr>
+        <tr><td><span class="tag">阶段A</span></td>
+            <td><b>2026.10–2027.01 做项目 v1 要用的</b>：大模型调用 / Agent / RAG / pandas / FastAPI。
+                现在<b>不用会</b>，但可以翻着看，知道"原来就这几下"。</td></tr>
         <tr><td><span class="tag">以后</span></td>
-            <td>先知道"有这么个东西"，别现在学。看到名字能想起来就行。</td></tr>
+            <td>2027 起才用得上的（正则进阶、第三方库签名）。看到名字能想起来就行。</td></tr>
         <tr><td><b>实测输出</b>（绿块）</td>
             <td>脚本跑出来的<b>真实结果</b>，不是手写的。红块 = <b>故意让它报错</b>的现场，因为报错信息本身就是要认的东西。</td></tr>
       </tbody>
     </table>
 
     <p class="note">
-      ⚠️ <b>抄之前先改表名。</b>卡里的示例跑在一份<b>样板数据</b>上（选修课三张表 <code>students / courses / enrollments</code>
+      🤖 <b>大模型那些卡（LLM API / Agent / RAG）是怎么"实测"的</b>：全部跑在<b>你本机的 Ollama</b> 上
+      （<code>qwen2.5:3b</code> + <code>bge-m3</code>，<code>127.0.0.1:11434</code>），<b>不联网、不花钱</b>。
+      卡上的问答是<b>真调模型</b>得到的那一次回答。
+      ⚠️ 但要说清楚：<b>模型的回答每次会略有不同</b>（<code>temperature=0</code> 也不保证逐字一样），
+      所以你复跑时数字可能变 —— <b>这是模型的特性，不是卡写错了</b>。
+    </p>
+    <p class="note">
+      ⚠️ <b>抄之前先改表名。</b>SQL 那些卡跑在一份<b>样板数据</b>上（选修课三张表 <code>students / courses / enrollments</code>
       ＋ 第 3 课的微信群三张表 <code>persons / groups / group_members</code>）——
       换成你自己的库，表名和列名都要跟着改。这正是第 3 课教的<b>「换皮」</b>。
     </p>
     <p class="note">
-      内置函数<b>不做成背诵卡</b>（那条线已经关掉）——只留 8 张最常撞到的当查询用。
-      要补哪些，说一声就加。
+      内置函数<b>不做成背诵卡</b>（那条线已经关掉）——只留 8 张最常撞到的当查询用。要补哪些，说一声就加。
     </p>
   </section>
 
@@ -111,8 +135,23 @@
   }
 
   var CARDS = (window.LAB_FN_CARDS || []).slice();
-  var CATS = ['SQL', 'sqlite3', '标准库', '内置', '第三方'];
-  var STAGES = ['本周', '本月', '以后'];
+  /* ?print=现在,近期 —— 只影响打印区，不影响屏幕 */
+  var PRINT_ONLY = new URLSearchParams(location.search).get('print');
+  /* 顺序 = 路线的顺序，不是字母序：先手上要用的，再项目期要用的 */
+  var CATS = ['SQL', 'sqlite3', '标准库', '内置', 'LLM API', 'Agent', 'RAG', '数据', 'FastAPI', '第三方'];
+  var STAGES = ['现在', '近期', '阶段A', '以后'];
+
+  /* 路线覆盖表（页面自己算，不写死） */
+  var ROUTE = [
+    [['SQL', 'sqlite3'], '① 数据库（手上这件事）', '第 3 课 + D8 作业；所有后端岗的默认底子'],
+    [['标准库', '内置'], '② 语言与文件', 'json / os / re / datetime —— 写任何脚本都绕不开'],
+    [['LLM API'], '③ 项目 v1：调大模型', '2026.10 立项后的第一块砖；换一家模型只改两行'],
+    [['Agent'], '④ 项目 v1：Agent', 'Agent = LLM + 上下文 + 工具（看板 2.1.1 已开线）'],
+    [['RAG'], '⑤ 项目 v1：检索增强', '你已经跑到 Recall@1 87% 的那条线'],
+    [['数据'], '⑥ 数据与算法调用', 'pandas / numpy —— 物联网线每天要用'],
+    [['FastAPI'], '⑦ 对外提供接口', '你的 api.py；服务器 8009 端口跑的就是它'],
+    [['第三方'], '⑧ 按需查', 'requests / pandas 等的签名速查']
+  ];
   var state = { q: '', cat: '全部', stage: '全部', hideOut: false };
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -139,7 +178,8 @@
     nm.textContent = c.name;
     head.appendChild(nm);
     var tStage = document.createElement('span');
-    tStage.className = 'tag ' + (c.stage === '本周' ? 'now' : c.stage === '本月' ? 'soon' : '');
+    tStage.className = 'tag ' + (c.stage === '现在' ? 'now'
+                    : (c.stage === '近期' || c.stage === '阶段A') ? 'soon' : '');
     tStage.textContent = c.stage;
     head.appendChild(tStage);
     var tCat = document.createElement('span');
@@ -239,8 +279,21 @@
   /* ── 打印版：全部卡，按类别分节（不受上面筛选影响）── */
   function renderPrint() {
     var host = $('#printAll');
+    /* 打印子集：URL 加 ?print=现在,近期 就只印这些阶段。
+       为什么用 URL 而不是"跟着屏幕上的筛选走"—— 屏幕筛选是运行时状态，
+       而 PDF 是**没有交互**时生成的（W-42：复习台那版打出来是空的）。 */
+    var only = PRINT_ONLY ? PRINT_ONLY.split(',') : null;
+    if (only) {
+      var tip = document.createElement('p');
+      tip.className = 'fnh2';
+      tip.textContent = '打印子集：只含 ' + only.join(' / ') + ' —— 共 ' +
+        CARDS.filter(function (c) { return only.indexOf(c.stage) >= 0; }).length + ' 张';
+      host.appendChild(tip);
+    }
     CATS.forEach(function (cat) {
-      var list = CARDS.filter(function (c) { return c.cat === cat; });
+      var list = CARDS.filter(function (c) {
+        return c.cat === cat && (!only || only.indexOf(c.stage) >= 0);
+      });
       if (!list.length) return;
       var h = document.createElement('h2');
       h.className = 'fnh2';
@@ -274,6 +327,27 @@
     });
   }
 
+  /* ── 路线覆盖表：卡数实时算 ─────────────────────────── */
+  function renderRoute() {
+    var tb = document.querySelector('#routeTable tbody');
+    if (!tb) return;
+    ROUTE.forEach(function (row) {
+      var cats = row[0];
+      var n = CARDS.filter(function (c) { return cats.indexOf(c.cat) >= 0; }).length;
+      var tr = document.createElement('tr');
+      var td1 = document.createElement('td');
+      td1.innerHTML = '<b>' + esc(row[1]) + '</b><br><small style=\"color:var(--ink-3)\">' + esc(cats.join(' / ')) + '</small>';
+      var td2 = document.createElement('td');
+      td2.className = 'num';
+      td2.innerHTML = n ? ('<b>' + n + '</b>') : '<b class=\"red\">0</b>';
+      var td3 = document.createElement('td');
+      td3.textContent = row[2];
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+      if (!n) tr.style.background = 'var(--red-soft)';
+      tb.appendChild(tr);
+    });
+  }
+
   function boot() {
     var n = CARDS.length;
     var ok = CARDS.filter(function (c) { return c.ok || c.err; }).length;
@@ -300,6 +374,7 @@
       state.hideOut = ho.checked; persist(); render();
     });
 
+    renderRoute();
     render();
     renderPrint();
   }

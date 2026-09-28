@@ -43,7 +43,20 @@ def file_url(p: Path) -> str:
     return "file:///" + str(p)
 
 
-def to_pdf(browser: str, src: Path, profile: Path) -> bool:
+def split_query(raw: str) -> tuple[Path, str]:
+    """拆出 `路径?查询串`。
+
+    为什么需要：同一个页面要能出不同的 PDF —— 例如函数卡册全量 38 页太重，
+    学员真正会打印的只是「现在」那 24 张（约 8 页）。靠 URL 查询串切换打印子集，
+    就不必维护第二份 HTML（两份必然各自变旧）。
+    """
+    if "?" in raw:
+        path, q = raw.split("?", 1)
+        return Path(path), "?" + q
+    return Path(raw), ""
+
+
+def to_pdf(browser: str, src: Path, profile: Path, query: str = "") -> bool:
     out = src.with_suffix(".pdf")
     if out.exists():
         out.unlink()                       # 先删，避免"旧文件被当成成功"
@@ -56,7 +69,7 @@ def to_pdf(browser: str, src: Path, profile: Path) -> bool:
         "--no-pdf-header-footer",          # 不要浏览器自带的页眉页脚
         f"--user-data-dir={profile}",
         f"--print-to-pdf={out}",
-        file_url(src),
+        file_url(src) + query,
     ]
     subprocess.run(cmd, capture_output=True, timeout=90)
     # 等文件落盘。别把轮询调太短：中文内容多、表格大的页面可能 10 秒以上才写完，
@@ -74,7 +87,7 @@ def to_pdf(browser: str, src: Path, profile: Path) -> bool:
 
 def main() -> int:
     browser = find_browser()
-    targets = [Path(a) for a in sys.argv[1:]] or sorted(SRC_DIR.glob("*.html"))
+    targets = [split_query(a) for a in sys.argv[1:]] or [(p, "") for p in sorted(SRC_DIR.glob("*.html"))]
     if not targets:
         print("打印资料/ 里没有 html 文件")
         return 1
@@ -84,13 +97,13 @@ def main() -> int:
 
     print(f"浏览器：{Path(browser).name}")
     ok = True
-    for src in targets:
+    for src, query in targets:
         src = src if src.is_absolute() else (ROOT / src)
         if not src.exists():
             print(f"  [跳过] 文件不存在：{src}")
             ok = False
             continue
-        good = to_pdf(browser, src, profile)
+        good = to_pdf(browser, src, profile, query)
         size = src.with_suffix(".pdf").stat().st_size if good else 0
         print(f"  [{'OK' if good else '失败'}] {src.name}  ->  {src.with_suffix('.pdf').name}  {size} bytes")
         ok = ok and good

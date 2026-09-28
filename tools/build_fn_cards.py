@@ -19,6 +19,7 @@ import io
 import json
 import sqlite3
 import sys
+import threading
 import unicodedata
 from pathlib import Path
 
@@ -54,7 +55,7 @@ CARDS: list[dict] = []
 
 
 def C(cid, lang, cat, stage, name, brief, code,
-      where="", gotcha="", verify=None, err=False, extra=""):
+      where="", gotcha="", verify=None, err=False, extra="", pre=""):
     """登记一张卡。
 
     cid   卡 id（跨文件引用用，别改）
@@ -63,125 +64,126 @@ def C(cid, lang, cat, stage, name, brief, code,
     stage 本周 | 本月 | 以后   ← 决定"现在要不要会"
     code  示例代码（会被真的执行）
     err   True = 这张卡故意演示报错（跑挂了不算失败）
+    pre   前置代码：真跑时会先执行它，但**不显示在卡上**（用来省掉重复的客户端初始化）
     """
     CARDS.append(dict(id=cid, lang=lang, cat=cat, stage=stage, name=name, brief=brief,
                       code=code.strip("\n"), where=where, gotcha=gotcha,
-                      verify=verify, err=err, extra=extra))
+                      verify=verify, err=err, extra=extra, pre=pre))
 
 
 # ══════════════════════════════════════════════════════════════════════
 # SQL 卡（cat=SQL）
 # ══════════════════════════════════════════════════════════════════════
-C("sql.skeleton", "sql", "SQL", "本周", "SELECT … FROM …",
+C("sql.skeleton", "sql", "SQL", "现在", "SELECT … FROM …",
   "所有查询的骨架：先说「要哪几列」，再说「从哪张表」",
   "SELECT name, class FROM students;",
   where="第3课① · 任何一条 SQL 都长这样",
   gotcha="`SELECT *` 能跑但别常用 —— 列的顺序以后会变，代码会悄悄错位")
 
-C("sql.where", "sql", "SQL", "本周", "WHERE",
+C("sql.where", "sql", "SQL", "现在", "WHERE",
   "先在脑子里选出全部，再一条条筛掉不要的",
   "SELECT name, class FROM students WHERE class = '讯飞班';",
   where="第3课 · 筛选；D8 作业至少要用一次",
   gotcha="筛完只剩 2 行不是因为「表里只有 2 行」，是 WHERE 把它们筛掉了")
 
-C("sql.on_vs_where", "sql", "SQL", "本周", "ON / WHERE 分工",
+C("sql.on_vs_where", "sql", "SQL", "现在", "ON / WHERE 分工",
   "ON = 怎么配对（横着拼），WHERE = 要哪些（竖着筛）",
   "SELECT s.name, e.cid\nFROM students s\nJOIN enrollments e ON s.id = e.sid\nWHERE e.cid = 1;",
   where="第3课④ · 全课最该分清的一对",
   gotcha="把 `e.cid = 1` 挪到 ON 里，INNER JOIN 结果一样 —— 但换成 LEFT JOIN 就天差地别（留在 ON 里 = 右表筛完再拼，放 WHERE 里 = 拼完再筛，会把 NULL 行筛掉）")
 
-C("sql.order_by", "sql", "SQL", "本月", "ORDER BY",
+C("sql.order_by", "sql", "SQL", "近期", "ORDER BY",
   "排序；默认升序，DESC 反过来",
   "SELECT s.name, e.grade\nFROM enrollments e JOIN students s ON s.id = e.sid\nORDER BY e.grade DESC;",
   where="出榜单 / 看最大的那个",
   gotcha="NULL 在 SQLite 里排在最前（DESC 时排最后）—— 想让它垫底要写 `ORDER BY grade IS NULL, grade DESC`")
 
-C("sql.limit", "sql", "SQL", "本月", "LIMIT / OFFSET",
+C("sql.limit", "sql", "SQL", "近期", "LIMIT / OFFSET",
   "只要前 N 条 / 跳过前 N 条（分页就靠它）",
   "SELECT name, credit FROM courses ORDER BY credit DESC LIMIT 2;",
   where="Top-N 排行榜；翻页",
   gotcha="`LIMIT` 没有 `ORDER BY` 时顺序是**未定义**的 —— 每次跑可能不一样")
 
-C("sql.distinct", "sql", "SQL", "本月", "DISTINCT",
+C("sql.distinct", "sql", "SQL", "近期", "DISTINCT",
   "一行里多个列都相同才算重复，去重后只剩一种",
   "SELECT DISTINCT class FROM students;",
   where='「有几种」而不是「有几条」',
   gotcha="`COUNT(DISTINCT 列)` 才是「数几种」；`COUNT(*)` 数的是行数")
 
-C("sql.and_or", "sql", "SQL", "本月", "AND / OR 的优先级",
+C("sql.and_or", "sql", "SQL", "近期", "AND / OR 的优先级",
   "AND 比 OR 先算 —— 所以 OR 两边一定要加括号",
   "SELECT name, class FROM students\nWHERE (class = '讯飞班' OR class = '计科1班') AND name <> '小红';",
   where="多条件筛选",
   gotcha="不加括号会变成「讯飞班的人，或者（计科1班且不叫小红的人）」—— 结果多出来的人你还不一定看得出来")
 
-C("sql.in", "sql", "SQL", "本月", "IN",
+C("sql.in", "sql", "SQL", "近期", "IN",
   "一个字段对一串值，比写一堆 OR 干净",
   "SELECT name FROM students WHERE class IN ('讯飞班', '计科1班');",
   where="按一批 id 批量查（爬虫/接口返回的 id 列表）",
   gotcha="`NOT IN` 遇到 NULL 会整体变空 —— 子查询里可能有 NULL 时别用")
 
-C("sql.between", "sql", "SQL", "本月", "BETWEEN",
+C("sql.between", "sql", "SQL", "近期", "BETWEEN",
   "区间筛选，**两头都算在内**",
   "SELECT name, credit FROM courses WHERE credit BETWEEN 2 AND 5;",
   where="按时间/分数区间查",
   gotcha="`BETWEEN 2 AND 5` = `>= 2 AND <= 5`（含 5）—— 差一个边界是常见 off-by-one")
 
-C("sql.like", "sql", "SQL", "本月", "LIKE 通配",
+C("sql.like", "sql", "SQL", "近期", "LIKE 通配",
   "`%` = 任意多个字符，`_` = 正好一个字符",
   "SELECT id, name FROM courses WHERE name LIKE '_数';",
   where="模糊搜索 / 清洗数据时找脏值",
   gotcha="SQLite 的 LIKE 对 ASCII **大小写不敏感**，对中文当然无所谓 —— 但换成 PostgreSQL 就敏感了")
 
-C("sql.count", "sql", "SQL", "本周", "COUNT(*) / COUNT(列)",
+C("sql.count", "sql", "SQL", "现在", "COUNT(*) / COUNT(列)",
   "COUNT(*) 数行；COUNT(列) 只数**这一列不是 NULL** 的行",
   "SELECT COUNT(*) AS rows_all, COUNT(grade) AS rows_graded FROM enrollments;",
   where="第3课⑥ 诊断第一步：单独数绳子表",
   gotcha="两者不一样就说明这列有 NULL —— 这个差值本身就是线索，不是 bug")
 
-C("sql.count_distinct", "sql", "SQL", "本月", "COUNT(DISTINCT 列)",
+C("sql.count_distinct", "sql", "SQL", "近期", "COUNT(DISTINCT 列)",
   "数「有几种」，不是「有几条」",
   "SELECT COUNT(*) AS rows_all, COUNT(DISTINCT cid) AS kinds FROM enrollments;",
   where="统计去重后的数量（多少门课被选过）",
   gotcha="`COUNT(DISTINCT a, b)` 在 SQLite 里是**语法错误**，多列去重得用子查询")
 
-C("sql.aggregate", "sql", "SQL", "本月", "SUM / AVG / MIN / MAX / ROUND",
+C("sql.aggregate", "sql", "SQL", "近期", "SUM / AVG / MIN / MAX / ROUND",
   "五个聚合函数，NULL 一律不参与计算",
   "SELECT ROUND(AVG(grade), 1) AS avg_g, MAX(grade) AS top, MIN(grade) AS low\nFROM enrollments WHERE grade IS NOT NULL;",
   where="算总分/均分；第7章预习要用",
   gotcha="`AVG` 忽略 NULL，所以分母是「有分数的行数」而不是总行数 —— 拿不准就先 `COUNT(*)` 和 `COUNT(列)` 都打出来看")
 
-C("sql.group_by", "sql", "SQL", "本月", "GROUP BY",
+C("sql.group_by", "sql", "SQL", "近期", "GROUP BY",
   "把行按某列分成堆，每堆出一行（聚合函数的分母就变成「这一堆」）",
   "SELECT cid, COUNT(*) AS n FROM enrollments GROUP BY cid ORDER BY n DESC;",
   where="第7章预习 · 每个群的成员数这种「分堆统计」",
   gotcha="SELECT 里只能出现**分组列 + 聚合函数**，出现别的列时 SQLite 不报错但会随便挑一行给你（别的数据库直接报错）")
 
-C("sql.having", "sql", "SQL", "本月", "HAVING",
+C("sql.having", "sql", "SQL", "近期", "HAVING",
   "筛「堆」。WHERE 筛行、发生在分组前，HAVING 筛堆、发生在分组后",
   "SELECT cid, COUNT(*) AS n FROM enrollments GROUP BY cid HAVING COUNT(*) > 1;",
   where="第7章预习 · 「选课人数 > 1 的课」",
   gotcha="写成 `WHERE COUNT(*) > 1` 会直接报错 —— 因为 WHERE 执行时还没分组，没有「每堆」这个概念")
 
-C("sql.where_aggregate_err", "sql", "SQL", "本月", "坑：WHERE 里用聚合函数",
+C("sql.where_aggregate_err", "sql", "SQL", "近期", "坑：WHERE 里用聚合函数",
   "WHERE 比 GROUP BY 先执行，所以它根本看不到 COUNT(*)",
   "SELECT cid FROM enrollments WHERE COUNT(*) > 1 GROUP BY cid;",
   where="报错现场",
   gotcha="看到 `misuse of aggregate function` 就一个动作：把条件从 WHERE 挪到 HAVING",
   err=True)
 
-C("sql.coalesce", "sql", "SQL", "本月", "IFNULL / COALESCE",
+C("sql.coalesce", "sql", "SQL", "近期", "IFNULL / COALESCE",
   "NULL 换个默认值再显示（NULL 参与算术会让整行变 NULL）",
   "SELECT sid, cid, IFNULL(grade, 0) AS grade FROM enrollments;",
   where="配 LEFT JOIN 用：没匹配上的那侧全是 NULL",
   gotcha="别用 `IFNULL(grade,0)` 去「修」平均值 —— 用 0 冒充「没考」会把均分拉低，该用 `WHERE grade IS NOT NULL`")
 
-C("sql.null_eq_trap", "sql", "SQL", "本月", "坑：`= NULL` 永远查不出东西",
+C("sql.null_eq_trap", "sql", "SQL", "近期", "坑：`= NULL` 永远查不出东西",
   "NULL 的意思是「不知道」，所以「等不等于不知道」的答案是「我也不知道」",
   "SELECT sid, cid FROM enrollments WHERE grade = NULL;",
   where="查「没填的那几条」时最常踩",
   gotcha="要判 NULL 只能用 `IS NULL` / `IS NOT NULL` —— 这个坑**不报错、只是静默返回 0 行**")
 
-C("sql.is_null", "sql", "SQL", "本月", "IS NULL / IS NOT NULL",
+C("sql.is_null", "sql", "SQL", "近期", "IS NULL / IS NOT NULL",
   "判断「这格是不是空的」唯一正确写法",
   "SELECT sid, cid FROM enrollments WHERE grade IS NULL;",
   where="找脏数据 / 找漏填的记录",
@@ -223,38 +225,38 @@ C("sql.group_concat", "sql", "SQL", "以后", "GROUP_CONCAT",
   where='「这个群都有谁」 —— 一行拿到全部成员',
   gotcha="拼接顺序不保证；要固定顺序得先在外面排序（SQLite 3.44+ 才支持 `GROUP_CONCAT(x ORDER BY y)`）")
 
-C("sql.join2", "sql", "SQL", "本周", "JOIN … ON（两表）",
+C("sql.join2", "sql", "SQL", "现在", "JOIN … ON（两表）",
   "拿一边的 id 去另一边配对，配对成功才出一行",
   "SELECT s.name, e.cid\nFROM students s\nJOIN enrollments e ON s.id = e.sid;",
   where="第3课④ · 本课核心",
   gotcha="结果行数 = **配对成功的次数**，不是任何一张表的行数")
 
-C("sql.join3", "sql", "SQL", "本周", "三表 JOIN（中间那张是「绳子」）",
+C("sql.join3", "sql", "SQL", "现在", "三表 JOIN（中间那张是「绳子」）",
   "行数由中间那张绳子表说了算；两头都只是「换名字」",
   "SELECT s.name AS student, c.name AS course, e.grade\nFROM students s\nJOIN enrollments e ON s.id = e.sid\nJOIN courses     c ON e.cid = c.id;",
   where="第3课④ · 第6章换皮就是把它改名",
   gotcha="三张表的顺序可以换，但**每一句 ON 必须紧跟着它要拼的那张表**")
 
-C("sql.join_alias", "sql", "SQL", "本周", "坑：两边都有 id，不给表起别名",
+C("sql.join_alias", "sql", "SQL", "现在", "坑：两边都有 id，不给表起别名",
   "两张表都有 `id` 列时，`ON students.id = courses.id` 里的 id 到底是谁的？",
   "SELECT id, name FROM students JOIN courses ON students.id = courses.id;",
   where="报错现场 —— 别名就是为了解决它",
   gotcha="`ambiguous column name` 的正确解法是给表起别名然后写全：`s.id`、`c.id`",
   err=True)
 
-C("sql.join_wrong_zero", "sql", "SQL", "本周", "坑①：ON 接反 → 0 行（不报错）",
+C("sql.join_wrong_zero", "sql", "SQL", "现在", "坑①：ON 接反 → 0 行（不报错）",
   "groups.id 是 1/2/3，group_members.uid 是 7/9/7 —— 一个都对不上",
   "SELECT persons.name AS person, groups.name AS grp\nFROM groups\nJOIN group_members ON groups.id = group_members.uid\nJOIN persons       ON group_members.gid = persons.id;",
   where="第3课④ 实测反例 1（低危：空的一眼看得出来）",
   gotcha="**JOIN 查出空表时的第一反应应该是「怀疑 ON」，而不是「数据没了」**")
 
-C("sql.join_wrong_fake", "sql", "SQL", "本周", "坑②：id 重叠 → 照样出数据（最危险）",
+C("sql.join_wrong_fake", "sql", "SQL", "现在", "坑②：id 重叠 → 照样出数据（最危险）",
   "students.id 和 courses.id 都从 1 开始，接反了照样配得上 —— 于是给你一张看着完全合理的假表",
   "SELECT s.name AS student, c.name AS course\nFROM students s\nJOIN enrollments e ON s.id = e.cid\nJOIN courses     c ON e.sid = c.id;",
   where="第3课④ 实测反例 2（🔴 高危：静默错误）",
   gotcha="「不为空」**绝不等于**「对」。唯一的防线是**挑一行人工核对内容**——这张表里有**根本没选课的小美**、还有对不上课的小红，一眼就能看出不对")
 
-C("sql.fake_proof", "sql", "SQL", "本周", "证明它到底错在哪：行数一样，内容不同",
+C("sql.fake_proof", "sql", "SQL", "现在", "证明它到底错在哪：行数一样，内容不同",
   "同一批数据，正确写法和接反写法**都出 6 行**；真正差的是其中 2 行的内容",
   """SELECT
  (SELECT COUNT(*) FROM (
@@ -274,19 +276,19 @@ C("sql.fake_proof", "sql", "SQL", "本周", "证明它到底错在哪：行数�
   where="第3课④ 那张假数据卡的下半句 —— 用 SQL 自己证明",
   gotcha="左边 = 正确结果里有、接反结果里没有的（**漏了 2 行**）；右边 = 接反结果凭空多出来的（**假了 2 行**）。⇒ 只数行数永远发现不了，必须看内容")
 
-C("sql.diagnose", "sql", "SQL", "本周", "诊断三步：先数绳子，再数结果",
+C("sql.diagnose", "sql", "SQL", "现在", "诊断三步：先数绳子，再数结果",
   "① 单独数绳子表 ② 数 JOIN 结果 ③ 两数一致不算过关，再挑一行核对内容",
   "SELECT (SELECT COUNT(*) FROM enrollments) AS rope_rows,\n       (SELECT COUNT(*) FROM students s JOIN enrollments e ON s.id = e.sid) AS join_rows;",
   where="第3课⑥ · 本课最实用的迁移技能",
   gotcha="数字对不上（空 / 多很多）→ 几乎一定是 ON；数字**对得上**也可能内容错（id 重叠时）")
 
-C("sql.left_join", "sql", "SQL", "本周", "LEFT JOIN",
+C("sql.left_join", "sql", "SQL", "现在", "LEFT JOIN",
   "左表一行都不能丢；右表配不上就整行填 NULL",
   "SELECT s.name, e.cid, e.grade\nFROM students s LEFT JOIN enrollments e ON s.id = e.sid;",
   where="第3课⑤ 换皮3 · 统计时最常见",
   gotcha="把 `LEFT` 去掉，**没选课的人会整个消失** —— 人数从 5 变 4，而且不报错")
 
-C("sql.inner_vs_left", "sql", "SQL", "本周", "INNER vs LEFT：差在哪一行",
+C("sql.inner_vs_left", "sql", "SQL", "现在", "INNER vs LEFT：差在哪一行",
   "同一条查询，只差 `LEFT` 四个字母，结果少一行",
   "SELECT s.name FROM students s JOIN enrollments e ON s.id = e.sid;",
   where="对照上一张卡看：5 个人变成了 4 个人，小美没了",
@@ -304,40 +306,40 @@ C("sql.union", "sql", "SQL", "以后", "UNION",
   where="合并两张结构相同的表（比如两个月的日志）",
   gotcha="两边**列数必须一样**，列名以第一条为准 —— 列对不齐时不报错，只会悄悄错位")
 
-C("sql.tables", "sql", "SQL", "本周", "看这个库有哪些表",
+C("sql.tables", "sql", "SQL", "现在", "看这个库有哪些表",
   "不用装数据库工具，一条 SQL 就能看清家底",
   "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;",
   where="第3课① 「这库里一共几张表」那道题的正确做法",
   gotcha="`sqlite_master` 是 SQLite 专有；MySQL 里叫 `SHOW TABLES`")
 
-C("sql.pragma", "sql", "SQL", "本周", "看一张表的结构",
+C("sql.pragma", "sql", "SQL", "现在", "看一张表的结构",
   "列名、类型、是否主键，一条 PRAGMA 全给你",
   "PRAGMA table_info(enrollments);",
   where="忘了列名时先看这个，别猜",
   gotcha="`PRAGMA` 不是标准 SQL（且不吃 `?` 占位符）—— 表名只能拼字符串，只用于自己写死的表名")
 
-C("sql.create_table", "sql", "SQL", "本周", "CREATE TABLE",
+C("sql.create_table", "sql", "SQL", "现在", "CREATE TABLE",
   "并列三件事：列定义、主键、外键约束",
   "CREATE TABLE enrollments_new (\n    sid   INTEGER NOT NULL REFERENCES students(id),\n    cid   INTEGER NOT NULL REFERENCES courses(id),\n    grade REAL,\n    PRIMARY KEY (sid, cid)\n);",
   where="第3课③ · D8 作业的第一件事",
   gotcha="**复合主键** `PRIMARY KEY (sid, cid)` 直接防住「同一个人重复选同一门课」—— 比在 Python 里查一遍再插可靠",
   verify="PRAGMA table_info(enrollments_new);")
 
-C("sql.insert", "sql", "SQL", "本周", "INSERT INTO",
+C("sql.insert", "sql", "SQL", "现在", "INSERT INTO",
   "列名写全，值用 `?` 占位（Python 里）",
   "INSERT INTO students (id, name, class) VALUES (6, '小七', '计科1班');",
   where="D8 作业：插 3 行数据",
   gotcha="列名和值**数量必须一致**，否则报 `table has N columns but M values were supplied`",
   verify="SELECT * FROM students WHERE id = 6;")
 
-C("sql.update", "sql", "SQL", "本月", "UPDATE … WHERE",
+C("sql.update", "sql", "SQL", "近期", "UPDATE … WHERE",
   "改数据。**没有 WHERE 就是改全表**（没有撤销）",
   "UPDATE enrollments SET grade = 90 WHERE sid = 3 AND cid = 5;",
   where="补分数、改状态",
   gotcha="养成习惯：先把 `WHERE` 那段单拎出来 `SELECT` 一遍，确认命中行数，再改成 UPDATE",
   verify="SELECT sid, cid, grade FROM enrollments WHERE sid = 3 AND cid = 5;")
 
-C("sql.delete", "sql", "SQL", "本月", "DELETE FROM … WHERE",
+C("sql.delete", "sql", "SQL", "近期", "DELETE FROM … WHERE",
   "删行。同样：**没有 WHERE 就是清空整张表**",
   "DELETE FROM students WHERE id = 5;",
   where="删脏数据",
@@ -347,7 +349,7 @@ C("sql.delete", "sql", "SQL", "本月", "DELETE FROM … WHERE",
 # ══════════════════════════════════════════════════════════════════════
 # Python · sqlite3（cat=sqlite3）
 # ══════════════════════════════════════════════════════════════════════
-C("py.sqlite_skeleton", "py", "sqlite3", "本周", "六行骨架：连接 → 游标 → 执行 → 取 → 关",
+C("py.sqlite_skeleton", "py", "sqlite3", "现在", "六行骨架：连接 → 游标 → 执行 → 取 → 关",
   "连 Python 和数据库的全部动作就这六行",
   """import sqlite3
 conn = sqlite3.connect(":memory:")          # 文件路径；:memory: = 内存库
@@ -361,7 +363,7 @@ conn.close()""",
   where="第3课 · 所有 SQL 作业的外壳",
   gotcha="`commit()` 忘写的后果见下一张卡 —— 它和 `close()` 是**两件事**")
 
-C("py.sqlite_commit", "py", "sqlite3", "本周", "commit() vs close()：谁在丢数据",
+C("py.sqlite_commit", "py", "sqlite3", "现在", "commit() vs close()：谁在丢数据",
   "P-014 的实测：换一个连接去读，看数据还在不在",
   """import sqlite3, tempfile, os, shutil
 d = tempfile.mkdtemp(); p = os.path.join(d, "k.db")
@@ -381,7 +383,7 @@ c2.close(); shutil.rmtree(d, ignore_errors=True)""",
   where="第3课① 检索题（当场答错的那道）· P-014",
   gotcha="**丢数据的凶手是 `commit`，不是 `close`。** `close()` 忘写的代价是占资源（见下张卡），不是丢数据")
 
-C("py.sqlite_close", "py", "sqlite3", "本周", "close() 忘了写会怎样",
+C("py.sqlite_close", "py", "sqlite3", "现在", "close() 忘了写会怎样",
   "连接不关 → 文件被锁住 → 连删都删不掉",
   """import sqlite3, tempfile, os, shutil
 d = tempfile.mkdtemp(); p = os.path.join(d, "k.db")
@@ -398,7 +400,7 @@ shutil.rmtree(d, ignore_errors=True)""",
   where="P-014 的另一半：close 的真实代价",
   gotcha="Linux/Mac 上删得掉，**只有 Windows 会当场报 `WinError 32`** —— 所以这个坑在 Windows 上反而更容易被发现")
 
-C("py.sqlite_fetch", "py", "sqlite3", "本周", "fetchone / fetchall / 直接遍历",
+C("py.sqlite_fetch", "py", "sqlite3", "现在", "fetchone / fetchall / 直接遍历",
   "三种取结果的方式，选中一条就不可能再回头",
   """import sqlite3
 conn = sqlite3.connect(":memory:")
@@ -414,7 +416,7 @@ conn.close()""",
   where="取查询结果",
   gotcha="游标是**一次性**的：`fetchone()` 之后再 `fetchall()` 拿不到已经取走的那行。要重复用就把结果存进 list")
 
-C("py.sqlite_executemany", "py", "sqlite3", "本周", "executemany() 批量插入",
+C("py.sqlite_executemany", "py", "sqlite3", "现在", "executemany() 批量插入",
   "一次插 20 行，别写 20 条 execute",
   """import sqlite3
 conn = sqlite3.connect(":memory:")
@@ -429,7 +431,7 @@ conn.close()""",
   where="灌测试数据 / 批量写爬下来的数据",
   gotcha="参数是**一个可迭代对象**，每项对应一条语句；写成 `executemany(sql, (1,2))` 会把它当成两行单列")
 
-C("py.sqlite_param", "py", "sqlite3", "本周", "`?` 占位符（防注入）",
+C("py.sqlite_param", "py", "sqlite3", "现在", "`?` 占位符（防注入）",
   "值永远走参数，不要用 f-string 拼进 SQL",
   """import sqlite3
 conn = sqlite3.connect(":memory:")
@@ -444,7 +446,7 @@ conn.close()""",
   where="所有带用户输入的查询",
   gotcha="**单元素也必须写成 `(who,)`** —— 少了逗号 `(who)` 只是个字符串，会被当成一个可迭代对象逐字符拆开，报 `Incorrect number of bindings`")
 
-C("py.sqlite_row", "py", "sqlite3", "本周", "row_factory：按列名取值",
+C("py.sqlite_row", "py", "sqlite3", "现在", "row_factory：按列名取值",
   "设一次 `row_factory`，之后 `row['name']` 就能用",
   """import sqlite3
 conn = sqlite3.connect(":memory:")
@@ -498,7 +500,7 @@ conn.close()""",
 # ══════════════════════════════════════════════════════════════════════
 # Python · 标准库（cat=标准库）
 # ══════════════════════════════════════════════════════════════════════
-C("py.json_dumps", "py", "标准库", "本月", "json.dumps",
+C("py.json_dumps", "py", "标准库", "近期", "json.dumps",
   "Python 对象 → JSON 字符串（接口/存盘都用它）",
   """import json
 d = {"name": "韩立", "score": 88.5, "tags": ["python", "sql"]}
@@ -507,7 +509,7 @@ print(json.dumps(d, ensure_ascii=False, indent=2))""",
   where="调大模型 API 的请求体；把结果存成文件",
   gotcha="`ensure_ascii=False` 不加，中文会变成 `\\u97e9\\u7acb` —— 能用但没法看")
 
-C("py.json_loads", "py", "标准库", "本月", "json.loads",
+C("py.json_loads", "py", "标准库", "近期", "json.loads",
   "JSON 字符串 → Python 对象（大模型返回的就是个字符串）",
   """import json
 s = '{"answer": 42, "ok": true, "items": [1, 2]}'
@@ -521,7 +523,7 @@ except KeyError as e:
   where="解析接口/大模型返回",
   gotcha="`loads` 吃字符串，`load` 吃文件对象 —— 差一个 s 是两种用法，报错信息很像（都叫 JSONDecodeError）")
 
-C("py.json_file", "py", "标准库", "本月", "json.dump / json.load 直接读写文件",
+C("py.json_file", "py", "标准库", "近期", "json.dump / json.load 直接读写文件",
   "省掉 open 那一步",
   """import json, tempfile, os, shutil
 d = tempfile.mkdtemp(); p = os.path.join(d, "out.json")
@@ -533,7 +535,7 @@ shutil.rmtree(d, ignore_errors=True)""",
   where="把中间结果存盘，下次不用重跑",
   gotcha="**一定要写 `encoding='utf-8'`** —— Windows 默认编码不是 utf-8，中文会乱码或直接 `UnicodeEncodeError`")
 
-C("py.open_read", "py", "标准库", "本月", "with open(...) 读文件",
+C("py.open_read", "py", "标准库", "近期", "with open(...) 读文件",
   "`with` 会自动关文件，不用手动 close",
   """import tempfile, os, shutil
 d = tempfile.mkdtemp(); p = os.path.join(d, "a.txt")
@@ -545,7 +547,7 @@ shutil.rmtree(d, ignore_errors=True)""",
   where="读日志/读 txt 语料",
   gotcha="`line` 自带 `\\n`，直接 print 会多一个空行 —— 要么 `rstrip()`，要么 print 时加 `end=''`")
 
-C("py.open_write", "py", "标准库", "本月", "open(..., 'w') 写文件",
+C("py.open_write", "py", "标准库", "近期", "open(..., 'w') 写文件",
   "`w` 覆盖、`a` 追加，都要显式写编码",
   """import tempfile, os, shutil
 d = tempfile.mkdtemp(); p = os.path.join(d, "log.txt")
@@ -558,7 +560,7 @@ shutil.rmtree(d, ignore_errors=True)""",
   where="记运行日志 / 导出结果",
   gotcha="**`'w'` 会立刻清空原文件** —— 想追加却写了 `'w'`，上一次的结果就没了（且没有提示）")
 
-C("py.os_path", "py", "标准库", "本月", "os.path.join / exists",
+C("py.os_path", "py", "标准库", "近期", "os.path.join / exists",
   "拼路径永远用 join，别手写 `+ '/' +`",
   """import os
 p = os.path.join("E:\\\\项目学习", "交互演示", "函数卡.html")
@@ -570,7 +572,7 @@ print("扩展名 →", os.path.splitext(p)[1])""",
   where="所有涉及文件路径的代码",
   gotcha="`os.path.join('E:\\\\a', '/b')` 里第二个参数带开头的斜杠时，**前面的路径会被整个丢掉** —— 得到 `/b`")
 
-C("py.os_makedirs", "py", "标准库", "本月", "os.makedirs(..., exist_ok=True)",
+C("py.os_makedirs", "py", "标准库", "近期", "os.makedirs(..., exist_ok=True)",
   "建多层目录；`exist_ok=True` 让「已存在」不报错",
   """import os, tempfile, shutil
 d = tempfile.mkdtemp()
@@ -582,7 +584,7 @@ shutil.rmtree(d, ignore_errors=True)""",
   where="写文件前确保目录存在（爬虫存图、导出报告）",
   gotcha="不写 `exist_ok=True`，跑第二遍就 `FileExistsError` —— 这是「只在第二次运行才炸」的经典 bug")
 
-C("py.os_listdir", "py", "标准库", "本月", "os.listdir / glob 过滤",
+C("py.os_listdir", "py", "标准库", "近期", "os.listdir / glob 过滤",
   "列目录，再按后缀筛",
   """import os, tempfile, shutil
 d = tempfile.mkdtemp()
@@ -605,7 +607,7 @@ print("存在吗 →", p.exists(), "｜ 是文件吗 →", p.is_file())""",
   where="新写的脚本（老代码里 os.path 也常见，两种都要能读）",
   gotcha="`Path` 对象不能直接丢给老函数当字符串用 —— 必要时 `str(p)`")
 
-C("py.re_findall", "py", "标准库", "本月", "re.findall",
+C("py.re_findall", "py", "标准库", "近期", "re.findall",
   "在一段文本里捞出所有符合模式的片段",
   """import re
 text = "订单 A1001 金额 88 元；订单 A1002 金额 192 元"
@@ -615,7 +617,7 @@ print("成对取     →", re.findall(r"(A\\d{4}).*?(\\d+) 元", text))""",
   where="从网页/日志里提取字段",
   gotcha="模式字符串前面**一定要加 r**（原始字符串）—— 不加的话 `\\d` 会被 Python 先当成转义字符处理")
 
-C("py.re_search", "py", "标准库", "本月", "re.search + 分组",
+C("py.re_search", "py", "标准库", "近期", "re.search + 分组",
   "只找第一个；用括号分组把想要的部分单独取出来",
   """import re
 m = re.search(r"(\\d{4})-(\\d{2})-(\\d{2})", "今天是 2026-09-24 周四")
@@ -627,7 +629,7 @@ print("没找到时 →", re.search(r"zzz", "abc"))""",
   where="解析日期、版本号、URL 参数",
   gotcha="`re.search` 找不到时返回 **None**，直接 `.group()` 会 `AttributeError` —— 先 `if m:`")
 
-C("py.re_sub", "py", "标准库", "本月", "re.sub",
+C("py.re_sub", "py", "标准库", "近期", "re.sub",
   "按模式替换（清洗文本的主力）",
   """import re
 s = "价格：￥1,299.00 元  （含税）"
@@ -637,7 +639,7 @@ print(re.sub(r"(\\d+)\\.(\\d+)", r"\\2.\\1", "3.14"))     # 分组反向引用""
   where="清洗爬下来的文本 / 归一化输入",
   gotcha="`re.sub` 默认**替换所有**匹配；只想换第一个要加 `count=1`")
 
-C("py.datetime_now", "py", "标准库", "本月", "datetime.now() / strftime",
+C("py.datetime_now", "py", "标准库", "近期", "datetime.now() / strftime",
   "取当前时间，格式化成字符串",
   """from datetime import datetime
 now = datetime.now()
@@ -648,7 +650,7 @@ print("星期日历 →", now.strftime("%Y-%m-%d %A"))""",
   where="给导出文件起名；记日志时间戳",
   gotcha="Windows 上 `strftime('%Y-%m-%d')` 没问题，但**文件名里不能有 `:`** —— `%H:%M` 直接拿去当文件名会失败")
 
-C("py.datetime_strptime", "py", "标准库", "本月", "strptime：字符串 → 时间",
+C("py.datetime_strptime", "py", "标准库", "近期", "strptime：字符串 → 时间",
   "把文本日期变成能计算的对象（转回来才能减）",
   """from datetime import datetime
 d = datetime.strptime("2026-09-21", "%Y-%m-%d")
@@ -661,7 +663,7 @@ except ValueError as e:
   where="算复习到期日 / 算实习倒计时",
   gotcha="格式串必须和输入**严格一致**（`2026/09/21` 配 `%Y-%m-%d` 会报 `does not match format`）")
 
-C("py.timedelta", "py", "标准库", "本月", "timedelta：日期加减",
+C("py.timedelta", "py", "标准库", "近期", "timedelta：日期加减",
   "算差几天、N 天后是哪天",
   """from datetime import date, timedelta
 anchor = date(2026, 9, 23)                  # 你的倒推起点
@@ -764,7 +766,7 @@ print("长度不等时 →", list(zip([1, 2, 3], "ab")))""",
   where="两个来源的数据要一起处理",
   gotcha="长度不等时**按短的截断，不报错** —— 数据对不齐时会静默丢数据（Python 3.10+ 可用 `strict=True` 让它报错）")
 
-C("bi.sorted_key", "py", "内置", "本月", "sorted(key=…)",
+C("bi.sorted_key", "py", "内置", "近期", "sorted(key=…)",
   "排序的万能钥匙：`key` 决定「按什么排」",
   """rows = [("小明", 88.5), ("小红", 92.0), ("小刚", 76.5)]
 print("按分数 →", sorted(rows, key=lambda r: r[1], reverse=True))
@@ -797,7 +799,7 @@ print("空列表的默认 →", any([]), all([]))""",
   where="批量校验（检查所有字段都非空）",
   gotcha="空列表时 `all([])` 是 **True**（「全都满足」在逻辑上成立）—— 拿它当「数据没问题」的判断会漏掉空数据的情况")
 
-C("bi.type_cast", "py", "内置", "本月", "int / float / str 类型转换",
+C("bi.type_cast", "py", "内置", "近期", "int / float / str 类型转换",
   "输入永远是字符串，要算就得先转",
   """print(int("42") + 1, float("3.5") * 2, str(42) + "!")
 print("取整 →", int(3.9), "（截断不是四舍五入）｜ round →", round(3.9))
@@ -809,7 +811,7 @@ except ValueError as e:
   where="读用户输入、读文件里的数字",
   gotcha="`int(3.9)` 是 **3**（截断）；要四舍五入用 `round()`。`int('3.5')` 也会报错，得先 `float()`")
 
-C("bi.fstring", "py", "内置", "本月", "f-string 格式化",
+C("bi.fstring", "py", "内置", "近期", "f-string 格式化",
   "在字符串里直接写变量，还能控制小数位和对齐",
   """name, score = "韩立", 88.4567
 print(f"{name} 的分数是 {score}")
@@ -859,20 +861,67 @@ def run_sql(code: str, verify: str | None) -> str:
         con.close()
 
 
-def run_py(code: str) -> str:
+def run_py(code: str, pre: str = "") -> str:
     buf = io.StringIO()
     ns = {"__name__": "__card__"}
+    full = (pre + "\n\n" + code) if pre else code
     with contextlib.redirect_stdout(buf):
-        exec(compile(code, "<card>", "exec"), ns)
+        exec(compile(full, "<card>", "exec"), ns)
     return buf.getvalue().rstrip("\n")
+
+
+CARD_TIMEOUT = 180      # 单张卡最多等 3 分钟（模型调用可能慢）
+
+
+def run_guarded(fn, what: str):
+    """带超时护栏地跑一张卡。
+
+    为什么不直接调：本文件里有 30+ 张卡要**真调本机大模型**，一个卡住的调用会把整次构建挂死
+    —— 这条规矩是学员自己踩出来的（W-24：跑他的死循环代码，把我两次工具调用都打断了）。
+    护栏用线程 + join(timeout)：超时后放弃等待，线程是 daemon，不会拦住脚本退出。
+    """
+    box: dict = {}
+
+    def target():
+        try:
+            box["v"] = fn()
+        except BaseException as e:                            # noqa: BLE001
+            box["e"] = e
+    th = threading.Thread(target=target, daemon=True)
+    th.start()
+    th.join(CARD_TIMEOUT)
+    if th.is_alive():
+        raise TimeoutError(f"{what} 超过 {CARD_TIMEOUT} 秒仍未返回")
+    if "e" in box:
+        raise box["e"]
+    return box["v"]
+
+
+def load_extra() -> None:
+    """载入 `_fn_cards_extra.py`（路线后半段：LLM API / Agent / RAG / 数据 / FastAPI）。
+
+    单独一个文件是因为那一段是按「学员的路线」写的，和按「某次课」写的主表不是一回事；
+    显式按文件路径载入，避免依赖 sys.path。
+    """
+    import importlib.util
+    path = Path(__file__).with_name("_fn_cards_extra.py")
+    spec = importlib.util.spec_from_file_location("_fn_cards_extra", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    CARDS.extend(mod.CARDS_EXTRA)
+    print(f"extra = {len(mod.CARDS_EXTRA)} 张（路线后半段）")
 
 
 def main() -> int:
     check_only = "--check" in sys.argv
+    load_extra()
     bad: list[str] = []
     for c in CARDS:
         try:
-            c["out"] = run_sql(c["code"], c["verify"]) if c["lang"] == "sql" else run_py(c["code"])
+            c["out"] = run_guarded(
+                (lambda cc=c: run_sql(cc["code"], cc["verify"])) if c["lang"] == "sql"
+                else (lambda cc=c: run_py(cc["code"], cc.get("pre", ""))),
+                c["id"])
             c["ok"] = True
             if c["err"]:
                 bad.append(f"{c['id']}: expected an error but it ran fine")
@@ -905,7 +954,8 @@ def main() -> int:
     if check_only:
         return 1 if bad else 0
 
-    payload = json.dumps(CARDS, ensure_ascii=False, indent=1)
+    slim = [{k: v for k, v in c.items() if k != "pre"} for c in CARDS]
+    payload = json.dumps(slim, ensure_ascii=False, indent=1)
     OUT.write_text(
         "/* 自动生成 —— 不要手改这个文件！\n"
         "   事实源：tools/build_fn_cards.py（卡片文字 + 示例代码）\n"

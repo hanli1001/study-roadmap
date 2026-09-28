@@ -585,3 +585,12 @@ html{ caret-color:var(--pen); scrollbar-color:var(--rule-2) transparent }
   .tag{ font-size:7.6pt; padding:0 4px }
   .fnh2{ font-size:12.5pt; margin:9px 0 6px }
 }
+
+/* 打印态：把 grid 换成多栏（column）——
+   grid 是"按行对齐"：同一行里一张高卡会把整行撑高，旁边那张矮卡就留一片空白。
+   实测 126 张卡排成 42 页，一半纸是空的。多栏是"**填满一栏再下一栏**"，能把这些缝填上。 */
+@media print{
+  .fn-grid{ display:block; column-count:2; column-gap:8px }
+  .fncard{ margin:0 0 7px; break-inside:avoid }
+  .fn-grid::after{ content:""; display:block; clear:both }
+}
