@@ -1,7 +1,8 @@
 """中医方剂数据库 - JOIN 联表查询"""
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect("prescriptions.db")
+conn = sqlite3.connect(Path(__file__).with_name("prescriptions.db"))
 cur = conn.cursor()
 
 # 1. 删旧表重建（因为结构变了）

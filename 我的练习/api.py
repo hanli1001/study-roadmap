@@ -31,6 +31,7 @@
 # ╚══════════════════════════════════════════════════════════╝
 
 import sqlite3
+from pathlib import Path
 from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -96,7 +97,9 @@ def get_db():
 
     类比：服务员每次进后厨都拿一个新托盘，出来时把托盘放回架子。
     """
-    conn = sqlite3.connect("prescriptions.db")
+    # ⚠️ 2026-09-28 改：原来写 "prescriptions.db"（相对 cwd）——
+    # 从别的目录跑就找不到库（整理目录后 5 个测试当场红）。改成跟着脚本自己走，从哪跑都对。
+    conn = sqlite3.connect(Path(__file__).with_name("prescriptions.db"))
     conn.row_factory = sqlite3.Row
     return conn
 

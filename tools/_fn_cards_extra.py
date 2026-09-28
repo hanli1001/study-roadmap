@@ -631,7 +631,7 @@ def hello():
     return {"msg": "你好"}
 print("路径表 =", [r.path for r in app.routes if r.path.startswith("/")])
 print("方法   =", [sorted(r.methods)[0] for r in app.routes if r.path == "/hello"])''',
-  where="你 `api.py` 的骨架；服务器 8009 端口上跑的就是这个",
+  where="你 `../我的练习/api.py` 的骨架；服务器 8009 端口上跑的就是这个",
   gotcha="**返回 dict 就会被自动转成 JSON** —— 你不需要 `json.dumps`。"
          "但返回一个不能序列化的对象（比如 datetime 以外的自定义类）会 500")
 

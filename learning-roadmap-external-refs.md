@@ -2,7 +2,7 @@
 
 > 2026.09 收集 · 与 `learning-roadmap.md`（v3）配合使用
 > 用途：为现有个人路线提供体系化知识地图与进阶资源，star 数为 2026.09 查询值
-> 教学法证据来源见文末 H 段（`teaching-methodology.md` v2 的依据）
+> 教学法证据来源见文末 H 段（`课程/teaching-methodology.md` v2 的依据）
 
 ---
 

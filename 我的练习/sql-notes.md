@@ -140,4 +140,4 @@ prescription_ingredients（关联表）
 
 ---
 
-*代码文件：`E:\项目学习\prescription_db.py`*
+*代码文件：`E:\项目学习\我的练习\prescription_db.py`*
