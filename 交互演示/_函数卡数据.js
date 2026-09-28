@@ -720,7 +720,7 @@ window.LAB_FN_CARDS = [
   "verify": null,
   "err": false,
   "extra": "",
-  "out": "PermissionError: [WinError 32] 另一个程序正在使用此文件，进程无法访问。: 'E:\\\\Temp\\\\tmptwk_r4_e\\\\k.db'\nclose 之后再删：成功",
+  "out": "PermissionError: [WinError 32] 另一个程序正在使用此文件，进程无法访问。: 'E:\\\\Temp\\\\tmpmik2j1z7\\\\k.db'\nclose 之后再删：成功",
   "ok": true
  },
  {
@@ -1024,7 +1024,7 @@ window.LAB_FN_CARDS = [
   "verify": null,
   "err": false,
   "extra": "",
-  "out": "原样 → 2026-09-28 14:37:48.303849\n常用 → 2026-09-28 14:37:48\n文件名用 → 20260928-1437\n星期日历 → 2026-09-28 Monday",
+  "out": "原样 → 2026-09-28 19:39:34.481962\n常用 → 2026-09-28 19:39:34\n文件名用 → 20260928-1939\n星期日历 → 2026-09-28 Monday",
   "ok": true
  },
  {
@@ -1344,7 +1344,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "temperature=0  两次回答不同 = False  ['匠心筑梦']\ntemperature=1  两次回答不同 = True  ['智慧探索堂', '智慧探索课']",
+  "out": "temperature=0  两次回答不同 = False  ['匠心筑梦']\ntemperature=1  两次回答不同 = True  ['信息科技基础与实践', '匠心智造']",
   "ok": true
  },
  {
@@ -1408,7 +1408,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "收到 20 个 chunk，前 3 个 = ['杭州', '是一座', '历史悠久']\n拼起来 = 杭州是一座历史悠久的城市。西湖以其美丽的风景而闻名。杭州也是美食和茶文化的中心。",
+  "out": "收到 19 个 chunk，前 3 个 = ['杭州', '是一座', '历史悠久']\n拼起来 = 杭州是一座历史悠久的城市。西湖以其美丽的风景吸引着游客。杭州还是一个美食天堂。",
   "ok": true
  },
  {
@@ -1456,7 +1456,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "正文 = 收到\n本次输出 token = 2 | 耗时 = 2.2 秒",
+  "out": "正文 = 收到\n本次输出 token = 2 | 耗时 = 4.64 秒",
   "ok": true
  },
  {
@@ -1488,7 +1488,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "正常调用 = 好\n打不通的地址会抛 = APITimeoutError",
+  "out": "  第 1 次失败：APITimeoutError\n正常调用 = 好\n打不通的地址会抛 = InternalServerError",
   "ok": true
  },
  {
@@ -1872,7 +1872,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "循环 17.8 ms   向量化 0.7 ms   快 24 倍\n结果相同 = True",
+  "out": "循环 23.2 ms   向量化 0.8 ms   快 28 倍\n结果相同 = True",
   "ok": true
  },
  {
@@ -1915,7 +1915,7 @@ window.LAB_FN_CARDS = [
   "name": "最小应用 + 一个接口",
   "brief": "装饰器写路径，函数返回什么就发什么（dict 自动变 JSON）",
   "code": "from fastapi import FastAPI\napp = FastAPI()\n@app.get(\"/hello\")\ndef hello():\n    return {\"msg\": \"你好\"}\nprint(\"路径表 =\", [r.path for r in app.routes if r.path.startswith(\"/\")])\nprint(\"方法   =\", [sorted(r.methods)[0] for r in app.routes if r.path == \"/hello\"])",
-  "where": "你 `api.py` 的骨架；服务器 8009 端口上跑的就是这个",
+  "where": "你 `../我的练习/api.py` 的骨架；服务器 8009 端口上跑的就是这个",
   "gotcha": "**返回 dict 就会被自动转成 JSON** —— 你不需要 `json.dumps`。但返回一个不能序列化的对象（比如 datetime 以外的自定义类）会 500",
   "extra": "",
   "err": false,
@@ -2017,6 +2017,22 @@ window.LAB_FN_CARDS = [
   "err": false,
   "verify": null,
   "out": "状态码 = 200 | Content-Type = text/plain; charset=utf-8\n拼起来 = 数据库很有用",
+  "ok": true
+ },
+ {
+  "id": "sql.foreign_key",
+  "lang": "py",
+  "cat": "SQL",
+  "stage": "现在",
+  "name": "REFERENCES 外键：写了 ≠ 生效",
+  "brief": "`sid INTEGER REFERENCES students(id)` 只是**声明**。SQLite 默认**不检查**它 —— 一个不存在的学生照样能选上课，而且**不报错**",
+  "code": "import sqlite3, tempfile, os, shutil\nd = tempfile.mkdtemp(); p = os.path.join(d, \"t.db\")\ncon = sqlite3.connect(p, isolation_level=None)     # 自动提交：避开\"事务里设 pragma 会被忽略\"那个坑\nfor ddl in [\"CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT)\",\n            \"INSERT INTO students VALUES (1,'韩立')\",\n            \"CREATE TABLE courses (id INTEGER PRIMARY KEY, name TEXT)\",\n            \"INSERT INTO courses VALUES (1,'数据库')\",\n            \"CREATE TABLE enrollments (sid INTEGER NOT NULL REFERENCES students(id),\"\n            \" cid INTEGER NOT NULL REFERENCES courses(id), PRIMARY KEY (sid, cid))\"]:\n    con.execute(ddl)\n\nprint(\"① 声明被记下来了吗 =\", [(r[3], r[2], r[4]) for r in con.execute(\"PRAGMA foreign_key_list(enrollments)\")])\nprint(\"② 默认开关 =\", con.execute(\"PRAGMA foreign_keys\").fetchone()[0], \"（0 = 关）\")\ncon.execute(\"INSERT INTO enrollments VALUES (999, 1)\")\nprint(\"③ 插一个不存在的学生 999 → 进得去，库里 =\", con.execute(\"SELECT * FROM enrollments\").fetchall())\n\ncon.execute(\"DELETE FROM enrollments\"); con.execute(\"PRAGMA foreign_keys = ON\")\nprint(\"④ 打开开关后再插同一条 →\", end=\" \")\ntry:\n    con.execute(\"INSERT INTO enrollments VALUES (999, 1)\")\nexcept Exception as e:\n    print(type(e).__name__, \":\", e)\ncon.close()\nc2 = sqlite3.connect(p, isolation_level=None)\nprint(\"⑤ 新连接又回到 =\", c2.execute(\"PRAGMA foreign_keys\").fetchone()[0], \"（每条连接各自，不写进文件）\")\nc2.close(); shutil.rmtree(d, ignore_errors=True)",
+  "where": "D8 建表直接用；你 `prescription_db.py` 里写的 FOREIGN KEY 也是同一条规则",
+  "gotcha": "⚠️ **`PRAGMA foreign_keys = ON` 必须每次连上就设一遍** —— 它不写进文件、新连接回到 0。🔴 更阴的一条：**在未提交的事务里设它会被静默忽略**（读回来还是 0，不报错也不警告）→ 要么 `isolation_level=None`（自动提交），要么先 `commit()` 再设。已经混进去的脏数据可以用 `PRAGMA foreign_key_check` 事后揪出来。另：同一条 `CREATE TABLE` 里的 `PRIMARY KEY (sid, cid)` **默认就生效** —— 一行管用一行不管",
+  "extra": "",
+  "err": false,
+  "verify": null,
+  "out": "① 声明被记下来了吗 = [('cid', 'courses', 'id'), ('sid', 'students', 'id')]\n② 默认开关 = 0 （0 = 关）\n③ 插一个不存在的学生 999 → 进得去，库里 = [(999, 1)]\n④ 打开开关后再插同一条 → IntegrityError : FOREIGN KEY constraint failed\n⑤ 新连接又回到 = 0 （每条连接各自，不写进文件）",
   "ok": true
  }
 ];

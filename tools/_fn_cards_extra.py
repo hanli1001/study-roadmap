@@ -741,6 +741,43 @@ print("拼起来 =", r.text)''',
   gotcha="**生成器里 `yield` 的是字符串/字节，不能 yield dict**。"
          "而且流式一开，就没法再改状态码了 —— 出错只能在流里发一个约定的错误标记")
 
+E("sql.foreign_key", "SQL", "现在", "REFERENCES 外键：写了 ≠ 生效",
+  "`sid INTEGER REFERENCES students(id)` 只是**声明**。SQLite 默认**不检查**它 —— 一个不存在的学生照样能选上课，而且**不报错**",
+  '''import sqlite3, tempfile, os, shutil
+d = tempfile.mkdtemp(); p = os.path.join(d, "t.db")
+con = sqlite3.connect(p, isolation_level=None)     # 自动提交：避开"事务里设 pragma 会被忽略"那个坑
+for ddl in ["CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT)",
+            "INSERT INTO students VALUES (1,'韩立')",
+            "CREATE TABLE courses (id INTEGER PRIMARY KEY, name TEXT)",
+            "INSERT INTO courses VALUES (1,'数据库')",
+            "CREATE TABLE enrollments (sid INTEGER NOT NULL REFERENCES students(id),"
+            " cid INTEGER NOT NULL REFERENCES courses(id), PRIMARY KEY (sid, cid))"]:
+    con.execute(ddl)
+
+print("① 声明被记下来了吗 =", [(r[3], r[2], r[4]) for r in con.execute("PRAGMA foreign_key_list(enrollments)")])
+print("② 默认开关 =", con.execute("PRAGMA foreign_keys").fetchone()[0], "（0 = 关）")
+con.execute("INSERT INTO enrollments VALUES (999, 1)")
+print("③ 插一个不存在的学生 999 → 进得去，库里 =", con.execute("SELECT * FROM enrollments").fetchall())
+
+con.execute("DELETE FROM enrollments"); con.execute("PRAGMA foreign_keys = ON")
+print("④ 打开开关后再插同一条 →", end=" ")
+try:
+    con.execute("INSERT INTO enrollments VALUES (999, 1)")
+except Exception as e:
+    print(type(e).__name__, ":", e)
+con.close()
+c2 = sqlite3.connect(p, isolation_level=None)
+print("⑤ 新连接又回到 =", c2.execute("PRAGMA foreign_keys").fetchone()[0], "（每条连接各自，不写进文件）")
+c2.close(); shutil.rmtree(d, ignore_errors=True)''',
+  where="D8 建表直接用；你 `prescription_db.py` 里写的 FOREIGN KEY 也是同一条规则",
+  gotcha="⚠️ **`PRAGMA foreign_keys = ON` 必须每次连上就设一遍** —— 它不写进文件、新连接回到 0。"
+         "🔴 更阴的一条：**在未提交的事务里设它会被静默忽略**（读回来还是 0，不报错也不警告）→ "
+         "要么 `isolation_level=None`（自动提交），要么先 `commit()` 再设。"
+         "已经混进去的脏数据可以用 `PRAGMA foreign_key_check` 事后揪出来。"
+         "另：同一条 `CREATE TABLE` 里的 `PRIMARY KEY (sid, cid)` **默认就生效** —— 一行管用一行不管",
+  pre="")
+
+
 # ══════════════════════════════════════════════════════════════════════
 # 统计一下覆盖率（给学员看清「这套卡覆盖路线的哪几段」）
 # ══════════════════════════════════════════════════════════════════════

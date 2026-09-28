@@ -33,6 +33,17 @@ def url(base: str, rel: str) -> str:
     return base.rstrip("/") + "/" + urllib.parse.quote(rel)
 
 
+def expect_cards() -> int:
+    """卡数从数据文件里读 —— 不写死。
+
+    为什么：这个数字已经硬编码过 4 处，加一张卡就要全改一遍，早晚会忘（然后"验收失败"
+    看起来像 bug，其实只是数字没跟着更新）。
+    """
+    import json, re
+    src = (ROOT / "交互演示" / "_函数卡数据.js").read_text(encoding="utf-8")
+    return len(json.loads(src[src.index("["):src.rindex("]") + 1]))
+
+
 def _check_page_overflow(pg, w: int, check, check_true, notes) -> None:
     """判定**整页**是否横向溢出。
 
@@ -73,6 +84,8 @@ def main() -> int:
 
     fails: list[str] = []
     notes: list[str] = []
+
+    N = expect_cards()
 
     def check(name: str, got, want) -> None:
         ok = got == want
@@ -131,21 +144,21 @@ def main() -> int:
             pg.wait_for_timeout(220)
             return pg.inner_text("#count")
 
-        check("搜索「接反」", search("接反"), "显示 3 / 共 126 张")
+        check("搜索「接反」", search("接反"), f"显示 3 / 共 {N} 张")
         # ⚠️ 搜索是**全文**匹配：搜 agent 会连"提到 Agent 的 LLM API 卡"一起命中（14 张），
         #    这是对的。要精确数就用类别按钮（见下）。我第一次把期望写成 10 = 我错了，不是页面错。
         got = search("agent")
         n_agent = int(got.split()[1])
         check_true("搜索「agent」至少包含全部 10 张 Agent 卡", n_agent >= 10, got)
         notes.append(f"搜 agent 命中 {n_agent} 张（全文匹配，含 4 张提到 Agent 的 LLM 卡）")
-        check("搜索不存在的词", search("zzz没有zzz"), "显示 0 / 共 126 张")
+        check("搜索不存在的词", search("zzz没有zzz"), f"显示 0 / 共 {N} 张")
         check_true("空结果提示可见", pg.is_visible("#empty"))
-        check("清空后", search(""), "显示 126 / 共 126 张")
+        check("清空后", search(""), f"显示 {N} / 共 {N} 张")
 
         # 点「阶段A」筛选
         pg.click("#stageChips .chip:has-text('阶段A')")
         pg.wait_for_timeout(150)
-        check("筛「阶段A」", pg.inner_text("#count"), "显示 47 / 共 126 张")
+        check("筛「阶段A」", pg.inner_text("#count"), f"显示 47 / 共 {N} 张")
         tags = pg.evaluate("[...document.querySelectorAll('#grid .fncard .tag')].map(t=>t.textContent)")
         check_true("筛出来的卡确实都是阶段A", all(t in ("阶段A",) for t in tags if t in
                                               ("现在", "近期", "阶段A", "以后")), "混进了别的阶段")
@@ -155,7 +168,7 @@ def main() -> int:
         # 打印区不随筛选变（W-42 的教训）
         pg.click("#stageChips .chip:has-text('阶段A')")
         pg.wait_for_timeout(150)
-        check("打印区卡片数（不随筛选）", pg.evaluate("document.querySelectorAll('#printAll .fncard').length"), 126)
+        check("打印区卡片数（不随筛选）", pg.evaluate("document.querySelectorAll('#printAll .fncard').length"), N)
         pg.click("#stageChips .chip:has-text('全部')")
         pg.wait_for_timeout(150)
 
@@ -182,7 +195,7 @@ def main() -> int:
         check("打印态：筛选栏隐藏", v["bar"], "none")
         check("打印态：复制按钮隐藏", v["copy"], "none")
         check("打印态：分栏数", v["cols"], "2")
-        check("打印态：卡片数（全量）", v["cards"], 126)
+        check("打印态：卡片数（全量）", v["cards"], N)
         notes.append(f"打印区总高 {v['h']}px（A4 可印高约 1017px）")
         if want_shot:
             pg.evaluate("window.scrollTo(0, 900)")
