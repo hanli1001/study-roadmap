@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>今日清单 · 2026.09.28（周一）</title>
+<link rel="stylesheet" href="_主题.css">
+<style>
+/* 只属于本页：勾选框排一行、打印时不显示进度条 */
+.task{ display:flex; align-items:flex-start; gap:9px; margin:9px 0 }
+.task input{ margin-top:3px; width:16px; height:16px; accent-color:var(--pen); flex:none }
+.task label{ flex:1 }
+.task.done label{ color:var(--ink-3); text-decoration:line-through }
+.tick{ font-size:12.5px; color:var(--ink-3); margin:2px 0 10px }
+.blank{ display:inline-block; min-width:110px; border-bottom:1px solid var(--rule-2);
+        padding:0 4px; color:var(--ink-3) }
+@media print{
+  .tick{ display:none }
+  .task input{ -webkit-print-color-adjust:exact }
+  /* 主题里 .sec 默认 break-inside:avoid —— 对这张单子不合适：
+     一个 1.2 页高的小节会把整页顶掉，5 页纸里一半是空的（实测 5 页 → 改后 3 页）。
+     这里改成"小节可以跨页，但里面的表格/任务条/代码块不许被切开"。 */
+  .sec{ break-inside:auto }
+  .task,.tw,pre,.note,.redpen{ break-inside:avoid }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <header class="rec-head">
+    <h1>今日清单 · 2026.09.28（周一）</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="周">W40 第 1 天（W39 已于 09.27 结束）</span>
+      <span class="f" data-k="今天">先清 2 件挂着的，再做 1 件主菜</span>
+      <span class="f" data-k="总量">约 2.5 小时</span>
+    </div>
+    <p class="sub">
+      这张单子是<b>按到期日排的</b>，不是按重要性 —— 因为挂得最久的那件只要 15 分钟，
+      而它一直占着你的注意力。<b>从上往下做，别跳。</b>
+    </p>
+
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span>
+      <b>② 编程主线 · SQL</b>
+      <a href="复习台.html">复习台</a>
+      <a href="函数卡.html">函数卡</a>
+      <a href="../每周书/W39-数据怎么连起来.html">第 3 课讲义</a>
+    </div>
+  </header>
+
+  <!-- ══ 三个数 ══════════════════════════════════════════ -->
+  <section class="sec" id="nums">
+    <h2 data-n="数">先看这三个数（今天重算过）</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>倒推锚点</th><th style="width:18%">还有</th><th>和上周比</th></tr></thead>
+        <tbody>
+          <tr><td><b>2027.03</b> —— 简历上必须有东西可写</td><td class="num"><b>22 周</b></td><td>23 → 22，<b>真的少了一周</b></td></tr>
+          <tr><td>2028.03 —— 考研 / 就业 决策点</td><td class="num">74 周（+2 天）</td><td>—</td></tr>
+          <tr><td>2029.06 —— 毕业入职</td><td class="num">143 周（+5 天）</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      22 周 ≈ 一个多学期。一个<b>从零自己做的 AI 应用</b>从立项到能写进简历最少 2–3 个月 ——
+      所以「项目立项」这件事是<b>限速步骤</b>，不是普通待办。
+    </p>
+  </section>
+
+  <!-- ══ ①② 两件挂着的 ══════════════════════════════════ -->
+  <section class="sec" id="clear">
+    <h2 data-n="清">先清两件挂着的（25 分钟）</h2>
+
+    <h3>① 把流程可视化发给导师 · 15 分钟 · 已挂 4 天</h3>
+    <div class="task"><input type="checkbox" id="t1"><label for="t1">
+      打开 <code>E:\项目学习\导出\物联网流程可视化-20260923.html</code>，
+      <b>自己先把三步讲一遍</b>（得分怎么算 / 为什么有的服务第 1 步就没了 / 方案 A 与 B 差在哪）——
+      讲不顺就先别发，回去看图。
+    </label></div>
+    <div class="task"><input type="checkbox" id="t2"><label for="t2">
+      发出去。附一句<b>主动交代</b>：<i>「发现这一步我现在用的是简化做法，还没换成您方案里的那种，
+      想先把整条流程跑通给您看」</i>。
+    </label></div>
+    <p class="redpen">
+      为什么不主动说会出事：他一看 demo 就会知道「发现」那步和方案文档里写的不是一回事 ——
+      <b>主动说 = 加分（他上一条夸的就是"按你自己思路来"）；不说 = 被记一笔糊弄。</b>
+    </p>
+    <p class="note">⏱ 这条<b>只有 15 分钟</b>，对面有个真人在等，而它从 09-24 挂到现在 —— 先把它清掉，后面两小时才安得下心。</p>
+
+    <h3>② 过复习台 · 10 分钟 · 🔴 已逾期</h3>
+    <div class="task"><input type="checkbox" id="t3"><label for="t3">
+      打开 <a href="复习台.html"><b>复习台</b></a>。第 3 课的卡有两格到期<b>已经逾期</b>：
+      <b>09.24 逾期 4 天</b>、<b>09.26 逾期 2 天</b>。
+    </label></div>
+    <div class="task"><input type="checkbox" id="t4"><label for="t4">
+      把逾期的过完。<b>答不出就点「没过，再来」，不要点「会了」</b> —— 点错比不做还糟。
+    </label></div>
+    <p class="note">
+      ⚠️ 这是「1-3-7-30」建起来之后<b>第一次真正到期</b>。上一次同类机制（看板表 2.3）
+      <b>空转了 9 天没人管</b>，代价是 09-06 学的 404 三步排查法到 09-23 完全想不起来 ——
+      那次教训记在 <code>改动路线.md</code> 的 W / P-015。<b>今天这 10 分钟就是在还那笔账。</b>
+    </p>
+  </section>
+
+  <!-- ══ ③ 主菜 ══════════════════════════════════════════ -->
+  <section class="sec" id="main">
+    <h2 data-n="主">主菜：D8 作业 · 约 2 小时</h2>
+    <p>
+      <b>任务原文</b>：仿照三步推导法，自己设计一个<b>选修课报名</b>的关系图（学生 / 课程 / 选课），
+      三张 <code>CREATE TABLE</code> + 插 3 行数据 + <b>一条 JOIN 查询</b>跑通。
+    </p>
+    <p class="note">
+      为什么今天做它：① 第 3 课是 <b>09-23</b> 上的，到今天第 <b>5</b> 天，<b>知识还热</b>
+      ② 它<b>不依赖任何人</b>（不等导师、不等服务器、不等我）③ 它有<b>客观验收</b>：跑通就是跑通。
+      ⇒ 这是今天唯一"投入 2 小时、当天就能确认完成"的事。
+    </p>
+
+    <h3>第 1 步：三步推导（自己填，别翻书）</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:36%">问自己</th><th>选修课报名 · 你的答案</th></tr></thead>
+        <tbody>
+          <tr><td>① 有几种「东西」？</td><td><span class="blank">　　　　　　　　　　　　　</span></td></tr>
+          <tr><td>② 每个事实<b>跟着谁走</b>？</td><td><span class="blank">　　　　　　　　　　　　　</span></td></tr>
+          <tr><td>③ 跟<b>两个</b>东西走的事实是什么？<br><small>这就是绳子表</small></td><td><span class="blank">　　　　　　　　　　　　　</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>第 2 步：建三张表（空留给你填）</h3>
+    <pre>-- 第 1 张表：______      它装什么事实？______________
+CREATE TABLE ______ (
+    id   INTEGER PRIMARY KEY,
+    ______
+);
+
+-- 第 2 张表：______
+CREATE TABLE ______ (
+    id   INTEGER PRIMARY KEY,
+    ______
+);
+
+-- 第 3 张 = 绳子表：它的每一行 = 一条关系，不是一个人
+CREATE TABLE ______ (
+    ______ INTEGER,      -- 指向第 ___ 张表
+    ______ INTEGER,      -- 指向第 ___ 张表
+    ______,              -- 还有别的要记吗？（想想 dosage 在哪）
+    PRIMARY KEY (______, ______)   -- ← 防"同一个人重复选同一门课"
+);</pre>
+    <p class="note">
+      拿不准就看 <a href="函数卡.html"><b>函数卡</b></a> 筛「<b>现在</b>」那 24 张 ——
+      里面 <code>sql.create_table</code> 那张有你照着改就行。<b>抄结构不算抄答案，表名和列得你自己定。</b>
+    </p>
+
+    <h3>第 3 步：插 3 行 + 写一条 JOIN</h3>
+    <pre>-- 插 3 行（自己编数据，但要让 JOIN 真的配得上）
+INSERT INTO ______ VALUES (...);
+
+-- 一条 JOIN：从「谁」出发，查「他选了什么」
+SELECT ______
+FROM ______
+JOIN ______ ON ______ = ______
+JOIN ______ ON ______ = ______;</pre>
+
+    <h3>第 4 步：交之前自己撞两个坑（<b>这一步不许省</b>）</h3>
+    <div class="task"><input type="checkbox" id="t5"><label for="t5">
+      <b>坑一</b>：把某一句 <code>ON</code> 的<b>两头故意接反</b>，再跑一次。
+      看是 <b>0 行</b>还是「<b>看着合理的假数据</b>」？——两种都不报错。
+      参考函数卡 <code>sql.join_wrong_zero</code> / <code>sql.join_wrong_fake</code>。
+    </label></div>
+    <div class="task"><input type="checkbox" id="t6"><label for="t6">
+      <b>坑二</b>：<b>单独</b>数一下你那张绳子表有几行，再数 JOIN 结果几行。
+      两个数一样就说明配对对了？<b>不一定</b> —— 还要挑一行人工核对内容。
+      （参考 <code>sql.diagnose</code> / <code>sql.fake_proof</code>）
+    </label></div>
+
+    <h3>自查清单（全过才算交）</h3>
+    <ul>
+      <li>三张表里<b>哪一张是绳子表</b>？它的主键是什么？</li>
+      <li>一条 JOIN 跑出来<b>几行</b>？这个行数由哪张表决定？</li>
+      <li>把 ON 接反之后<b>为什么没报错</b>？（一句话）</li>
+      <li>你是怎么发现「数字对、内容错」的？</li>
+      <li>合上所有文档，能不能说出<b>三步推导法</b>？</li>
+    </ul>
+    <p class="note">
+      ⚠️ 你说「我懂了」的时候就是危险信号 —— 立刻做上面第 2 条。
+      完整讲义在 <a href="../每周书/W39-数据怎么连起来.html"><b>《数据怎么连起来》第 8 章</b></a>。
+    </p>
+  </section>
+
+  <!-- ══ 今天不做 ════════════════════════════════════════ -->
+  <section class="sec" id="not">
+    <h2 data-n="不做">今天明确不做（防分心）</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:34%">不做</th><th>为什么</th></tr></thead>
+        <tbody>
+          <tr><td>第 3 课 ⑤⑥（换皮 + 你讲我听）</td><td>要等你手上有<b>自己写的东西</b>才好上 —— 先把 D8 做完</td></tr>
+          <tr><td>Linux 任务 1–5</td><td>它要 2–3 小时且要开服务器；<b>今天是 Monday，先把上面三件清掉</b>。明天整块时间做</td></tr>
+          <tr><td>项目立项（仓库 + README）</td><td>限速步骤但<b>死线 2026.10</b>，还有时间；且可能被物联网线选题影响</td></tr>
+          <tr><td>扩服务库到 100 条 / 换语义匹配</td><td>导师说「先按 20 条跑通」→ <b>等他看过可视化再动</b></td></tr>
+          <tr><td>PyTorch / Java / 前端 / 囤课</td><td>41% 本科可投岗不要 PyTorch；Java 只有 2 条要 —— 这周的理由和上周一样，没变</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 交什么 ══════════════════════════════════════════ -->
+  <section class="sec" id="hand">
+    <h2 data-n="交">做完给我什么（+ W40 还差你的数）</h2>
+    <ol>
+      <li><b>D8 的库或脚本</b>（<code>选修课.db</code> 或 <code>.py</code> 都行）+ 一句话说卡在哪</li>
+      <li><b>Linux 卡在第几个任务</b>（1–5 / 6–10 / 11–15 → 这就是你的水平线）</li>
+      <li><b>项目仓库链接</b> + 你写的那段 README</li>
+      <li><b>一句话</b>：W39 那一周（09.21–09.27）实际投入了几小时</li>
+    </ol>
+    <p class="note">
+      ⑵⑶⑷ 是排 W40 目标的输入 —— <b>W40 目标表我没有替你写</b>，因为存档模板里有一条规则：
+      「<b>❌ 的不许原样再列一遍</b>」，要执行它就得先知道上周哪些 ❌。
+      归档已在 <code>周目标存档/2026-W39.md</code>（结果栏留 ⬜ 待你确认）。
+    </p>
+    <p class="note">
+      但<b>这不影响你今天开工</b> —— 上面三件事不管 W40 怎么排都要做。
+    </p>
+  </section>
+
+  <div class="foot">
+    今日清单 · 2026.09.28（周一）｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">
+      依据：`周目标存档/2026-W39.md` · `教学进度看板.md` 表 2.1/2.2 · `第3课-数据模型与JOIN.md` §⑦
+      ｜ 配套：<a href="复习台.html">复习台</a> · <a href="函数卡.html">函数卡（筛「现在」24 张）</a> ·
+      <a href="../每周书/W39-数据怎么连起来.html">第 3 课讲义</a>
+    </span>
+  </div>
+</div>
+
+<script>
+/* 打勾状态记在本地 —— 刷新不丢；打印时是一张干净的空表（可以印出来手写） */
+(function () {
+  'use strict';
+  var KEY = 'lab.today.20260928';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.task input'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.id];
+    b.parentNode.classList.toggle('done', b.checked);
+    b.addEventListener('change', function () {
+      b.parentNode.classList.toggle('done', b.checked);
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      paint();
+    });
+  });
+  function paint() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    var el = document.getElementById('tick');
+    el.textContent = n + ' / ' + boxes.length + ' 打完' + (n === boxes.length ? ' —— 今天这单子清了 ✅' : '');
+  }
+  var p = document.createElement('p');
+  p.className = 'tick';
+  p.id = 'tick';
+  document.getElementById('clear').appendChild(p);
+  paint();
+})();
+</script>
+</body>
+</html>
