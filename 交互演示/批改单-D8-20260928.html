@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>批改单 · D8 作业 · 2026.09.28</title>
+<link rel="stylesheet" href="_主题.css">
+<style>
+/* 只属于本页：返工清单的勾选、行号标签、验收表的状态色 */
+.task{ display:flex; align-items:flex-start; gap:9px; margin:9px 0 }
+.task input{ margin-top:3px; width:16px; height:16px; accent-color:var(--pen); flex:none }
+.task label{ flex:1 }
+.task.done label{ color:var(--ink-3); text-decoration:line-through }
+.tick{ font-size:12.5px; color:var(--ink-3); margin:2px 0 10px }
+.ln{ display:inline-block; min-width:34px; font-family:"Cascadia Mono",Consolas,monospace;
+     font-size:11.5px; color:var(--ink-3); text-align:right; padding-right:6px }
+.st{ font-size:11px; font-weight:600; padding:1px 6px; border-radius:3px; white-space:nowrap }
+.st.no{ background:var(--red); color:#FFF6F3 }
+.st.half{ background:var(--marker); color:var(--ink) }
+.st.ok{ background:var(--ok); color:#F2F8F4 }
+.err{ color:var(--red) }
+@media print{
+  .tick{ display:none }
+  .task input{ -webkit-print-color-adjust:exact }
+  .sec{ break-inside:auto }
+  .task,.tw,pre,.out,.note,.redpen,.selfcheck{ break-inside:avoid }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <header class="rec-head">
+    <h1>批改单 · D8 作业</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="交件">我的练习/D8作业.py（81 行）</span>
+      <span class="f" data-k="批改于">2026.09.28（周一）</span>
+      <span class="f" data-k="结论">🔴 需返工 —— 4 / 5 项验收未过</span>
+    </div>
+    <p class="sub">
+      下面每一条结论都<b>真跑过</b>，不是看代码猜的。我把你作业里每一处可疑点单独拿出来跑了一遍，
+      原始输出留在 <code>我的练习/_批改-D8-输出.txt</code>（脚本 <code>_批改-D8.py</code>，你可以自己再跑一次）。
+    </p>
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span>
+      <b>② 编程主线 · SQL</b><span class="sep">›</span>
+      <b>第 3 课 · D8</b>
+      <a href="复习台.html">复习台</a>
+      <a href="函数卡.html">函数卡</a>
+      <a href="../每周书/W39-数据怎么连起来.html">第 3 课讲义</a>
+    </div>
+  </header>
+
+  <!-- ══ 0 验收表 ═══════════════════════════════════════ -->
+  <section class="sec" id="grade">
+    <h2 data-n="判">先看判决：五项验收</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:44%">要求</th><th style="width:14%">判</th><th>实测到什么</th></tr></thead>
+        <tbody>
+          <tr><td>三张 <code>CREATE TABLE</code></td><td><span class="st half">半过</span></td><td>三张都建出来了，方向也对；但里面 <b>3 条 <code>REFERENCES</code> 没有一条真的成立</b></td></tr>
+          <tr><td>插 3 行数据</td><td><span class="st no">未过</span></td><td><b>库里 0 行</b> —— 程序崩了，数据全被回滚（下面 §2）</td></tr>
+          <tr><td>一条 <code>JOIN</code> 跑通</td><td><span class="st no">未过</span></td><td><b>一条 JOIN 都没有</b> —— 三次查询都是单表 <code>SELECT&nbsp;*</code></td></tr>
+          <tr><td>坑一：<code>ON</code> 故意接反</td><td><span class="st no">未过</span></td><td>没做</td></tr>
+          <tr><td>坑二：数行数 + 核对一行</td><td><span class="st no">未过</span></td><td>没做 —— 但<b>你的 bug 已经替你生成了这道题的答案</b>（§6）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      说清楚：<b>这不是"全错"</b>。三张表的结构、绳子表的存在、<code>Path(__file__)</code> 的用法都是对的（§1）。
+      问题集中在两处 —— <b>一股脑的笔误</b>（§3）和 <b>一个设计判断</b>（§5）。后者才是这次要学的东西。
+    </p>
+  </section>
+
+  <!-- ══ 1 做对的 ═══════════════════════════════════════ -->
+  <section class="sec" id="good">
+    <h2 data-n="对">做对的四件事（别改掉）</h2>
+    <ol>
+      <li>
+        <b><code>Path(__file__).with_name("D8.db")</code></b> —— 这正是上周 <code>pytest</code> 那个坑的修法：
+        用脚本自己的位置拼路径，<b>从哪个目录运行都不炸</b>。我特意在 <code>C:\Users\vision</code> 下跑你的脚本，
+        它照样找到了 <code>D8.db</code>。✅ 这一条比作业本身值钱。
+      </li>
+      <li><b><code>DROP TABLE IF EXISTS</code></b> —— 脚本可以反复跑，不用手删库。✅</li>
+      <li><b>占位符 <code>?</code> + <code>executemany</code></b> —— 没有把值拼进 SQL 字符串。✅ 习惯对了。</li>
+      <li>
+        <b>三张表的选型</b> —— <code>students</code> / <code>course</code> / <code>student_course</code>，
+        第三张就是绳子表。<b>你确实推出了"要第三张表"</b>，这一步是第 3 课的核心，你拿到了。
+      </li>
+    </ol>
+  </section>
+
+  <!-- ══ 2 库是空的 ═════════════════════════════════════ -->
+  <section class="sec" id="empty">
+    <h2 data-n="空">最要紧的一件事：你的库现在是空的</h2>
+    <p>
+      我打开 <code>D8.db</code> 看到的是：<b>三张表都在，但加起来 0 行数据</b>。
+      如果你之前觉得"表建好了就是跑通了"，那是假象。
+    </p>
+    <div class="out"><span class="cap">实测 —— 直接读你交上来的 D8.db</span>students     -&gt; 0 行 []
+course       -&gt; 0 行 []
+student_course -&gt; 0 行 []</div>
+    <p><b>为什么表在、数据没了？</b>实测 <code>conn.in_transaction</code>：</p>
+    <div class="out"><span class="cap">实测 —— 探针 0</span>刚连上            in_transaction = False
+执行 DDL(CREATE)  in_transaction = False   &lt;- 建表不进事务，直接落盘
+执行 DML(INSERT)  in_transaction = True    &lt;- 插数据才开事务
+崩溃后重连 —— 表还在吗： ['t']
+崩溃后重连 —— 数据还有吗： []</div>
+    <p>
+      <code>CREATE TABLE</code> 是<b>立刻生效</b>的，所以表留下了；
+      <code>INSERT</code> 开了一个事务，而脚本在第 62 行崩了、<b>没人 <code>commit</code></b>，
+      连接被回收时整个事务回滚 ⇒ <b>连你插的 5 个学生、6 门课也一起没了</b>。
+    </p>
+    <p class="redpen">
+      记住这条：<b>程序崩了 = 从上次 <code>commit</code> 之后做的事全部作废。</b>
+      你的 <code>commit()</code> 写在 <code>link()</code> 里，所以只要第一次调用 <code>link()</code> 就炸，
+      前面所有插入都白干。这不是运气问题 —— 是"commit 放哪"的问题。
+    </p>
+  </section>
+
+  <!-- ══ 3 报错链 ═══════════════════════════════════════ -->
+  <section class="sec" id="crash">
+    <h2 data-n="崩">报错链：修一个撞下一个（4 处）</h2>
+    <p>你现在停在第一个。我把后面三个也提前跑出来了 —— 免得你修一个跑一次、跑一次撞一个。</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:8%">行</th><th style="width:34%">你写的</th><th>实测报错</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="ln">44</span></td>
+            <td><code>cur.execute('... WHERE name = ?', course_name)</code></td>
+            <td class="err">ProgrammingError: Incorrect number of bindings supplied.<br>The current statement uses 1, and there are 2 supplied.</td>
+          </tr>
+          <tr>
+            <td><span class="ln">52</span></td>
+            <td><code>INSERT INTO student_course(..., class_naem)</code></td>
+            <td class="err">OperationalError: table student_course has no column named class_naem</td>
+          </tr>
+          <tr>
+            <td><span class="ln">75</span></td>
+            <td><code>SELECT * FROM courses</code></td>
+            <td class="err">OperationalError: no such table: courses</td>
+          </tr>
+          <tr>
+            <td><span class="ln">79</span></td>
+            <td><code>SELECT * FROM student_courses</code></td>
+            <td class="err">OperationalError: no such table: student_courses</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>第 44 行那个逗号，值得单独讲 —— 它会"时好时坏"</h3>
+    <p>
+      你写的是 <code>course_name</code>，少了一个逗号，所以传进去的<b>不是一个元组，是一个字符串</b>。
+      而 sqlite3 把字符串当<b>一串参数</b>看：<code>'语文'</code> 有 <b>2 个字符</b> ⇒ 它以为你给了 2 个参数 ⇒ 报错。
+    </p>
+    <div class="out"><span class="cap">实测 —— 探针：换个课名会怎样</span>'语文'  长度 2 -&gt; ProgrammingError  Incorrect number of bindings supplied. ... there are 2 supplied.
+'语'    长度 1 -&gt; <b>静默通过</b>, 返回 [('语',)]
+'数学'  长度 2 -&gt; ProgrammingError  Incorrect number of bindings supplied.</div>
+    <p class="redpen">
+      看第二行：<b>如果课名是 1 个字，这个 bug 会安静地跑过去。</b>
+      这类"随数据变化忽隐忽现"的错最难查 —— 所以正确的写法是<b>永远写成元组</b>：<code>(course_name,)</code>。
+      那个逗号不是排版，它是语法。
+    </p>
+    <p class="note">
+      顺带：<code>courses</code> / <code>student_courses</code> 在表里叫 <code>course</code> / <code>student_course</code>。
+      建表、外键、查询三处用的名字要<b>一模一样</b> —— 这类错 SQLite 从不帮你猜。
+    </p>
+  </section>
+
+  <!-- ══ 4 不报错但错的 ═════════════════════════════════ -->
+  <section class="sec" id="silent">
+    <h2 data-n="哑">不报错、但数据是错的（两处，比上面危险）</h2>
+
+    <h3>① 列名和值没对齐 —— 静默存反</h3>
+    <pre>-- 第 52–53 行，你的写法：
+INSERT INTO student_course(course_id, student_id, class_name) VALUES (?,?,?)
+                          ↑ 顺序 A                        (sid, course_id, class_name)
+                                                          ↑ 顺序 B —— 反了</pre>
+    <p>
+      两个都是整数，SQLite 照单全收，<b>不报错、不警告</b>。跑出来的后果（实测，把你那 5 行数据按原样灌进去）：
+    </p>
+    <div class="out"><span class="cap">实测 —— 探针 3：绳子表 5 行，配一条正确的 JOIN</span>你本来想记的：张三 选了 物理
+绳子表里实际存的：(course_id=1, student_id=4, '高一')
+  ↓ 用 student_id=4 去 JOIN students
+JOIN 读出来的：  李三 选了 语文   ← 人错了、课也错了</div>
+    <div class="out"><span class="cap">实测 —— 5 行跑完的完整结果</span>绳子表 student_course 全部行：
+    (1, 4, '高一')      (2, 1, '高三')      (3, 6, '高三')
+    (4, 3, '高一')      (5, 5, '高二')
+
+JOIN 出来：
+    (1, '李三',   '语文', '高一')
+    (2, '张三',   '数学', '高三')   ← 张三其实是高一
+    (4, '牛二',   '物理', '高一')   ← 牛二其实是高三
+    (5, '张贾瑞', '化学', '高二')
+绳子表 5 行 → JOIN 只得 4 行
+绳子表里指向不存在学生的行： [(6,)]</div>
+    <p>
+      <b>报错了吗？没有。行数对吗？不对（5→4）。内容对吗？错。</b>
+      这就是讲义里说的"看着合理的假数据"—— 而且是你自己制造的第一个真实样本。
+    </p>
+    <p class="note">
+      顺便你会发现：<code>class_name</code> 这一列<b>自己就是破案线索</b>。
+      JOIN 出来「张三 · 高三」，可名册里张三明明是高一的 —— 两份数据自己打起来了。
+      <b>下次不知道该核对什么的时候，就找这种"应该一致的地方"。</b>
+    </p>
+
+    <h3>② 三条 <code>REFERENCES</code>，三种不同的错法</h3>
+    <p>
+      昨天你刚问过 <code>REFERENCES students(id)</code> 是什么。这里正好是它的<b>应用题</b> ——
+      而你三条全踩了不同的坑。实测：
+    </p>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:30%">你写的</th><th style="width:26%">问题</th><th>实测</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>REFERENCES courses(id)</code><br><span class="ln">第 27 行</span></td>
+            <td>父表叫 <code>course</code>，<b>不叫 courses</b></td>
+            <td class="err">建表：成功<br>插入：no such table: main.courses</td>
+          </tr>
+          <tr>
+            <td><code>REFERENCES students(class_name)</code><br><span class="ln">第 29 行</span></td>
+            <td>父键<b>不是 UNIQUE</b>（一堆人都是高一，指向哪一行？）</td>
+            <td class="err">插入：foreign key mismatch<br>- "student_course" referencing "students"</td>
+          </tr>
+          <tr>
+            <td><code>REFERENCES students(id)</code><br><span class="ln">第 28 行</span></td>
+            <td>✅ 写法对 —— 但<b>默认不生效</b>（pragma 没开）</td>
+            <td>pragma 开：插 999 号学生 → <code class="err">FOREIGN KEY constraint failed</code><br>pragma 关：静默插进去</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="redpen">
+      <b>建表的时候这三条 SQLite 一条都不检查 —— 全部"成功"。</b>
+      你会以为写对了。等真往里插数据才炸，而且炸的是最难懂的那种错。
+      ⇒ 这正好是函数卡 <code>sql.foreign_key</code> 那张的实战版，去搜「外键」重看一遍。
+    </p>
+    <div class="out"><span class="cap">实测 —— 对照：给 class_name 加 UNIQUE 之后，第 29 行就能生效了</span>插入 高一: 成功
+插入 高二: IntegrityError -&gt; FOREIGN KEY constraint failed</div>
+  </section>
+
+  <!-- ══ 5 设计判断 ═════════════════════════════════════ -->
+  <section class="sec" id="design">
+    <h2 data-n="设">这次最关键的一条：<code>class_name</code> 不该待在绳子表里</h2>
+    <p>
+      你在绳子表里加了第三列 <code>class_name</code>，还给它写了外键。
+      看格式，你大概是照着<b>你自己那个处方库</b>的样子写的 —— 那个库里，绳子表确实有第三列：
+    </p>
+    <pre>-- 你的 prescriptions.db，prescription_ingredients 表
+CREATE TABLE prescription_ingredients (
+    prescription_id INTEGER,
+    ingredient_id   INTEGER,
+    dosage          TEXT,      -- ← 绳子表里的第三列，你是照这个抄的
+    ...)</pre>
+    <p><b>所以区别在哪？</b>一句话：</p>
+    <ul>
+      <li><code>dosage</code>（三两）<b>是在说这次配对本身</b> —— 当归在三两这个方子里是三两，换个方子就不是了。⇒ <b>属于绳子表</b> ✅</li>
+      <li><code>class_name</code>（高一）<b>是在说这个人</b> —— 张三在不在语文课上，他都是高一。⇒ <b>不属于绳子表</b> ❌</li>
+    </ul>
+    <p>判据：把配对拆开，那一列还成立吗？成立 → 它不属于绳子表。</p>
+
+    <h3>实测代价：改一次名册，两份数据就对不上了</h3>
+    <div class="out"><span class="cap">实测 —— 探针 5</span>分班时： students 说 高一 ／ sc 说 高一
+张三升到高二，只改了名册这一处（这是唯一正确的改法）：
+   students 说 高二 ／ sc 说 高一   &lt;- 假的
+   而且 SQL 不会告诉你哪一份对：两份都是普通文本，谁也不指向谁
+
+对照：绳子表只留两列（course_id, student_id），班级要用时现 JOIN 出来
+   名册改完，JOIN 出来立刻是新的： [('张三', '高二', '语文')]</div>
+    <p>
+      这叫<b>改一处、漏一处</b>。你现在有 5 个学生，手工同步还行；等有 500 行，
+      库里就会同时存在"高一"和"高二"的张三，而<b>没有任何东西会报错</b>。
+    </p>
+    <p class="redpen">
+      还有更要紧的一层：<b>你把班级抄进绳子表，动机很可能是"这样就不用 JOIN 了"</b> ——
+      一句 <code>SELECT *</code> 就能看到全部信息。<br>
+      但这次作业要交的<b>恰恰就是那条 JOIN</b>。关系模型的做法是：
+      <b>名字不抄、id 只存一次，需要的时候现配</b>。抄一份 = 把 JOIN 的活儿提前干了一遍，
+      还干错了（见上面）。
+    </p>
+    <div class="selfcheck">
+      <b>要你回答（一句话，别展开）：</b>
+      <ol>
+        <li>为什么 <code>dosage</code> 该在绳子表、<code>class_name</code> 不该？</li>
+        <li>如果以后真要记"这个学生在这门课上的成绩"，成绩该放哪张表？为什么？</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ══ 6 自查清单 ═════════════════════════════════════ -->
+  <section class="sec" id="self">
+    <h2 data-n="查">自查清单：5 项，你写出来 0 项</h2>
+    <p>但其中一项，<b>你的 bug 已经替你答了</b>：</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:34%">讲义第 8 章问的</th><th>你手上现在的真实答案</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>绳子表是<b>哪一张</b>？主键是什么？</td>
+            <td>你写了 <code>PRIMARY KEY (course_id, student_id, class_name)</code> —— <b>多塞了一列</b>。
+              实测：同一门课重复插，<code class="err">UNIQUE constraint failed</code>（碰巧防住了，因为班级不会变）；
+              但把 <code>class_name</code> 写成别的值，<b>同一个人就能重复选同一门课了</b>（实测：插入成功）。
+              正确的主键是<b>前两列</b>。</td>
+          </tr>
+          <tr>
+            <td>一条 JOIN 跑出来<b>几行</b>？由哪张表决定？</td>
+            <td><b>你的数据已经给出了答案：绳子表 5 行 → JOIN 出来 4 行。</b>
+              少的那行是 <code>(3, 6, '高三')</code> —— 6 号学生根本不存在，JOIN 配不上就<b>直接丢掉</b>（INNER JOIN 的行为）。
+              行数由<b>绳子表</b>决定，但<b>能被配上的行才留下</b>。</td>
+          </tr>
+          <tr><td>把 <code>ON</code> 接反再跑一次 —— 0 行还是假数据？</td><td>没做（§8 第 4 步）</td></tr>
+          <tr><td>挑一行人工核对内容</td><td>没做（上面那张表就是现成的素材：核对 <code>class_name</code> 和 JOIN 出来的学生对不对得上）</td></tr>
+          <tr><td>接反之后<b>为什么没报错</b>？</td><td>没答。提示：SQL 只比较"两个数相等吗"，它不知道这两个数<b>本来是什么意思</b>。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 7 死代码 ═══════════════════════════════════════ -->
+  <section class="sec" id="dead">
+    <h2 data-n="死">第 58–68 行：那段 if/else 是死代码</h2>
+    <pre>b = -1                      # ← 循环外面（没用到）
+for s in student:
+    rn = rnd.randint(0, 5)
+    b = -1                  # ← 问题在这：每轮开头又把它按回 -1
+    if rn != b:             # rn 是 0–5，b 是 -1 ⇒ 永远为真
+        link(s[0], course[rn][0])
+        b = rn              # ← 白写：下一轮开头就被覆盖
+    else:
+        ...                 # ← 永远走不到</pre>
+    <div class="out"><span class="cap">实测 —— 探针 4</span>rn 从 0 到 5 各跑一次，if 分支进入次数 = 6   else 分支进入次数 = 0
+=&gt; else 分支是死代码，永远走不到；b = rn 这行也没用（下一轮开头又被 -1 覆盖）</div>
+    <p>
+      你八成是想做"这个人已经选过这门课了，就换一门"。但 <code>b</code> 在循环里被重置，
+      所以那个判断从来没生效过 —— <b>而它长得像在工作</b>，这就是死代码最坑的地方。
+      （顺带：<code>else</code> 里那句 <code>course[rn+1]</code> 在 rn=5 时会越界，只是因为走不到才没爆。）
+    </p>
+    <p class="note">
+      我看到你旁边还有个 <code>测试.py</code>，里面就是 <code>if a != b:</code> 然后空着 ——
+      实测跑它：<code class="err">IndentationError: expected an indented block after 'if' statement on line 5</code>。
+      <b>那个文件从头到尾没跑起来过。</b> 下次把试的那两行直接写在作业脚本里试，别另开一个不跑的文件。
+    </p>
+    <p>
+      还有一件跟作业验收直接相关的：<b><code>rnd.randint</code> 让每次跑出来的行数都不一样</b>。
+      讲义要求"挑一行人工核对内容"，随机数据没法核对、也没法复现。
+      作业里的数据<b>写死</b>更好 —— 随机是后面写压力测试才需要的东西。
+    </p>
+  </section>
+
+  <!-- ══ 8 返工顺序 ═════════════════════════════════════ -->
+  <section class="sec" id="redo">
+    <h2 data-n="返">返工顺序（约 30–40 分钟）</h2>
+    <p>按这个顺序做，中间不要跳 —— 前两步是清障，第三步才是这次真正要学的。</p>
+
+    <h3>第 1 步：清掉 4 个笔误（5 分钟）</h3>
+    <div class="task"><input type="checkbox" id="r1"><label for="r1">第 44 行 <code>course_name</code> → <code>(course_name,)</code> —— <b>补逗号</b></label></div>
+    <div class="task"><input type="checkbox" id="r2"><label for="r2">第 52 行 <code>class_naem</code> → 拼对</label></div>
+    <div class="task"><input type="checkbox" id="r3"><label for="r3">表名统一：<code>courses</code> → <code>course</code>（第 27 / 75 行）、<code>student_courses</code> → <code>student_course</code>（第 79 行）</label></div>
+
+    <h3>第 2 步：把列名和值对齐（3 分钟）</h3>
+    <div class="task"><input type="checkbox" id="r4"><label for="r4">
+      第 52–53 行：<b>列写什么顺序，值就给什么顺序</b>。写完把两行并排看一遍再回车。
+    </label></div>
+    <p class="note">小技巧：列名和值<b>竖着写</b>成两行对齐，反了一眼就看得出来 —— 后面写大段 INSERT 都这么干。</p>
+
+    <h3>第 3 步：绳子表砍成两列（10 分钟，<b>这是重点</b>）</h3>
+    <div class="task"><input type="checkbox" id="r5"><label for="r5">
+      <code>student_course</code> 只留 <code>course_id</code> / <code>student_id</code>，
+      主键 <code>PRIMARY KEY (course_id, student_id)</code>。<b><code>class_name</code> 整列删掉。</b>
+    </label></div>
+    <div class="task"><input type="checkbox" id="r6"><label for="r6">
+      <code>link()</code> 里那个"再查一次班级"的 <code>SELECT</code> 也一起删 —— 不需要了。
+    </label></div>
+    <div class="task"><input type="checkbox" id="r7"><label for="r7">
+      三条 <code>REFERENCES</code> 重写：<b>只留指向两张主表 <code>id</code> 的两条</b>（父表名写对）。
+      顺便把 <code>PRAGMA foreign_keys = ON</code> 加上，让它们真的管事。
+    </label></div>
+
+    <h3>第 4 步：写那条 JOIN（10 分钟）</h3>
+    <div class="task"><input type="checkbox" id="r8"><label for="r8">
+      从绳子表出发，把两边的名字配出来。骨架和昨天那张单子上的一样，<b>空得你自己填</b>：
+    </label></div>
+    <pre>SELECT ______, ______, ______      -- 你想要哪几列？（学生名 / 班级 / 课程名）
+FROM student_course
+JOIN ______ ON ______ = ______     -- 配学生
+JOIN ______ ON ______ = ______;    -- 配课程</pre>
+    <p class="note">
+      卡住就看 <a href="函数卡.html"><b>函数卡</b></a>筛「现在」→ <code>sql.join</code> / <code>sql.join_three</code>。
+    </p>
+
+    <h3>第 5 步：补上两坑（10 分钟，不许省）</h3>
+    <div class="task"><input type="checkbox" id="r9"><label for="r9">
+      <b>坑一</b>：把你 JOIN 里某一句 <code>ON</code> 的两头<b>故意接反</b>，跑一次。
+      记下：<b>0 行</b>，还是<b>假数据</b>？（你现在这套数据里 <code>course.id</code> 是 1–6、<code>students.id</code> 是 1–5，
+      <b>会重叠</b> —— 所以先猜猜是哪种，再跑。）
+    </label></div>
+    <div class="task"><input type="checkbox" id="r10"><label for="r10">
+      <b>坑二</b>：单独 <code>SELECT COUNT(*)</code> 数绳子表几行，再数 JOIN 几行，
+      <b>挑一行</b>把学生名、班级、课程名逐个核对一遍。
+    </label></div>
+
+    <h3>第 6 步：把数据写死，再跑一遍</h3>
+    <div class="task"><input type="checkbox" id="r11"><label for="r11">
+      把 <code>rnd.randint</code> 换成一串写死的选课（比如 <code>[('张三','语文'), ('李四','数学'), ...]</code>），
+      这样别人（和我）拿到你的脚本，跑出来<b>行行一样</b>。
+    </label></div>
+  </section>
+
+  <!-- ══ 9 交回来 ═══════════════════════════════════════ -->
+  <section class="sec" id="back">
+    <h2 data-n="交">交回来时给我四样</h2>
+    <ol>
+      <li>改好的 <code>D8作业.py</code>（还是这个路径就行）</li>
+      <li><b>JOIN 的真实输出</b>贴给我（几行、每行内容）</li>
+      <li>坑一的答案：接反之后是 <b>0 行</b> 还是 <b>假数据</b>？</li>
+      <li>两个数：<b>绳子表几行 / JOIN 几行</b>，以及你核对了哪一行</li>
+    </ol>
+    <p class="note">
+      §5 那两个问题（<code>dosage</code> 为什么该在绳子表里 / 成绩该放哪张表）也一起答了 ——
+      答完这次作业就算真正结掉，
+      <a href="../每周书/W39-数据怎么连起来.html">第 3 课</a>只剩 ⑤⑥（换皮 + 你讲我听），那两个<b>要我在场</b>，
+      你答完就来找我约时间。
+    </p>
+    <p class="note">
+      这张批改单是<b>新格式的第一次</b>。以后你每次交作业我都出这么一张（可打印、带实测输出、留返工清单）——
+      觉得哪里别扭跟我说，我改。
+    </p>
+  </section>
+
+  <div class="foot">
+    批改单 · D8 作业 · 2026.09.28 ｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">
+      证据：<code>我的练习/_批改-D8-输出.txt</code>（脚本 <code>_批改-D8.py</code>，5 组探针，可重跑）
+      ｜ 判据：<code>每周书/W39-数据怎么连起来.html</code> 第 8 章 · <code>每周目标.md</code>（W40 第 1 项）
+      ｜ 配套：<a href="函数卡.html">函数卡</a> · <a href="复习台.html">复习台</a> · <a href="今日清单-20260928.html">今日清单</a>
+    </span>
+  </div>
+</div>
+<script>
+/* 返工进度记在本地 —— 刷新不丢；打印时是一张干净的清单（可以印出来手写） */
+(function () {
+  'use strict';
+  var KEY = 'lab.redo.D8.20260928';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.task input'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.id];
+    b.parentNode.classList.toggle('done', b.checked);
+    b.addEventListener('change', function () {
+      b.parentNode.classList.toggle('done', b.checked);
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      paint();
+    });
+  });
+  function paint() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    var el = document.getElementById('tick');
+    el.textContent = n + ' / ' + boxes.length + ' 项返工完成' +
+      (n === boxes.length ? ' —— 可以交回来了 ✅' : '');
+  }
+  var p = document.createElement('p');
+  p.className = 'tick';
+  p.id = 'tick';
+  document.getElementById('redo').appendChild(p);
+  paint();
+})();
+</script>
+</body>
+</html>
