@@ -141,7 +141,10 @@
   var state = Lab.store.get(KEY, {});
   function keyOf(id, n) { return id + '@' + n; }
   function mark(id, n, v) { state[keyOf(id, n)] = v; Lab.store.set(KEY, state); }
-  function isOk(id, n) { return state[keyOf(id, n)] === 'ok'; }
+  function val(id, n) { return state[keyOf(id, n)]; }
+  /* 「已结清」= 当天过了（ok）**或**事后补过（late）。
+     late 是 2026-10-05 加的：逾期格子原来没有入口，永远清不掉（见 backfill 注释）。 */
+  function settled(id, n) { var v = val(id, n); return v === 'ok' || v === 'late'; }
 
   /* 本轮 = 已经到日期的**最后一个**复习档 */
   var dueIdx = -1;
@@ -174,7 +177,7 @@
     $('#tNextWrap').hidden = nextIdx < 0;
     if (nextIdx >= 0) $('#tNext').textContent = DATES[nextIdx].n + ' 天档 · ' + cnDate(DATES[nextIdx].iso);
 
-    var pending = ALL.filter(function (c) { return !isOk(c.id, round.n); });
+    var pending = ALL.filter(function (c) { return !settled(c.id, round.n); });
     totalEl.textContent = TOTAL_PER_ROUND;
     doneEl.textContent = (TOTAL_PER_ROUND - pending.length);
 
@@ -253,10 +256,11 @@
                       g.origin.replace(/-/g, '.') + ' · ' + g.cards.length + ' 张</span>';
       tr.appendChild(td0);
       DATES.forEach(function (d) {
-        var done = g.cards.filter(function (c) { return isOk(c.id, d.n); }).length;
+        var done = g.cards.filter(function (c) { return settled(c.id, d.n); }).length;
+        var late = g.cards.filter(function (c) { return val(c.id, d.n) === 'late'; }).length;
         var td = el('td', 'num');
-        var span = el('span', null, done + ' / ' + g.cards.length);
-        if (done === g.cards.length) span.style.color = 'var(--ok)';
+        var span = el('span', null, done + ' / ' + g.cards.length + (late ? ' *' : ''));
+        if (done === g.cards.length) span.style.color = late ? 'var(--pen)' : 'var(--ok)';
         else if (d.iso < TODAY) span.style.color = 'var(--red)';
         else if (d.iso === TODAY) span.style.fontWeight = '700';
         td.appendChild(span);
@@ -267,33 +271,104 @@
     });
     $('#calNote').innerHTML = '<b>起算日 ' + R.start.replace(/-/g, '.') + '</b>。' +
       '第 1、2 课的卡<b>原本学于 2026.09.06</b>，它们的 1/3/7 三档<b>全部逾期且从未做过</b> —— ' +
-      '09.23 第 3 课当场重测，证实已经忘光。⇒ <b>重学即重新起算</b>（今晚重新过了这几张），旧账不勾销、但也不再挂着吓人。';
+      '09.23 第 3 课当场重测，证实已经忘光。⇒ <b>重学即重新起算</b>（今晚重新过了这几张），旧账不勾销、但也不再挂着吓人。<br>' +
+      '<b>*</b> = 这一档是<b>事后补过</b>的（蓝色）—— 不是当天做的。<b>没做的日子不会被改写成做过的日子。</b>';
+  }
+
+  /* ── 补过：把某张卡「比今天这档更早」的欠档一次结清 ──────
+     为什么要加（2026-10-05 实测）：这一页原来写着「点下表里的卡直接补过，补完就少一格」，
+     但**全页唯一可点的入口只标当前档**（mark(c.id, round.n)）——
+     1 天档 / 3 天档的格子打开是 33 格，把今天列出的 11 张全点「会了」之后
+     **还是剩 22 格，而且永远清不掉**（想把它们变成 0 没有任何按钮可点）。
+     承诺是假的，这里把它做成真的。
+
+     结清的状态记成 'late'（不是 'ok'）—— 事实是他**没在 09.24 / 09.26 做**，
+     这件事不会因为今天补了就变成"当天做过"。日历里 late 用蓝色 + `*` 标出来。 */
+  function backfill(cardId) {
+    var changed = 0;
+    DATES.forEach(function (d, i) {
+      if (i >= dueIdx) return;                          /* 今天这档在顶部处理，不在这里补 */
+      if (!settled(cardId, d.n)) { mark(cardId, d.n, 'late'); changed++; }
+    });
+    return changed;
   }
 
   /* ── 渲染逾期 ───────────────────────────────────────── */
   function renderOverdue() {
     var rows = [];
-    DATES.forEach(function (d) {
-      if (d.iso >= TODAY) return;                       /* 今天和以后的不算逾期 */
+    DATES.forEach(function (d, i) {
+      if (i >= dueIdx) return;                          /* 今天这档已在顶部列出，不重复记成"藏起来的烂账" */
       ALL.forEach(function (c) {
-        if (!isOk(c.id, d.n)) rows.push({ c: c, d: d, late: daysBetween(d.iso, TODAY) });
+        if (!settled(c.id, d.n)) rows.push({ c: c, d: d, late: daysBetween(d.iso, TODAY) });
       });
     });
-    var sec = $('#overdue');
-    if (!rows.length) { sec.hidden = true; return; }
+    var sec = $('#overdue'), host = $('#overdueList');
+    if (!rows.length) {
+      /* 隐藏 ≠ 清空：2026-10-05 实测，这里原来提前 return 没清 DOM，
+         补完最后一格之后段位虽然 hidden，里面**还留着看不见的死按钮**
+         （无头脚本点得到、人点不到 → 任何自动化核对都会在这里假失败）。 */
+      sec.hidden = true;
+      host.textContent = '';
+      $('#overdueMsg').textContent = '';
+      return;
+    }
     sec.hidden = false;
     rows.sort(function (a, b) { return b.late - a.late; });
-    $('#overdueMsg').innerHTML = '有 <b>' + rows.length + '</b> 格过了日子还没打勾。' +
-      '<b>最老的一格逾期 ' + rows[0].late + ' 天。</b> 别慌 —— 点下表里的卡直接补过，补完就少一格。';
-    var host = $('#overdueList'); host.textContent = '';
-    var byGroup = {};
-    rows.forEach(function (r) { (byGroup[r.c.course] = byGroup[r.c.course] || []).push(r); });
-    Object.keys(byGroup).forEach(function (k) {
-      var tr = el('div', 'redpen');
-      tr.innerHTML = '<b>' + k + '</b> —— ' +
-        byGroup[k].map(function (r) { return r.d.n + ' 天档（逾期 ' + r.late + ' 天）'; }).join('、') +
-        ' 共 ' + byGroup[k].length + ' 格没过。';
-      host.appendChild(tr);
+    $('#overdueMsg').innerHTML = '有 <b>' + rows.length + '</b> 格比今天这档更早、还没打勾。' +
+      '<b>最老的一格逾期 ' + rows[0].late + ' 天。</b> ' +
+      '对着卡片自己答一遍，答得出就点<b>补过</b>结清 —— 会记成「事后补过」，' +
+      '<b>不会伪装成当天做的</b>。';
+
+    /* 按卡归并：一张卡欠几档，一次结清（分档只是调度，不是几种不同的债） */
+    var byCard = {};
+    rows.forEach(function (r) {
+      var box = byCard[r.c.id] || (byCard[r.c.id] = { c: r.c, rounds: [] });
+      box.rounds.push(r);
+    });
+
+    host.textContent = '';
+    var lastCourse = null, k = 0;
+    Object.keys(byCard).forEach(function (id) {
+      var e = byCard[id];
+      if (e.c.course !== lastCourse) {
+        lastCourse = e.c.course; k = 0;
+        host.appendChild(el('h3', null, e.c.course));
+      }
+      var box = el('div', 'guess wrong');
+      var q = el('p', 'q');
+      q.innerHTML = '<span style="color:var(--ink-3);font-weight:400">' + (++k) + '.</span> ' + md(e.c.q);
+      box.appendChild(q);
+
+      var ans = el('div', 'answer');
+      ans.hidden = true;
+      ans.innerHTML = md(e.c.a);
+      box.appendChild(ans);
+
+      var row = el('div', 'try');
+      var bShow = el('button', null, '看答案');
+      bShow.onclick = function () {
+        ans.hidden = !ans.hidden;
+        bShow.textContent = ans.hidden ? '看答案' : '收起答案';
+      };
+      row.appendChild(bShow);
+
+      var b = el('button', 'primary', '补过（结清 ' + e.rounds.length + ' 格）');
+      b.onclick = function () {
+        backfill(e.c.id); Lab.ink(box);
+        renderToday(); renderCalendar(); renderOverdue();
+      };
+
+      /* 先摆"欠哪几档"，再摆动作 —— 读起来是「欠 1天+3天 → 补过」，
+         而不是先看见一个动作再猜它要清什么。小药丸样式让两档不会连成一串。 */
+      e.rounds.forEach(function (r) {
+        var chip = el('span', null, r.d.n + ' 天档 · 逾期 ' + r.late + ' 天');
+        chip.style.cssText = 'color:var(--red);font-size:12px;font-weight:600;' +
+          'border:1px solid var(--red);border-radius:999px;padding:2px 9px;background:var(--red-soft)';
+        row.appendChild(chip);
+      });
+      row.appendChild(b);
+      box.appendChild(row);
+      host.appendChild(box);
     });
   }
 
