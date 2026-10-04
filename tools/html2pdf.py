@@ -1,5 +1,8 @@
 """打印流水线：把 打印资料/*.html 批量转成 A4 PDF（用 Edge/Chrome 无头模式，不需要装任何库）
 
+⏸ 默认不跑（2026-10-05 学员定：交付物只出 HTML，要纸自己 Ctrl+P）。
+   只有学员明确说「要 PDF」时才用这个脚本 —— 别再顺手生成。
+
 用法：
     python tools/html2pdf.py                  # 转 打印资料/ 下全部 html
     python tools/html2pdf.py 某个文件.html     # 只转一个

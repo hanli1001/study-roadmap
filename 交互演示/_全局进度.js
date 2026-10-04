@@ -13,11 +13,17 @@
 (function (global) {
   'use strict';
 
-  var ANCHOR = '2026-09-23';                 /* 本页数据校准日 */
+  var ANCHOR = '2026-09-23';                 /* 本页数据校准日（只作元信息标注，不再参与天数计算） */
 
+  /* 「还剩几周」必须从**今天**算起 ——
+     ⚠️ 原实现从 ANCHOR 起算，于是那句「现在还剩 N 周」是一块**停摆的表**：
+     2026-10-05 时它仍显示 23 周，而真实值是 21 周（与 `每周目标.md` / 今日清单里的重算对不上）。
+     这正是 P-015 / W-42 那一类病：数字看着是算出来的，其实不会动。
+     ANCHOR 仍然有用（数据校准日、复习日程的起算日另见 REVIEW_START），只是不该拿来当"现在"。 */
   function weeksTo(d) {
-    var a = new Date(ANCHOR + 'T00:00:00'), b = new Date(d + 'T00:00:00');
-    return Math.round((b - a) / 6048e5 * 10) / 10;
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    var b = new Date(d + 'T00:00:00');
+    return Math.round((b - now) / 6048e5 * 10) / 10;
   }
 
   var P = {

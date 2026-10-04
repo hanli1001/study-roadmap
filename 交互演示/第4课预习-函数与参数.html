@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 4 课预习 · 函数与参数 · 2026.10.05</title>
+<link rel="stylesheet" href="_主题.css">
+<style>
+/* 只属于本页 */
+.guess{ background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+        padding:11px 14px; margin:11px 0 }
+.guess .q{ font-weight:600; margin:0 0 7px }
+.guess ol{ margin:0; padding-left:22px }
+.guess li{ margin:3px 0 }
+details{ margin:9px 0; background:rgba(255,255,255,.35); border:1px dashed var(--rule-2);
+         border-radius:5px; padding:7px 12px }
+details summary{ cursor:pointer; font-size:13.5px; color:var(--pen); font-weight:600 }
+details[open] summary{ margin-bottom:6px }
+details p{ margin:5px 0; font-size:13.5px; color:var(--ink-2) }
+.task{ display:flex; align-items:flex-start; gap:9px; margin:9px 0 }
+.task input{ margin-top:3px; width:16px; height:16px; accent-color:var(--pen); flex:none }
+.task label{ flex:1 }
+.task.done label{ color:var(--ink-3); text-decoration:line-through }
+.tick{ font-size:12.5px; color:var(--ink-3); margin:2px 0 10px }
+.mmwrap{ background:rgba(255,255,255,.34); border:1px solid var(--rule); border-radius:5px;
+         padding:6px 4px; margin:12px 0; overflow-x:auto }
+@media print{
+  .tick{ display:none }
+  .task input{ -webkit-print-color-adjust:exact }
+  .sec{ break-inside:auto }
+  .task,.tw,pre,.out,.note,.redpen,.guess,details,.mmwrap{ break-inside:avoid }
+  details{ border-style:solid } details > *{ display:block !important }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <header class="rec-head">
+    <h1>第 4 课 · 预习单：函数与参数</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="时长">20 分钟微课（可拆 2×10）</span>
+      <span class="f" data-k="前置">第 3 课已结课（2026.10.05）</span>
+      <span class="f" data-k="素材">你自己的 我的练习/prescription_db.py</span>
+    </div>
+    <p class="sub">
+      这一页是<b>上课前看的</b>，不是讲义 —— 它只告诉你"要打哪三个靶子"和"先自己答什么"。
+      真正动手的材料是 <a href="函数与参数-详解.html">函数与参数-详解.html</a>（交互卡，7 个按钮）。
+    </p>
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span>
+      <b>② 编程主线 · Python</b><span class="sep">›</span>
+      <b>第 4 课</b>
+      <a href="全局思维导图.html">全局思维导图</a>
+      <a href="函数与参数-详解.html">交互卡</a>
+      <a href="复习台.html">复习台</a>
+    </div>
+  </header>
+
+  <!-- ══ 1 三个靶子 ═════════════════════════════════════ -->
+  <section class="sec" id="targets">
+    <h2 data-n="靶">本课要打三个靶子（不超过 3 个）</h2>
+    <p>
+      第 3 课解决的是「<b>数据怎么存、怎么拼</b>」。这一课解决「<b>代码怎么组织</b>」。
+      注意：<b>你不是从零学函数</b> —— 你早就写过带参数的函数了
+      （<code>def link(fangji_name, ingredients_dosage)</code>，还调用了 8 次）。
+      所以这一课干的事是：<b>给你已经会做的动作贴上名字</b>，再把缺的几种参数补齐。
+    </p>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:8%">#</th><th style="width:34%">靶子</th><th>上完课你应该能说清</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><b>参数是怎么绑上去的</b><br><small>位置 / 关键字 / 默认值</small></td><td>同一个函数，为什么 <code>greet("小明")</code> 和 <code>greet("小红","早上好")</code> 都能跑；<code>greeting</code> 的值分别从哪来</td></tr>
+          <tr><td>2</td><td><b><code>return</code> 和 <code>print</code> 不是一回事</b></td><td>为什么 <code>x = link("麻黄汤", [])</code> 之后 <code>print(x)</code> 打出来的是 <code>None</code></td></tr>
+          <tr><td>3</td><td><b>作用域</b></td><td>为什么函数里定义的变量，函数外面看不见</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      <b>只作「见识」、不列入必会</b>（听一句就行，不考）：<code>*args</code> / <code>**kwargs</code>、
+      「默认参数用可变对象」的坑。认知负荷有限，先把上面三个吃透。
+    </p>
+  </section>
+
+  <!-- ══ 2 本课思维导图 ═════════════════════════════════ -->
+  <section class="sec" id="mm">
+    <h2 data-n="图">本课思维导图 <small>（现在全是「没开始」—— 上完课我们回来改颜色）</small></h2>
+    <div class="mmwrap"><div data-mm="lesson" aria-label="第 4 课思维导图"></div></div>
+    <p class="note">
+      用法：上课前扫一眼，知道有哪几块；<b>上完课再回来</b>，把会的节点改成「已会」。
+      颜色变了才算真学过 —— 这张图不是装饰。
+    </p>
+  </section>
+
+  <!-- ══ 3 全局思维导图 ═════════════════════════════════ -->
+  <section class="sec" id="gmap">
+    <h2 data-n="全">全局思维导图 <small>（第 4 课在整条路线上的位置）</small></h2>
+    <div class="mmwrap"><div data-global-map aria-label="全局思维导图"></div></div>
+    <p class="note">
+      这一课属于<b>阶段 A · 编程主线</b>的第二段。整条链的终点没变：
+      <b>2027.03 简历上必须有东西可写</b> —— 函数与参数是写那个"东西"的<b>手</b>。
+      完整版也可以单独打开 <a href="全局思维导图.html">全局思维导图.html</a>。
+    </p>
+  </section>
+
+  <!-- ══ 4 闭卷快问 ═════════════════════════════════════ -->
+  <section class="sec" id="quick">
+    <h2 data-n="问">开课前：闭卷答这 4 题（3 分钟，别翻笔记）</h2>
+    <p>这是<b>第 1–3 课的检索练习</b>，不是你今天要学的新东西。答不出很正常，答不出<b>才说明该练</b>。</p>
+    <details>
+      <summary>① 多对多为什么必须用第三张表？</summary>
+      <p>因为「谁选了哪门课」这个事实<b>同时跟着两个人走</b> —— 放在学生表里，一个学生只能有一门课；放在课程表里，一门课只能有一个学生。<b>它自己就是第三种东西</b>，得有自己的表。那张表一行 = 一条关系，不是一个人。</p>
+    </details>
+    <details>
+      <summary>② <code>ON</code> 和 <code>WHERE</code> 的区别？</summary>
+      <p><b><code>ON</code> = 怎么配</b>（配对规则，写在 JOIN 后面）；<b><code>WHERE</code> = 要哪些</b>（筛结果）。第 3 课上实测过：少了 <code>WHERE</code>，那本书的例子从 2 行变成 3 行。</p>
+    </details>
+    <details>
+      <summary>③ <code>COUNT(*)</code> 和 <code>COUNT(age)</code> 什么时候不一样？</summary>
+      <p><b>有 NULL 的时候</b>。<code>COUNT(*)</code> 数行数，不管里面是不是空；<code>COUNT(列名)</code> <b>跳过 NULL</b>。所以 <code>COUNT(age)</code> 可能比 <code>COUNT(*)</code> 小。</p>
+    </details>
+    <details>
+      <summary>④ 你 <code>sql-notes.md</code> 里记的药材数，和你 <code>COUNT(*)</code> 数出来的一样吗？</summary>
+      <p>这是第 3 课欠下的作业，<b>要你自己去数</b>（笔记写的是一个数，库里是另一个）。<br>
+      目的不是对答案，是让你亲眼见一次：<b>笔记会过期，库不会</b> —— 以后凡是"我记得有 X 条"，都要能当场数一遍。</p>
+    </details>
+  </section>
+
+  <!-- ══ 5 钩子 ═════════════════════════════════════════ -->
+  <section class="sec" id="hook">
+    <h2 data-n="钩">钩子：你已经写过 8 遍的东西</h2>
+    <p>打开 <code>我的练习/prescription_db.py</code>，翻到第 80 行往下 —— 有 <b>8 行</b>长得一模一样的调用：</p>
+    <pre>link("麻黄汤", [("麻黄", "三两"), ("桂枝", "二两"), ("杏仁", "七十个"), ("甘草", "一两")])
+link("桂枝汤", [("桂枝", "三两"), ("白芍", "三两"), ("甘草", "二两"), ("生姜", "三两"), ("大枣", "十二枚")])
+link("小柴胡汤", [("柴胡", "半斤"), ("黄芩", "三两"), ("人参", "三两"), ("半夏", "半升"), ...])
+...                              ← 一共 8 行</pre>
+    <p>它们都指向同一个函数（第 68 行）：</p>
+    <pre>def link(fangji_name, ingredients_dosage):
+    """辅助函数：给方剂关联药材"""</pre>
+    <div class="guess">
+      <p class="q">先自己算，再往下看：</p>
+      <ol>
+        <li>这 8 行<b>如果不用函数</b>，大概要写多少行？</li>
+        <li>如果以后要把"药材"改成"饮片"，<b>不用函数</b>要改几处？用了函数呢？</li>
+      </ol>
+    </div>
+    <p class="note">
+      <b>函数 = 把一串重复动作打包成一个名字。</b>就这一句。这一课不是教你写函数，是教你<b>叫出它的各个部位的名字</b>。
+    </p>
+  </section>
+
+  <!-- ══ 6 先猜 ═════════════════════════════════════════ -->
+  <section class="sec" id="guess2">
+    <h2 data-n="猜">先猜：下面这一行会打出什么？</h2>
+    <pre>x = link("麻黄汤", [])
+print(x)</pre>
+    <div class="guess">
+      <p class="q">选一个（上课时会当场跑给你看）：</p>
+      <ol type="A">
+        <li>报错 —— 因为 <code>link()</code> 没有返回值</li>
+        <li>打出 <code>None</code></li>
+        <li>打出 <code>[]</code>（空列表）</li>
+        <li>打出插入结果 / 影响的行数</li>
+      </ol>
+    </div>
+    <p class="note">
+      ⚠️ <b>先写在纸上再往下</b> —— 猜错比猜对值钱。这是本课靶子 ② 的入口，
+      也是本课 L3 要你讲给我的那句话（<b>顺便补上第 3 课没验的「讲给别人听」那一档</b>）。
+    </p>
+  </section>
+
+  <!-- ══ 7 课后任务 ═════════════════════════════════════ -->
+  <section class="sec" id="hw">
+    <h2 data-n="做">课后三个任务（上完课做）</h2>
+    <ol>
+      <li><code>greet(name, greeting="你好")</code> —— <b>返回</b>问候语（<b>不是 print</b>）</li>
+      <li><code>greet("小明")</code> 与 <code>greet("小红", "早上好")</code> 各调用一次并打印出来</li>
+      <li><b>进阶</b>：<code>add_all(*nums)</code> —— 把所有数字加起来<b>返回</b></li>
+    </ol>
+    <p class="note">
+      第 1、2 题考的是靶子 ①（默认值从哪来）+ 靶子 ②（返回 ≠ 打印）。
+      第 3 题只是"见识"一下 <code>*args</code>，做不出不算欠账。
+    </p>
+  </section>
+
+  <!-- ══ 8 验收 ═════════════════════════════════════════ -->
+  <section class="sec" id="accept">
+    <h2 data-n="收">验收：三级（上完课当场对）</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:12%">级别</th><th>通过标准</th></tr></thead>
+        <tbody>
+          <tr><td><b>L1</b></td><td>能指出自己 <code>link()</code> 里哪些是参数、返回什么、<b>为什么要写函数</b></td></tr>
+          <tr><td><b>L2</b></td><td>独立写出 <code>greet()</code>（含默认参数），并说清 <code>greet("小明")</code> 时 <code>greeting</code> 从哪来</td></tr>
+          <tr><td><b>L3</b></td><td>能讲：<b>为什么 <code>x = link(...)</code> 得到 <code>None</code></b> ＋ 位置参数和关键字参数什么时候必须用哪种</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="redpen">
+      🔴 <b>L3 这一档这次要补一个旧账</b>：第 3 课的 ⑤ 换皮 / ⑥ 你讲我听 你决定略过了，
+      所以<b>「能讲给别人听」从来没验过</b>。这次不重开第 3 课 —— 改成：
+      <b>你把「为什么是 None」讲给我听</b>，讲顺了，两课的 L3 一起算过。
+    </p>
+    <p class="note">
+      ⚠️ 老规矩：<b>你说「我懂了」的时候就是危险信号</b> —— 立刻去交互卡 ④ 点"少给 / 多给"两个按钮自证。
+    </p>
+  </section>
+
+  <!-- ══ 9 上课前 ═══════════════════════════════════════ -->
+  <section class="sec" id="prep">
+    <h2 data-n="备">上课前你要做的三件事</h2>
+    <div class="task"><input type="checkbox" id="p1"><label for="p1">把这一页从上到下读完（约 10 分钟）</label></div>
+    <div class="task"><input type="checkbox" id="p2"><label for="p2">打开 <a href="函数与参数-详解.html">交互卡</a>，只读 ① ② 两节，<b>先别点按钮</b>（按钮留着上课一起点）</label></div>
+    <div class="task"><input type="checkbox" id="p3"><label for="p3">打开 <code>我的练习/prescription_db.py</code>，数一遍那 8 行 <code>link(...)</code>，并想好 §6 那个选择题的答案</label></div>
+    <p class="note">
+      课上会当场跑 <code>x = link(...)</code>、会点那 7 个按钮、会让你讲 L3。
+      <b>别的不用准备</b> —— 尤其别提前背 <code>*args</code>。
+    </p>
+  </section>
+
+  <div class="foot">
+    第 4 课预习单 · 2026.10.05 ｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">
+      依据：<code>课程/第4课-函数与参数.md</code>（教案）· <code>我的练习/prescription_db.py</code>（实测：<code>link()</code> 在第 68 行、8 处调用）
+      ｜ 动手材料：<a href="函数与参数-详解.html">函数与参数-详解.html</a> ·
+      <a href="语法速查-常用内置函数.html">语法速查</a> · <a href="复习台.html">复习台</a>
+      ｜ 🔴 要纸就本页 <b>Ctrl+P</b>（2026.10.05 起不再生成 PDF）
+    </span>
+  </div>
+</div>
+
+<script src="_全局进度.js"></script>
+<script>
+/* 本课思维导图 —— 预览态：全部 todo（还没开始），上完课回来改 state */
+window.MM_DATA = {
+  lesson: {
+    label: '函数与参数', note: '第 4 课', state: 'root',
+    children: [
+      { label: '为什么要函数', state: 'doing', children: [
+        { label: '你已经写过 8 遍 link(...)', note: '不是从零学', state: 'todo' },
+        { label: '函数 = 把重复动作打包成一个名字', state: 'todo' },
+        { label: '改一处 vs 改八处', state: 'todo' }
+      ]},
+      { label: '靶子 ① 参数怎么绑', state: 'current', children: [
+        { label: '位置参数 → 靠顺序', state: 'todo' },
+        { label: '关键字参数 → 靠名字，顺序随便', state: 'todo' },
+        { label: '默认值 → 不传就有', state: 'todo' },
+        { label: '少给 / 多给 → TypeError', note: '报错会说清是谁的问题', state: 'todo' }
+      ]},
+      { label: '靶子 ② return vs print', state: 'doing', children: [
+        { label: 'print = 给人看', state: 'todo' },
+        { label: 'return = 给程序用', state: 'todo' },
+        { label: 'link() 没有 return', note: '⇒ x = link(...) 是 None', state: 'todo' }
+      ]},
+      { label: '靶子 ③ 作用域', state: 'doing', children: [
+        { label: '函数里的变量，外面看不见', state: 'todo' }
+      ]},
+      { label: '只作见识（不考）', state: 'doing', children: [
+        { label: '*args / **kwargs', state: 'todo' },
+        { label: '默认参数用可变对象的坑', state: 'todo' }
+      ]},
+      { label: '课后三个任务', state: 'doing', children: [
+        { label: 'greet(name, greeting="你好")', note: '要 return，不要 print', state: 'todo' },
+        { label: '两次调用并打印', state: 'todo' },
+        { label: '进阶 add_all(*nums)', state: 'todo' }
+      ]}
+    ]
+  }
+};
+</script>
+<script src="_学习工具.js"></script>
+<script>
+/* 上课前清单：打勾状态记本地，刷新不丢 */
+(function () {
+  'use strict';
+  var KEY = 'lab.prep.L4';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.task input'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.id];
+    b.parentNode.classList.toggle('done', b.checked);
+    b.addEventListener('change', function () {
+      b.parentNode.classList.toggle('done', b.checked);
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      paint();
+    });
+  });
+  function paint() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    var el = document.getElementById('tick');
+    el.textContent = n + ' / ' + boxes.length + ' 项准备好了' +
+      (n === boxes.length ? ' —— 可以上课了 ✅' : '');
+  }
+  var p = document.createElement('p');
+  p.className = 'tick';
+  p.id = 'tick';
+  document.getElementById('prep').appendChild(p);
+  paint();
+})();
+</script>
+</body>
+</html>
