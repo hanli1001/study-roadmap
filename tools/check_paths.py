@@ -29,6 +29,10 @@ import re
 import sys
 from pathlib import Path
 
+# Windows 控制台默认 GBK，打印 🔴/✅ 会 UnicodeEncodeError 直接崩（2026-10-02 实测踩到）
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = Path(__file__).resolve().parent.parent
 SKIP_DIRS = {"_ref", ".git", "_备份", "__pycache__", ".idea", ".playwright-mcp",
              ".pytest_cache", ".ruff_cache", "node_modules"}
@@ -38,6 +42,8 @@ EXTS = "json|html|docx|yaml|jpeg|md|py|pdf|txt|js|css|db|ini|yml|png|jpg|csv|sh|
 PAT_MD_LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 PAT_HTML_REF = re.compile(r'(?:href|src)="([^"#?]+)')
 PAT_BARE = re.compile(rf"[\w\u4e00-\u9fff][\w\u4e00-\u9fff ./\\-]*\.(?:{EXTS})(?![\w])")
+# ⚠️ 首个字符类故意**不含 `-`**：允许连字符开头会把文件名尾部误当成路径
+#    （实测：账本里 `诺奖与我的方向-2026-09-28.md` 被抠出 `-2026-10-02.md` 两条假断链）
 BAD_CHARS = set("*<>{}$|")
 
 
@@ -93,7 +99,12 @@ def refs_of(p: Path) -> set[str]:
 
 def normalize(s: str) -> str | None:
     s = s.strip().strip("`").strip()
-    if not s or s.startswith(("http://", "https://", "mailto:", "data:", "#", "//")):
+    if ".bak-" in s:                            # 备份件名（README.md.bak-20260928-x）
+        return None                             # 真身是 .bak-…，会被截成 README.md 误报
+    s = s.replace("\\", "/")                     # ⚠️ 归一化必须在下面这些判断**之前**
+    if "_备份/" in s:                            # _备份/ 本就在 SKIP_DIRS 里，不该被检
+        return None
+    if not s or s.startswith(("http://", "https://", "www.", "mailto:", "data:", "#", "//")):
         return None
     if any(c in s for c in BAD_CHARS):          # 通配/占位/模板
         return None

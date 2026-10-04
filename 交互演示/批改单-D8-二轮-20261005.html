@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>批改单 · D8 作业（第二轮）· 2026.10.05</title>
+<link rel="stylesheet" href="_主题.css">
+<style>
+.task{ display:flex; align-items:flex-start; gap:9px; margin:9px 0 }
+.task input{ margin-top:3px; width:16px; height:16px; accent-color:var(--pen); flex:none }
+.task label{ flex:1 }
+.task.done label{ color:var(--ink-3); text-decoration:line-through }
+.tick{ font-size:12.5px; color:var(--ink-3); margin:2px 0 10px }
+.ln{ display:inline-block; min-width:30px; font-family:"Cascadia Mono",Consolas,monospace;
+     font-size:11.5px; color:var(--ink-3); text-align:right; padding-right:6px }
+.st{ font-size:11px; font-weight:600; padding:1px 6px; border-radius:3px; white-space:nowrap }
+.st.no{ background:var(--red); color:#FFF6F3 }
+.st.ask{ background:var(--marker); color:var(--ink) }
+.st.ok{ background:var(--ok); color:#F2F8F4 }
+.err{ color:var(--red) }
+.ok{ color:var(--ok) }
+@media print{
+  .tick{ display:none }
+  .task input{ -webkit-print-color-adjust:exact }
+  .sec{ break-inside:auto }
+  .task,.tw,pre,.out,.note,.redpen,.selfcheck{ break-inside:avoid }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <header class="rec-head">
+    <h1>批改单 · D8 作业（第二轮）</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="交件">我的练习/D8作业.py（80 行）</span>
+      <span class="f" data-k="批改于">2026.10.05（周一）</span>
+      <span class="f" data-k="结论">🟢 跑通了 · 还剩 3 件小事 + 2 个问题</span>
+    </div>
+    <p class="sub">
+      上一张批改单是 <b>09.28</b>，这张是 <b>10.05</b> —— 中间隔了 7 天（国庆）。
+      <b>时间先记在这儿，不算在作业头上</b>：这张单子只判代码。
+    </p>
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span>
+      <b>② 编程主线 · SQL</b><span class="sep">›</span>
+      <b>第 3 课 · D8</b>
+      <a href="批改单-D8-20260928.html">第一轮批改单</a>
+      <a href="函数卡.html">函数卡</a>
+      <a href="../每周书/W39-数据怎么连起来.html">第 3 课讲义</a>
+    </div>
+  </header>
+
+  <!-- ══ 判决 ═══════════════════════════════════════════ -->
+  <section class="sec" id="grade">
+    <h2 data-n="判">返工 11 项：<b class="ok">8 项过了</b> · 1 项没做 · 2 项要你答</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:8%">#</th><th style="width:46%">第一轮要你改的</th><th style="width:12%">判</th><th>实测</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>第 44 行补逗号 <code>(course_name,)</code></td><td><span class="st ok">过</span></td><td>第 39、44 行现在都是元组</td></tr>
+          <tr><td>2</td><td><code>class_naem</code> 拼对</td><td><span class="st ok">过</span></td><td>整列都删了，不用拼了</td></tr>
+          <tr><td>3</td><td>表名统一（<code>courses</code>→<code>course</code>、<code>student_courses</code>→<code>student_course</code>）</td><td><span class="st ok">过</span></td><td>第 65、69 行都对</td></tr>
+          <tr><td>4</td><td>列名和值对齐</td><td><span class="st ok">过</span></td><td>第 47–48 行 <code>(course_id, student_id)</code> ← <code>(course_id, sid)</code></td></tr>
+          <tr><td>5</td><td>绳子表砍成两列 + 主键只留前两列</td><td><span class="st ok">过</span></td><td>见下方 §3 的建表语句</td></tr>
+          <tr><td>6</td><td>删掉 <code>link()</code> 里"再查一次班级"的 SELECT</td><td><span class="st ok">过</span></td><td>函数里现在只剩两次查询</td></tr>
+          <tr><td>7</td><td><b>两条外键写对 + <code>PRAGMA foreign_keys = ON</code></b></td><td><span class="st no">没做</span></td><td class="err">你把外键整段删了 —— <b>删掉 ≠ 修好</b>（§4）</td></tr>
+          <tr><td>8</td><td>写那条 JOIN</td><td><span class="st ok">过</span></td><td>还带了 <code>WHERE</code>，跑出来 5 行全对</td></tr>
+          <tr><td>9</td><td>坑一：把 <code>ON</code> 接反跑一次，答「0 行还是假数据」</td><td><span class="st ask">待答</span></td><td>代码里看不出来 —— 这是个<b>结论</b>，不是改动</td></tr>
+          <tr><td>10</td><td>坑二：数两个行数 + 挑一行核对</td><td><span class="st ask">待答</span></td><td>同上一行（数我已经算了，见 §5）</td></tr>
+          <tr><td>11</td><td>把数据写死，别用 <code>rnd.randint</code></td><td><span class="st ok">过</span></td><td>第 51–55 行 5 次 <code>link()</code> 写死</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      <b>一句话总结</b>：代码改对了，而且<b>真的跑通了</b>；剩下三项里两项是"你要说出结论"，一项是"你把东西删了"。
+    </p>
+  </section>
+
+  <!-- ══ 真跑通了 ═══════════════════════════════════════ -->
+  <section class="sec" id="run">
+    <h2 data-n="跑">这次真的跑通了（第一轮是崩在第 62 行）</h2>
+    <div class="out"><span class="cap">实测 —— 原样跑你的脚本，而且故意从 C:\Users\vision 跑（不跟你同一个目录）</span>退出码 = 0 （0 = 跑通了，没有异常）
+标准错误输出： ''   ← 空的，一个报错都没有
+最后一行输出 = [('数学', '张三', '高一'), ('数学', '李四', '高三'), ('数学', '牛二', '高三'),
+                ('数学', '李三', '高一'), ('数学', '张贾瑞', '高二')]
+
+students   5 行 ／ course   6 行 ／ student_course  15 行</div>
+    <p>
+      <b><code>Path(__file__).with_name("D8.db")</code> 又一次证明它是对的</b> —— 换个目录跑照样找到库。
+      第一轮你的库是 <b>三张表 0 行</b>（崩溃回滚），现在是 <b>5 / 6 / 15 行</b>，数据真的落盘了。
+    </p>
+  </section>
+
+  <!-- ══ 独立核对 ═══════════════════════════════════════ -->
+  <section class="sec" id="verify">
+    <h2 data-n="核">我没信你的 SQL，自己重算了一遍</h2>
+    <p>
+      批改不看"跑出来了没有"，看"跑出来的是不是对的"。所以我<b>不看你的 SQL</b>，
+      直接从你 5 次 <code>link()</code> 的参数手算应有的关系，再跟库里的比：
+    </p>
+    <div class="out"><span class="cap">实测 —— 探针 2</span>手算应有： 15 条
+库里实有： 15 条
+完全一致： True</div>
+    <p>然后逐行核对 JOIN 结果（每条关系都对得上名册）：</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th>课程</th><th>学生</th><th>JOIN 给的班级</th><th>名册里的班级</th><th>一致？</th></tr></thead>
+        <tbody>
+          <tr><td>数学</td><td>张三</td><td>高一</td><td>高一</td><td class="ok">✅</td></tr>
+          <tr><td>数学</td><td>李四</td><td>高三</td><td>高三</td><td class="ok">✅</td></tr>
+          <tr><td>数学</td><td>牛二</td><td>高三</td><td>高三</td><td class="ok">✅</td></tr>
+          <tr><td>数学</td><td>李三</td><td>高一</td><td>高一</td><td class="ok">✅</td></tr>
+          <tr><td>数学</td><td>张贾瑞</td><td>高二</td><td>高二</td><td class="ok">✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="redpen">
+      <b>这一张表就是第一轮那个设计问题的答案。</b>
+      第一轮你把 <code>class_name</code> 抄进绳子表 —— 一旦有人升了班，绳子表那份就变成假的，而且 SQL 不报错。
+      现在班级是 <b>JOIN 出来的</b>：名册一改，查询结果立刻跟着变，<b>没有第二份可以变得不一致的副本</b>。
+    </p>
+    <p>你的建表语句现在长这样（实测读自 <code>D8.db</code>）：</p>
+    <pre>CREATE TABLE student_course(
+    course_id INTEGER,
+    student_id INTEGER,
+    primary key (course_id, student_id))      <span class="err">← 就是这里少了约束（§4）</span></pre>
+  </section>
+
+  <!-- ══ 还剩三件 ═══════════════════════════════════════ -->
+  <section class="sec" id="left">
+    <h2 data-n="剩">还剩三件（约 20 分钟）</h2>
+
+    <h3>① 把两条外键加回去 · 5 分钟 · <b>这是唯一还没做的改动</b></h3>
+    <p>
+      第一轮我说的是「<b>重写</b>三条外键：只留指向两张主表 <code>id</code> 的两条，父表名写对」——
+      你把它们<b>整段删掉了</b>。这两种做法不一样：
+    </p>
+    <ul>
+      <li><b>写对</b> = 数据库帮你拦"id 写错" → 这正是第一轮让你吃亏的那类 bug</li>
+      <li><b>删掉</b> = 这张绳子表现在<b>一条约束都没有</b>（除了主键）→ 下次 id 写错，照样静默进去</li>
+    </ul>
+    <div class="out"><span class="cap">实测 —— 探针 1：你现在的 D8.db</span>外键声明（PRAGMA foreign_key_list）： 【一条都没有】
+外键开关（PRAGMA foreign_keys）   ： 0 （0 = 关）
+
+实测 —— 探针 4：把它加回去之后呢？
+加约束后跑出来的最后一行：
+    [('数学','张三','高一'), ('数学','李四','高三'), ('数学','牛二','高三'), ('数学','李三','高一'), ('数学','张贾瑞','高二')]
+=&gt; 跟你现在的结果<b>一模一样</b> ⇒ 加约束不用改你任何数据
+
+外键开着时：插 course_id=1（存在）   -&gt; 成功
+外键开着时：插 course_id=99（不存在）-&gt; IntegrityError -&gt; FOREIGN KEY constraint failed</div>
+    <p class="note">
+      说人话：<b>加这两行 + 一行 pragma，你现在的脚本一个字都不用改，输出完全一样</b>——
+      但从此以后 id 写错会当场报错，而不是等到 JOIN 出来少了行才发现。
+      <b>纯赚，不亏。</b>具体怎么写，函数卡搜「外键」（<code>sql.foreign_key</code>）那张就是。
+    </p>
+
+    <h3>② 坑一：把 <code>ON</code> 接反跑一次 · 5 分钟</h3>
+    <div class="task"><input type="checkbox" id="g1"><label for="g1">
+      你那条 JOIN 里有<b>两句 <code>ON</code></b>，随便挑一句，把两头对调，跑一次，记下：
+      <b>「接反的是哪一句」+「结果是 0 行，还是看着合理的假数据」</b>。
+    </label></div>
+    <p class="note">
+      提示：你这套数据 <code>course.id</code> 是 <b>1–6</b>、<code>students.id</code> 是 <b>1–5</b>，
+      <b>两个范围是重叠的</b> —— 所以<a href="批改单-D8-20260928.html">第一轮批改单</a>里说的两种下场你都有可能撞到。
+      <b>先猜，再跑</b>：猜错比猜对值钱。
+    </p>
+
+    <h3>③ 坑二：三个数 + 一行 · 5 分钟</h3>
+    <div class="task"><input type="checkbox" id="g2"><label for="g2">
+      数出来：<b>绳子表几行 / JOIN 不加 <code>WHERE</code> 几行 / 加 <code>WHERE</code> 几行</b>，
+      再<b>挑一行</b>说清它为什么对。
+    </label></div>
+    <p class="redpen">
+      <b>这三个数我这边已经算出来了（见 §5），但下一次没人替你算。</b>
+      所以先自己数一遍，对不上再看我那份。
+    </p>
+  </section>
+
+  <!-- ══ 双引号 ═════════════════════════════════════════ -->
+  <section class="sec" id="quote">
+    <h2 data-n="发">顺手发现一个雷：<code>WHERE c.name = "数学"</code></h2>
+    <p>
+      第 77 行，字符串用了<b>双引号</b>。现在能跑，但这是<b>碰巧能跑</b> ——
+      SQLite 里 <code>"..."</code> 优先当<b>列名</b>解析，只有在找不到同名列时才退化成字符串（历史兼容行为）。实测：
+    </p>
+    <div class="out"><span class="cap">实测 —— 探针 3</span>A) 表里没有叫 数学 的列 —— 现在能跑：
+    [(1, '数学')]
+
+B) 只要有人加了一列真的叫 数学 —— <b>同一条 SQL</b>：
+    []   ← 变成空结果，而且<b>不报错</b>
+   原因：SQLite 优先把 "..." 当列名；找不到同名列才退化成字符串
+
+   正确：单引号  [(1, '数学', 0)]
+   更好：占位符  [(1, '数学', 0)]</div>
+    <p>
+      <b>你不会收到任何报错，只会收到一个空列表</b> —— 然后开始怀疑数据、怀疑 JOIN、怀疑人生。
+      这类"不报错的错"第一轮已经咬过你一次（那次是列名和值写反）。
+    </p>
+    <p class="note">
+      改法：<code>WHERE c.name = '数学'</code>（单引号），或者干脆
+      <code>WHERE c.name = ?</code> 配 <code>("数学",)</code> ——
+      <b>占位符最好，因为它连"引号该用哪个"这个问题都取消了</b>（你第一轮的第 44 行就是栽在参数上）。
+    </p>
+  </section>
+
+  <!-- ══ 三个数 ═════════════════════════════════════════ -->
+  <section class="sec" id="nums">
+    <h2 data-n="数">§5 那三个数（先自己数，再对）</h2>
+    <div class="out"><span class="cap">实测 —— 探针 5</span>绳子表 student_course 行数        = 15
+同一条 JOIN 不加 WHERE 跑出来      = 15 行
+加 WHERE c.name="数学" 之后         = 5 行
+=&gt; 两数相等，说明这一轮<b>没有配不上的行</b>（第一轮是 5 → 4，少一行）</div>
+    <p>
+      <b>注意这里跟第一轮刚好相反</b>：第一轮你要的是"行数对不上"（5 → 4），
+      这一轮是"行数完全相等"。而讲义说的是 —— <b>两个数一样也不代表配对了</b>，
+      所以还必须<b>挑一行核对内容</b>（§3 那张表就是干这个的）。
+    </p>
+    <p class="note">
+      顺带一个能记住的说法：<b>行数只能证明"没少配"，内容才能证明"没配错"。</b>
+      第一轮你两个都错了；这一轮两个都对 —— 因为你把 <code>class_name</code> 挪出了绳子表。
+    </p>
+  </section>
+
+  <!-- ══ 还欠两个问题 ═══════════════════════════════════ -->
+  <section class="sec" id="ask">
+    <h2 data-n="问">第一轮问你的两个问题，还没有答案</h2>
+    <div class="selfcheck">
+      <b>各一句话就行，别展开：</b>
+      <ol>
+        <li>为什么处方库里 <code>dosage</code>（三两）该待在绳子表里，而 <code>class_name</code>（高一）不该？</li>
+        <li>如果以后要记「这个学生在这门课上的成绩」，<b>成绩该放哪张表？为什么？</b></li>
+      </ol>
+    </div>
+    <p>
+      这两个问题的答案，决定了你以后<b>每建一张表都要做一次的那个判断</b>——
+      比这次作业本身重要。第 2 问还可以真做一遍：给绳子表加一列 <code>score</code>，想想为什么它<b>可以</b>留下。
+    </p>
+  </section>
+
+  <!-- ══ 交回来 ═════════════════════════════════════════ -->
+  <section class="sec" id="back">
+    <h2 data-n="交">交回来给我五样</h2>
+    <ol>
+      <li>加了外键 + <code>PRAGMA</code> 的 <code>D8作业.py</code>（跑一次确认输出没变）</li>
+      <li>坑一：<b>接反了哪一句 + 0 行还是假数据</b></li>
+      <li>坑二：<b>15 / 15 / 5 这三个数，你自己数出来了吗</b> + 你核对了哪一行</li>
+      <li>§5 两个问题的答案（<code>dosage</code> / 成绩）</li>
+      <li>顺手把第 77 行的双引号改掉（单引号或占位符，二选一）</li>
+    </ol>
+    <p class="note">
+      这五样交齐，<b>D8 就算真正结掉了</b>，第 3 课只剩 ⑤ 换皮 + ⑥ 你讲我听 ——
+      那两个<b>要我在场</b>（约 20 分钟），你交完就来找我约时间。
+      ⑤ 我会拿<b>你自己这次的 bug</b> 当开场素材（第一轮批改单里那个"想记张三、读出来是李三"）。
+    </p>
+  </section>
+
+  <div class="foot">
+    批改单 · D8 作业（第二轮）· 2026.10.05 ｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">
+      证据：<code>我的练习/_批改-D8-二轮-输出.txt</code>（脚本 <code>_批改-D8-二轮.py</code>，5 组探针，可重跑）
+      ｜ 上一轮：<a href="批改单-D8-20260928.html">批改单-D8-20260928</a>
+      ｜ 判据：<code>每周书/W39-数据怎么连起来.html</code> 第 8 章
+    </span>
+  </div>
+</div>
+<script>
+/* 进度记在本地 —— 刷新不丢；打印时是一张干净的空表 */
+(function () {
+  'use strict';
+  var KEY = 'lab.redo.D8.round2';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.task input'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.id];
+    b.parentNode.classList.toggle('done', b.checked);
+    b.addEventListener('change', function () {
+      b.parentNode.classList.toggle('done', b.checked);
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      paint();
+    });
+  });
+  function paint() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    var el = document.getElementById('tick');
+    el.textContent = n + ' / ' + boxes.length + ' 项动手部分完成' +
+      (n === boxes.length ? ' —— 剩下的就是把答案写给我 ✅' : '');
+  }
+  var p = document.createElement('p');
+  p.className = 'tick';
+  p.id = 'tick';
+  document.getElementById('left').appendChild(p);
+  paint();
+})();
+</script>
+</body>
+</html>

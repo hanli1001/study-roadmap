@@ -1,95 +1,112 @@
 # -*- coding: utf-8 -*-
-"""验收 批改单-D8-20260928.html —— 真在浏览器里跑一遍，不靠读源码。
+"""批改单页面验收 —— 真在浏览器里跑一遍，不靠读源码。
 
-用法：python -X utf8 tools/_check_grade_sheet.py
+用法：
+    python -X utf8 tools/_check_grade_sheet.py            # 查下表里全部页面
+    python -X utf8 tools/_check_grade_sheet.py 二轮        # 只查文件名含"二轮"的
+
 需要：playwright + 本机 Edge（channel="msedge"）
+新增一张批改单时，只要往 PAGES 里加一行。
 """
 import sys, pathlib
 from playwright.sync_api import sync_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PAGE = ROOT / "交互演示" / "批改单-D8-20260928.html"
 SHOTS = ROOT / "交互演示"
 
+# 文件 → 该页特有的期望值（minlen = 正文最少字数，只用来防"页面是空的"）
+PAGES = {
+    "批改单-D8-20260928.html":      dict(secs=10, boxes=11, key="lab.redo.D8.20260928", shot="_shot-grade",  minlen=5000),
+    "批改单-D8-二轮-20261005.html": dict(secs=8,  boxes=2,  key="lab.redo.D8.round2",  shot="_shot-grade2", minlen=3500),
+}
+
 results = []
+
+
 def check(name, ok, detail=""):
     results.append((name, bool(ok), detail))
     print(("  PASS  " if ok else "  FAIL  ") + name + (("   " + str(detail)) if detail else ""))
 
+
+def run(pg, fname, spec):
+    page = SHOTS / fname
+    check(f"[{fname}] 文件存在", page.exists())
+    if not page.exists():
+        return
+    errs = []
+    pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
+    pg.on("pageerror", lambda e: errs.append(str(e)))
+    pg.goto(page.as_uri(), wait_until="load")
+    pg.wait_for_timeout(500)
+
+    check("  标题含「批改单」", pg.title().startswith("批改单"), pg.title())
+    check(f"正文 > {spec['minlen']} 字", len(pg.inner_text("body")) > spec["minlen"],
+          len(pg.inner_text("body")))
+    check(f"  章节数 = {spec['secs']}", pg.locator("section.sec").count() == spec["secs"],
+          pg.locator("section.sec").count())
+    real = [e for e in errs if "favicon" not in e.lower()]
+    check("  无控制台报错", not real, real[:3])
+
+    ids = pg.eval_on_selector_all(".task input", "els => els.map(e => e.id)")
+    check(f"  勾选框 {spec['boxes']} 个", len(ids) == spec["boxes"], len(ids))
+    check("  id 无重复", len(set(ids)) == len(ids), ids)
+    check(f"  进度条初始 0 / {spec['boxes']}",
+          pg.inner_text("#tick").startswith(f"0 / {spec['boxes']}"), pg.inner_text("#tick"))
+    if len(ids) >= 2:
+        pg.check("#" + ids[0]); pg.check("#" + ids[1]); pg.wait_for_timeout(120)
+        check(f"  勾 2 个后 = 2 / {spec['boxes']}",
+              pg.inner_text("#tick").startswith(f"2 / {spec['boxes']}"), pg.inner_text("#tick"))
+        check("  勾上的条目加删除线",
+              "done" in pg.eval_on_selector("#" + ids[0], "e => e.parentNode.className"))
+        pg.reload(wait_until="load"); pg.wait_for_timeout(400)
+        check(f"  刷新后仍是 2 / {spec['boxes']}（localStorage）",
+              pg.inner_text("#tick").startswith(f"2 / {spec['boxes']}"), pg.inner_text("#tick"))
+        pg.evaluate(f"localStorage.removeItem('{spec['key']}')")
+        pg.reload(wait_until="load"); pg.wait_for_timeout(400)
+
+    body = pg.inner_text("body")
+    check("  无字面 ** 残留", "**" not in body, body.count("**"))
+    check("  无字面 ` 残留", "`" not in body, body.count("`"))
+
+    hrefs = pg.eval_on_selector_all("a[href]", "els => els.map(e => e.getAttribute('href'))")
+    bad = [h for h in hrefs if not h.startswith(("http", "#")) and not (page.parent / h).exists()]
+    check("  所有相对链接文件存在", not bad, bad)
+
+    for w in (1440, 390):
+        pg.set_viewport_size({"width": w, "height": 1000}); pg.wait_for_timeout(300)
+        ov = pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
+        check(f"  {w}px 无整页横向溢出", ov <= 1, f"溢出 {ov}px")
+
+    pg.set_viewport_size({"width": 1440, "height": 1000})
+    pg.evaluate("window.scrollTo(0, 0)"); pg.wait_for_timeout(400)
+    pg.screenshot(path=str(SHOTS / f"{spec['shot']}-top.png"))
+    pg.screenshot(path=str(SHOTS / f"{spec['shot']}-full.png"), full_page=True)
+    pg.set_viewport_size({"width": 390, "height": 900})
+    pg.evaluate("window.scrollTo(0, 0)"); pg.wait_for_timeout(400)
+    pg.screenshot(path=str(SHOTS / f"{spec['shot']}-mobile.png"))
+
+    pg.set_viewport_size({"width": 1440, "height": 1000})
+    pg.emulate_media(media="print"); pg.wait_for_timeout(250)
+    vis = pg.eval_on_selector("#tick", "e => getComputedStyle(e).display")
+    check("  打印态隐藏进度条", vis == "none", vis)
+    pg.emulate_media(media="screen")
+
+
 def main():
+    want = sys.argv[1] if len(sys.argv) > 1 else ""
+    todo = {k: v for k, v in PAGES.items() if want in k}
+    if not todo:
+        print("没有匹配的页面：", want)
+        return 1
     with sync_playwright() as p:
         b = p.chromium.launch(channel="msedge")
         pg = b.new_page(viewport={"width": 1440, "height": 1000})
-        errs = []
-        pg.on("console", lambda m: errs.append(m.text) if m.type == "error" else None)
-        pg.on("pageerror", lambda e: errs.append(str(e)))
-        pg.goto(PAGE.as_uri(), wait_until="load")
-        pg.wait_for_timeout(500)
-
-        # 1 基本渲染
-        check("标题正确", pg.title().startswith("批改单 · D8 作业"), pg.title())
-        check("页面非空（正文 > 8000 字）", len(pg.inner_text("body")) > 8000, len(pg.inner_text("body")))
-        check("章节数 = 10", pg.locator("section.sec").count() == 10, pg.locator("section.sec").count())
-
-        # 2 控制台
-        real = [e for e in errs if "favicon" not in e.lower()]
-        check("无控制台报错", not real, real[:3])
-
-        # 3 勾选框
-        ids = pg.eval_on_selector_all(".task input", "els => els.map(e => e.id)")
-        check("返工勾选框 11 个", len(ids) == 11, len(ids))
-        check("id 无重复", len(set(ids)) == len(ids), ids)
-        tick0 = pg.inner_text("#tick")
-        check("进度条初始为 0 / 11", tick0.startswith("0 / 11"), tick0)
-
-        # 4 勾两个 → 刷新还在
-        pg.check("#r1"); pg.check("#r2"); pg.wait_for_timeout(120)
-        check("勾 2 个后进度 = 2 / 11", pg.inner_text("#tick").startswith("2 / 11"), pg.inner_text("#tick"))
-        check("勾上的条目加了删除线", "done" in (pg.get_attribute("#r1", "class") or "") or
-              "done" in pg.eval_on_selector("#r1", "e => e.parentNode.className"))
-        pg.reload(wait_until="load"); pg.wait_for_timeout(400)
-        check("刷新后仍是 2 / 11（localStorage）", pg.inner_text("#tick").startswith("2 / 11"), pg.inner_text("#tick"))
-        pg.evaluate("localStorage.removeItem('lab.redo.D8.20260928')")
-        pg.reload(wait_until="load"); pg.wait_for_timeout(400)
-
-        # 5 Markdown 残留（W-40 那个病）
-        body = pg.inner_text("body")
-        check("无字面 ** 残留", "**" not in body, body.count("**"))
-        check("无字面 ` 残留", "`" not in body, body.count("`"))
-
-        # 6 链接都能找到
-        hrefs = pg.eval_on_selector_all("a[href]", "els => els.map(e => e.getAttribute('href'))")
-        bad = [h for h in hrefs if h.startswith(("http", "#")) is False and not (PAGE.parent / h).exists()]
-        check("所有相对链接文件存在", not bad, bad)
-
-        # 7 溢出（整页级，不看单个元素 —— 上次栽过）
-        for w in (1440, 390):
-            pg.set_viewport_size({"width": w, "height": 1000}); pg.wait_for_timeout(300)
-            ov = pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
-            check(f"{w}px 无整页横向溢出", ov <= 1, f"溢出 {ov}px")
-
-        # 8 截图
-        pg.set_viewport_size({"width": 1440, "height": 1000})
-        pg.evaluate("window.scrollTo(0, 0)"); pg.wait_for_timeout(400)
-        pg.screenshot(path=str(SHOTS / "_shot-grade-top.png"))
-        pg.screenshot(path=str(SHOTS / "_shot-grade-full.png"), full_page=True)
-        pg.set_viewport_size({"width": 390, "height": 900})
-        pg.evaluate("window.scrollTo(0, 0)"); pg.wait_for_timeout(400)
-        pg.screenshot(path=str(SHOTS / "_shot-grade-mobile.png"))
-
-        # 9 打印态
-        pg.set_viewport_size({"width": 1440, "height": 1000})
-        pg.emulate_media(media="print"); pg.wait_for_timeout(250)
-        pg.evaluate("window.scrollTo(0, 0)")
-        vis = pg.eval_on_selector("#tick", "e => getComputedStyle(e).display")
-        check("打印态隐藏进度条", vis == "none", vis)
-        pg.screenshot(path=str(SHOTS / "_shot-grade-print.png"), full_page=True)
-
+        for fname, spec in todo.items():
+            print(f"\n── {fname} ──")
+            run(pg, fname, spec)
         b.close()
-
-    print()
     n_fail = sum(1 for _, ok, _ in results if not ok)
-    print(f"{len(results) - n_fail} PASS / {n_fail} FAIL")
+    print(f"\n{len(results) - n_fail} PASS / {n_fail} FAIL")
     return 1 if n_fail else 0
 
 
