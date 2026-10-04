@@ -41,9 +41,14 @@ EXTS = "json|html|docx|yaml|jpeg|md|py|pdf|txt|js|css|db|ini|yml|png|jpg|csv|sh|
 # 引用形态
 PAT_MD_LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 PAT_HTML_REF = re.compile(r'(?:href|src)="([^"#?]+)')
-PAT_BARE = re.compile(rf"[\w\u4e00-\u9fff][\w\u4e00-\u9fff ./\\-]*\.(?:{EXTS})(?![\w])")
+PAT_BARE = re.compile(rf"[\w\u4e00-\u9fff][\w\u4e00-\u9fff./\\-]*\.(?:{EXTS})(?![\w])")
 # ⚠️ 首个字符类故意**不含 `-`**：允许连字符开头会把文件名尾部误当成路径
 #    （实测：账本里 `诺奖与我的方向-2026-09-28.md` 被抠出 `-2026-10-02.md` 两条假断链）
+# ⚠️ 2026-10-05 **去掉空格**：字符类里带空格会让它把**前面的词一起吃进去** ——
+#    实测 `git add main.py`、`locate api.py` 这种"命令 + 文件名"整串被当成一条路径，
+#    于是 60 条基线悬空里**有 15 条是这种假阳性**。本仓**没有任何带空格的文件名**，
+#    所以那个空格从来没起过好作用，只在制造噪音并**掩盖真信号**。
+#    去掉后同位置会从正确的词首重新匹配（`python tools/jd_stats.py` → `tools/jd_stats.py`）。
 BAD_CHARS = set("*<>{}$|")
 
 
@@ -89,8 +94,14 @@ def refs_of(p: Path) -> set[str]:
     else:
         found |= set(PAT_MD_LINK.findall(txt))
         # 反引号里的路径
+        # ⚠️ 2026-10-05：**含空格的一律不算路径**。本仓**没有任何带空格的文件名**，
+        #    所以 `` `git add main.py` `` / `` `locate api.py` `` / `` `cargo` `` 这种
+        #    "命令 + 文件名"整串被当成路径**必然是误报**。
+        #    实测：60 条基线悬空里 **15 条**是它 —— 噪声大到会**掩盖真断链**。
         for span in re.findall(r"`([^`\n]+)`", txt):
             s = span.strip()
+            if " " in s:
+                continue
             if re.search(rf"\.(?:{EXTS})$", s) or re.search(rf"\.(?:{EXTS})[\s#]", s):
                 found.add(s)
         found |= set(PAT_BARE.findall(txt))
