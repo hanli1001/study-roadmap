@@ -1,5 +1,5 @@
 {
- "total": 549,
+ "total": 553,
  "dangling": [
   "PRODUCT.md|.py",
   "README.md|.py",
@@ -9,6 +9,9 @@
   "任务清单-在你自己服务器上练.md|./check_errors.sh",
   "任务清单-在你自己服务器上练.md|check_errors.sh",
   "任务清单-在你自己服务器上练.md|docker-compose.yml",
+  "我的差距表-20260921.md|ai/ai_worker.py",
+  "我的差距表-20260921.md|ui/main_window.py",
+  "我的差距表-20260921.md|utils/tts_engine.py",
   "改动路线.md|../我的练习/api.py",
   "改动路线.md|.pdf",
   "改动路线.md|/home/ubuntu/study-roadmap/api.py",
