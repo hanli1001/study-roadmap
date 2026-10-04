@@ -102,6 +102,11 @@ def refs_of(p: Path) -> set[str]:
             s = span.strip()
             if " " in s:
                 continue
+            # ⚠️ 2026-10-05 第二刀：**扩展名前面必须有文件名**。
+            #    实测 `` `.md` `` / `` `.py` `` 这种"光秃秃的扩展名"也被当成路径收了
+            #    （文档里写「几个 `.md` 笔记」是很自然的说法）—— 但它根本不是一个文件。
+            if not re.search(rf"[\w\u4e00-\u9fff]\.(?:{EXTS})(?![\w])", s):
+                continue
             if re.search(rf"\.(?:{EXTS})$", s) or re.search(rf"\.(?:{EXTS})[\s#]", s):
                 found.add(s)
         found |= set(PAT_BARE.findall(txt))

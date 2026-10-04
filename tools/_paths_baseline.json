@@ -1,8 +1,6 @@
 {
- "total": 553,
+ "total": 550,
  "dangling": [
-  "PRODUCT.md|.py",
-  "README.md|.py",
   "learning-roadmap-external-refs.md|roadmap.sh",
   "learning-roadmap.md|external-refs.md",
   "learning-roadmap.md|roadmap.sh",
@@ -13,7 +11,6 @@
   "我的差距表-20260921.md|ui/main_window.py",
   "我的差距表-20260921.md|utils/tts_engine.py",
   "改动路线.md|../我的练习/api.py",
-  "改动路线.md|.pdf",
   "改动路线.md|/home/ubuntu/study-roadmap/api.py",
   "改动路线.md|AI-Agent学习路线图.html/.pdf",
   "改动路线.md|_shot-_卡片模板.png",
@@ -31,7 +28,6 @@
   "政策与趋势-20260921.md|edu.people.com.cn/n1/2025/1121/c367001-40608931.html",
   "教学进度看板.md|chapter1/context/agent.py",
   "时间线账本.md|../我的练习/api.py",
-  "时间线账本.md|.pdf",
   "时间线账本.md|/home/ubuntu/study-roadmap/api.py",
   "时间线账本.md|01-个人能力与信息.md",
   "时间线账本.md|_shot-SQL①/②/③.png",
