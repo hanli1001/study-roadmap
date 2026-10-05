@@ -1,12 +1,15 @@
 {
- "total": 550,
+ "total": 554,
  "dangling": [
   "learning-roadmap-external-refs.md|roadmap.sh",
   "learning-roadmap.md|external-refs.md",
   "learning-roadmap.md|roadmap.sh",
   "任务清单-在你自己服务器上练.md|./check_errors.sh",
+  "任务清单-在你自己服务器上练.md|/root/check_errors.sh",
   "任务清单-在你自己服务器上练.md|check_errors.sh",
   "任务清单-在你自己服务器上练.md|docker-compose.yml",
+  "任务清单-在你自己服务器上练.md|root/check_errors.sh",
+  "任务清单-在你自己服务器上练.md|script.sh",
   "我的差距表-20260921.md|ai/ai_worker.py",
   "我的差距表-20260921.md|ui/main_window.py",
   "我的差距表-20260921.md|utils/tts_engine.py",
