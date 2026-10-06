@@ -1,5 +1,5 @@
 {
- "total": 554,
+ "total": 557,
  "dangling": [
   "learning-roadmap-external-refs.md|roadmap.sh",
   "learning-roadmap.md|external-refs.md",
@@ -37,8 +37,11 @@
   "时间线账本.md|_shot-agent-top/mid/bottom.png",
   "时间线账本.md|_shot-book-top/c5/print-a4.png",
   "时间线账本.md|_shot-range/enum/bifs/func.png",
+  "时间线账本.md|check_errors.sh",
+  "时间线账本.md|cron.txt",
   "时间线账本.md|docker-compose.yml",
   "时间线账本.md|docs/zh-CN/LEARNING.md",
+  "时间线账本.md|errors.txt",
   "时间线账本.md|home/ubuntu/study-roadmap/api.py",
   "时间线账本.md|rag/_run-02b.txt",
   "时间线账本.md|交互演示/_shot-fncard-top/deck/print-a4.png",
