@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>作品 v1 · 开工单（2026.10.09 起）</title>
+<link rel="stylesheet" href="_主题.css">
+<style>
+/* 只属于本页 */
+.guess{ background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+        padding:11px 14px; margin:11px 0 }
+.guess .q{ font-weight:600; margin:0 0 7px }
+.guess ol{ margin:0; padding-left:22px }
+.guess li{ margin:3px 0 }
+.guess textarea{ width:100%; min-height:46px; box-sizing:border-box; margin-top:6px;
+        font:inherit; font-size:13.5px; padding:7px 9px; resize:vertical;
+        background:rgba(255,255,255,.6); border:1px solid var(--rule-2); border-radius:4px;
+        color:var(--ink) }
+details{ margin:9px 0; background:rgba(255,255,255,.35); border:1px dashed var(--rule-2);
+         border-radius:5px; padding:7px 12px }
+details summary{ cursor:pointer; font-size:13.5px; color:var(--pen); font-weight:600 }
+details[open] summary{ margin-bottom:6px }
+details p{ margin:5px 0; font-size:13.5px; color:var(--ink-2) }
+.task{ display:flex; align-items:flex-start; gap:9px; margin:9px 0 }
+.task input{ margin-top:3px; width:16px; height:16px; accent-color:var(--pen); flex:none }
+.task label{ flex:1 }
+.task.done label{ color:var(--ink-3); text-decoration:line-through }
+.tick{ font-size:12.5px; color:var(--ink-3); margin:2px 0 10px }
+.blank{ display:inline-block; min-width:110px; border-bottom:1px solid var(--rule-2);
+        padding:0 4px; color:var(--ink-3) }
+pre{ background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+     padding:10px 13px; overflow-x:auto; font-size:13px; line-height:1.65 }
+.rail2{ display:flex; gap:0; margin:12px 0 4px; overflow-x:auto }
+.st2{ flex:1; min-width:96px; text-align:center; font-size:11.5px; color:var(--ink-3);
+      padding:0 3px; line-height:1.45 }
+.st2::before{ content:""; display:block; width:9px; height:9px; border-radius:50%;
+      margin:0 auto 7px; background:var(--paper); border:1.5px solid var(--rule-2) }
+.st2.done::before{ background:var(--pen); border-color:var(--pen) }
+.st2.now::before{ background:var(--red); border-color:var(--red); transform:scale(1.35) }
+.st2.now{ color:var(--red); font-weight:650 }
+@media print{
+  .tick{ display:none }
+  .task input{ -webkit-print-color-adjust:exact }
+  .sec{ break-inside:auto }
+  .task,.tw,pre,.out,.note,.redpen,.guess,details{ break-inside:avoid }
+  details{ border-style:solid } details > *{ display:block !important }
+  details textarea{ display:none }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <header class="rec-head">
+    <h1>作品 v1 · 开工单</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="何时">2026.10.09（周五）起，W41 还剩 3 天</span>
+      <span class="f" data-k="今天">开始写 v1 —— <b>你写，我审</b></span>
+      <span class="f" data-k="总量">第 1 块 ≈ 1–1.5 小时</span>
+    </div>
+    <p class="sub">
+      W41 的三件事<b>已经全部完成</b>（10-08 22:48，比死线早一天）。这 3 天是白送的 ——
+      但它不是"放假"，是<b>阶段 A 那条主线正式开工</b>。
+    </p>
+
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span>
+      <b>项目 v1</b><span class="sep">›</span>
+      <b>第 1 块</b>
+      <a href="复习台.html">复习台</a>
+      <a href="函数卡.html">函数卡</a>
+      <a href="https://github.com/hanli1001/ask-my-notes" target="_blank" rel="noopener">ask-my-notes</a>
+    </div>
+  </header>
+
+  <!-- ══ 三个数 ══════════════════════════════════════════ -->
+  <section class="sec" id="nums">
+    <h2 data-n="数">先看这三个数（今天 10-08 重算）</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>倒推锚点</th><th style="width:22%">还有</th><th>它管什么</th></tr></thead>
+        <tbody>
+          <tr><td><b>2027.03.01</b> —— 简历上必须有东西可写</td><td class="num"><b>144 天 ≈ 20 周</b></td><td>没东西写 → 春招投不出实习 → 后面全塌</td></tr>
+          <tr><td>2028.03.01 —— 考研 / 就业 决策点</td><td class="num">510 天 ≈ 73 周</td><td>凭<b>实习结果</b>定，不凭感觉</td></tr>
+          <tr><td>2029.06.30 —— 毕业入职</td><td class="num">996 天 ≈ 142 周</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      20 周 ≈ 一个学期。而一个 AI 应用从「能跑」到「能上线、能讲」最少 <b>2–3 个月</b> ——
+      ⇒ <b>今天开工不是早，是刚好。</b>再往后拖，寒假就只剩"赶工"，赶出来的东西讲不出设计。
+    </p>
+  </section>
+
+  <!-- ══ 你在哪 ═════════════════════════════════════════ -->
+  <section class="sec" id="where">
+    <h2 data-n="位">你现在站在哪</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:30%">路线 v4 · 阶段 A 里写的</th><th style="width:14%">状态</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><b>项目立项</b>（2026.10）</td><td>✅ 已完成</td><td>仓库 + 三段 README，<b>你自己写的</b>，10-08 推上 GitHub</td></tr>
+          <tr><td><b>项目 v1</b>（2026.10–2027.01）</td><td>⬜ <b>今天开工</b></td><td>自己写：检索 → 生成 → 接口 → 部署，<b>公网可访问</b></td></tr>
+          <tr><td>评测数字（2027.01）</td><td>⬜</td><td>自己跑出召回率，写进 README</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="redpen">
+      🔴 <b>阶段 A 唯一的规矩：「我写你看」→「你写我审」。</b><br>
+      <code>rag/01~03</code> 那三个脚本是<b>我写的</b>，你只负责跑通和看懂 —— 那套模式到这里翻过来。
+      从今天起：<b>代码你写，我审。</b>我给题目、给判据、给反例；<b>不给答案、不代写。</b><br>
+      理由就一句：2027.03 简历上那一行得是<b>你的</b>。
+    </p>
+
+    <p class="note">
+      <b>第 5 课（作用域与模块）不单独上了</b> —— 折进这里。依据是你自己路线里的那句
+      「<i>项目需要时再学，不为学而学</i>」：多文件项目<b>必然</b>要 <code>import</code> 自己的模块、
+      必然要写 <code>if __name__ == "__main__"</code> —— 而你 10-05 那个
+      <code>python api.py</code> 起不来，第二层原因正是它没有这一行。<b>撞上它再讲，比排一节课管用。</b>
+    </p>
+  </section>
+
+  <!-- ══ 第一块 ═════════════════════════════════════════ -->
+  <section class="sec" id="block1">
+    <h2 data-n="砖">第一块砖：让一百多万字「能按意思搜」</h2>
+
+    <p>
+      你的 README 第三段写的是：<i>「按语义找到 + <b>标注真实的文件位置</b> + 查不到就返回（未查到对应的笔记内容）」</i>。
+      要把这句话变成代码，得先有<b>能搜的东西</b>。而"能搜的东西"不是那一百多个文件，是<b>一大堆小块</b> ——
+      这个把文件变成块的动作，行话叫 <b>chunking（切分）</b>。
+    </p>
+
+    <div class="rail2">
+      <span class="st2 done">① 语料清单<small>哪些文件算数</small></span>
+      <span class="st2 now">② 读进来 + 切分<small>← 你今天在这</small></span>
+      <span class="st2">③ 算向量<small>embedding</small></span>
+      <span class="st2">④ 存 + 搜<small>top-k</small></span>
+      <span class="st2">⑤ 生成 + 标来源</span>
+      <span class="st2">⑥ 接口<small>FastAPI</small></span>
+      <span class="st2">⑦ 部署上线</span>
+    </div>
+    <p class="note" style="margin-top:14px">
+      ①–② 是<b>今天到周日</b>的全部；③ 以后的东西<b>今天一个字都别碰</b>。
+      ② 这一步不需要任何模型、不花钱、不联网 —— 它能立刻被验证，所以它是<b>最好的起点</b>。
+    </p>
+
+    <h3>为什么第一块是它，不是"先把 RAG 搭起来"</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:34%">理由</th><th>具体</th></tr></thead>
+        <tbody>
+          <tr><td>不需要模型，也不用花钱</td><td>纯 Python 读写文件。<b>卡住了我能帮你查，但答案在你手上</b></td></tr>
+          <tr><td>你<b>自己就能判对错</b></td><td>见下面的「四条验收」—— 不用问我"这样算对吗"</td></tr>
+          <tr><td>它是<b>最脏</b>的一步</td><td>后面每一步都建在这份块清单上；这里切歪了，③④⑤ 全白做</td></tr>
+          <tr><td>它是你<b>唯一写过一半</b>的一步</td><td>读文件、写文件你早会了；真正新的是"<b>按什么规则切</b>"</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 先猜 ═══════════════════════════════════════════ -->
+  <section class="sec" id="guess">
+    <h2 data-n="猜">开工前先猜四道（<b>不许翻资料、不许翻代码</b>）</h2>
+    <p class="note">
+      这四道没有标准答案，写错也不扣分 —— 它们只是把你<b>现在脑子里的模型</b>取出来。
+      写完再去下面「去量」那节，你才知道自己猜偏了哪儿。<b>先写，别跳。</b>
+    </p>
+
+    <div class="guess">
+      <p class="q">① <code>E:\项目学习</code> 里能当语料的文件，<b>最大的那一个有多大？</b></p>
+      <p style="font-size:13px;color:var(--ink-2);margin:0">
+        （圈一个：几千字 / 几万字 / 十几万字 / 几十万字，再写下你的理由）
+      </p>
+      <textarea placeholder="我猜大约 ______ 字，因为 ______"></textarea>
+    </div>
+
+    <div class="guess">
+      <p class="q">② 如果<b>一个文件 = 一块</b>（整个文件不切），会遇到什么问题？</p>
+      <textarea placeholder="我觉得会 ______"></textarea>
+    </div>
+
+    <div class="guess">
+      <p class="q">③ 如果<b>每 100 个字切一块</b>，又会遇到什么问题？</p>
+      <textarea placeholder="我觉得会 ______"></textarea>
+    </div>
+
+    <div class="guess">
+      <p class="q">④ 🔴 这个工作区里的文件，<b>每一类都该喂进去吗？</b></p>
+      <p style="font-size:13px;color:var(--ink-2);margin:0">
+        举<b>一个</b>你觉得<b>不该喂</b>的，并说清为什么。
+      </p>
+      <textarea placeholder="我觉得 ______ 不该喂，因为 ______"></textarea>
+    </div>
+
+    <p class="redpen">
+      第 ④ 题是这四道里真正的考点，别草草答。<b>RAG 只会照着你的语料说话</b> ——
+      语料里混进一个不该有的文件，它就会一本正经地拿那份东西回答你，而且<b>照样标来源、照样看着很可信</b>。
+    </p>
+  </section>
+
+  <!-- ══ 去量 ═══════════════════════════════════════════ -->
+  <section class="sec" id="measure">
+    <h2 data-n="量">去量：写你的第一段项目代码（约 40 分钟）</h2>
+
+    <h3>要量三件事</h3>
+    <ol>
+      <li><b>哪些文件算「语料」？</b> —— 你可以列一份清单，也可以写一条<b>规则</b>（比如"排除某几个目录"）。
+          哪种都行，但你必须能说出<b>为什么排除它们</b>。</li>
+      <li><b>每个文件多少字？</b> —— 最大的多大、中位数多少、加起来多少。</li>
+      <li><b>存下来</b> —— 结果写到 <code>rag/_语料清单.txt</code>（跟 <code>rag/_run-01.txt</code> 一个风格）。</li>
+    </ol>
+
+    <h3>怎么做</h3>
+    <ul>
+      <li>用 Python 写，文件放 <code>rag/</code> 下，<b>名字你自己起</b>。</li>
+      <li>你会用到遍历目录 —— <code>os.walk</code> 或 <code>pathlib.Path.rglob</code>，挑一个。
+          <b>这是今天唯一的新东西</b>，卡住就问我（我会给最小例子，不会给你完整脚本）。</li>
+      <li>读文件要用 <code>encoding="utf-8"</code> —— 这工作区里全是中文，漏了它必炸。</li>
+      <li>🔴 <b>有的文件读不了</b>（二进制、编码不对）。想清楚：遇到一个读不了的文件，
+          你的脚本应该<b>崩掉</b>，还是<b>跳过并记一笔</b>？为什么？</li>
+    </ul>
+
+    <p class="note">
+      ⏱ <b>先别急着写循环。</b>把第 ① 件事（哪些算语料）先用一句话写下来，再动手 ——
+      那句话就是你后面所有代码的输入。<b>先有规则，后有代码。</b>
+    </p>
+
+    <details>
+      <summary>量完之后再展开（里面是实测数字，不是结论）</summary>
+      <p><b>规则</b>：工作区里所有 UTF-8 文本文件，排除 <code>_ref/</code>（教材）、<code>.git</code>、
+         <code>_备份/</code>、以及 <code>__pycache__</code> / <code>.pytest_cache</code> / <code>.idea</code> 这类缓存目录。</p>
+      <div class="out">
+        <span class="cap">教练侧实测 · 2026-10-08</span>
+<pre>文件数      133 个
+总字数      1,677,948 字（约 168 万字）
+最大        170,189 字
+中位数      5,373 字
+平均        12,616 字
+
+分布：
+     0 –  2,000 字    21 个     1.1%
+ 2,000 –  5,000 字    42 个     8.6%
+ 5,000 – 20,000 字    52 个    34.0%
+20,000 – 50,000 字    12 个    20.7%
+50,000 字以上          6 个    35.5%   ← 6 个文件占了三分之一还多</pre>
+      </div>
+      <p>最大的 6 个是（<b>先别下结论，先看它们的名字</b>）：</p>
+      <div class="out">
+<pre>170,189   rag\_embeddings-cache.json
+120,659   导出\物联网流程可视化-20260923.html
+ 97,448   导出\物联网原始数据追踪-20260923.json
+ 97,241   交互演示\_函数卡数据.js
+ 59,041   改动路线.md
+ 51,017   时间线账本.md</pre>
+      </div>
+      <p>
+        📌 顺便：我 10-06 报过一次「129 个 / 158.2 万字」。今天重算是 <b>133 / 167.8 万</b>，
+        差的是 3 个 <code>*.bak-*</code> 备份和 1 个缓存文件 —— <b>我的过滤器宽了一点。</b>
+      </p>
+      <p class="redpen">
+        🔴 <b>而就在我写完这一页的时候，这个数又变了：136 个 / 1,706,568 字。</b><br>
+        多出来的 3 个，正是<b>我今天刚写的两个脚本和这一页自己</b>。<br>
+        ⇒ 这不是误差，这是<b>这条规则本身的漏洞</b>：如果"语料 = 工作区里所有文本文件"，
+        那你<b>每写一次代码，语料就变一次</b>，索引一次的结果和下一次就对不上 ——
+        <b>实验不可复现</b>。<br>
+        👉 这一条怎么处理，<b>是你第 ① 步要回答的东西</b>（它也是第 ④ 问的答案的一半）。
+      </p>
+    </details>
+  </section>
+
+  <!-- ══ 写 ═════════════════════════════════════════════ -->
+  <section class="sec" id="write">
+    <h2 data-n="写">然后写第二个文件：把文件切成块</h2>
+    <p>
+      输入 = 上一步那份语料清单；输出 = 一份<b>块清单</b>，每块至少带三样：
+      <b>来自哪个文件</b> / <b>是第几块</b> / <b>正文</b>。
+    </p>
+
+    <h3>骨架（<b>填空是你的活</b>）</h3>
+<pre># rag/______.py      ← 文件名你起
+import ______
+
+清单 = ______                     # 上一步的产物
+
+块 = []
+for 路径 in 清单:
+    正文 = ______                  # 读进来
+
+    # ── 今天唯一要想清楚的地方 ──────────────
+    这一段 = ______                # 按什么规则切？切多大？为什么？
+    # ────────────────────────────────────
+
+    for i, t in enumerate(这一段):
+        块.append({
+            "来源": ______,        # 你的 README 要求"标注真实文件位置"
+            "第几块": ______,
+            "正文": t,
+        })
+
+# 存下来（也给下一步 ③ 用）
+______</pre>
+
+    <p class="redpen">
+      <b>别把那一百多个文件名手抄进代码里。</b>写一条规则 —— 因为下周一这个数就变了，
+      而手抄的清单不会自己更新（这正是 <code>_全局进度.js</code> 里那个"永远说还剩 23 周"的病，同一个形状）。
+    </p>
+  </section>
+
+  <!-- ══ 验收 ═══════════════════════════════════════════ -->
+  <section class="sec" id="accept">
+    <h2 data-n="收">四条验收 —— <b>全都你自己能判</b>，不用问我</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:6%">#</th><th style="width:46%">检查什么</th><th>合格长什么样</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td>一共切出<b>几块</b>？</td><td>是个<b>算出来的具体数字</b>，不是"挺多的"</td></tr>
+          <tr><td class="num">2</td><td>随便挑 3 块，能不能说出它<b>来自哪个文件</b>？</td><td>能 —— 这是你 README 第③条的硬要求</td></tr>
+          <tr><td class="num">3</td><td>所有块的字数加起来，和<b>原文总字数</b>差多少？</td><td>差得少（丢字 = 有内容永远搜不到）</td></tr>
+          <tr><td class="num">4</td><td>挑 3 块<b>只读这一块</b>，你读得懂吗？</td><td>读得懂 —— 读不懂就是切坏了</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      第 4 条是真正的判据，前三条只是保险。理由：<b>检索的时候，模型只能看到你切出来的那一块</b> ——
+      一块自己都读不懂的文字，交给模型也是白搭。（这句你 09-21 就在 RAG 那份笔记里见过：
+      「模型只看到你塞给它的」。）
+    </p>
+  </section>
+
+  <!-- ══ 这 3 天 ════════════════════════════════════════ -->
+  <section class="sec" id="rest">
+    <h2 data-n="余">W41 还剩 3 天（10.09–10.11）</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:30%">做什么</th><th style="width:12%">量</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><b>v1 第 ① ② 块</b>（本页）</td><td>1–1.5 h</td><td>🟢 <b>主线</b>。做完了就是"这周有东西给下一周"</td></tr>
+          <tr><td>Linux 微课 3（任务 11–15）</td><td>约 25 min</td><td>可选。<b>做完就把整份 Linux 材料通关了</b>（3 条合肥 JD 的硬要求）</td></tr>
+          <tr><td>地板：LeetCode 1 题 + 1 commit</td><td>20 min/天</td><td>上周这项是 <b>0</b>；这周从今天重新起算，<b>不补账</b></td></tr>
+          <tr><td>复习台</td><td>—</td><td>✅ <b>这周没账</b>：下一档是 <b>10.23</b>（30 天档），还有 15 天</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      🔵 <b>物联网线（不占上面的名额）</b>：硬件下单还挂着（10-01 定的：ESP32-S3 + LD2450 ≈ ¥220）。
+      它一天不买，「感知」那条线就一天停在纸上。导师那条线另有节奏，看 <code>E:\物联网</code> 的账本。
+    </p>
+  </section>
+
+  <!-- ══ 不做 ═══════════════════════════════════════════ -->
+  <section class="sec" id="not">
+    <h2 data-n="不做">这几天明确不做（防分心）</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:34%">不做</th><th>为什么</th></tr></thead>
+        <tbody>
+          <tr><td><b>算向量 / 装向量库 / 挑 embedding 模型</b></td><td><b>块还没切好，谈这个太早</b>。③ 以后再说</td></tr>
+          <tr><td>给 v1 做界面 / 写前端</td><td>⑦ 的事。前端做得再好看，搜不准就是零</td></tr>
+          <tr><td>回头重看第 4 课 / 补 D8</td><td><b>都已结课</b>，没有未完成项</td></tr>
+          <tr><td>再排一节课（第 5 课）</td><td>已折进 v1，撞上再讲</td></tr>
+          <tr><td>PyTorch / Java / 囤课</td><td>41% 本科可投岗不要 PyTorch；Java 只有 2 条要 —— 理由和前几周一样，没变</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ 交什么 ═════════════════════════════════════════ -->
+  <section class="sec" id="hand">
+    <h2 data-n="交">做完给我什么</h2>
+    <ol>
+      <li><b>你那句话</b>：「算语料的文件是 ______」—— 一句话规则，说清排除了什么、为什么</li>
+      <li><b>两个 .py</b>（量分布的 + 切块的）+ 跑出来的 <code>_语料清单.txt</code> / 块清单</li>
+      <li><b>四条验收的结果</b>：几块 / 挑 3 块说来源 / 字数差多少 / 读不读得懂</li>
+      <li><b>一道题</b>（也是这页的第 ③ 问，答完再交）：你最后<b>按什么切</b>、<b>切多大</b>、<b>为什么是这么大</b></li>
+    </ol>
+    <p class="note">
+      交上来我会做两件事：<b>① 逐条跑一遍</b>（像批改单那样，不看你说什么、看我跑出什么）
+      <b>② 出变式题</b> —— 比如换一个文件、换一个大小，看你的切法还站不站得住。
+    </p>
+    <p class="redpen">
+      📮 另外，下周一（<b>10.12</b>）排 W42 之前，我要你<b>两个数</b>：<br>
+      <b>① 这周（W41）实际投入了几小时</b> —— 用它校准，不是拿来问责<br>
+      <b>② 下周（10.12–10.18）有几天是整块的</b>，哪几天已经被学校课 / 实验 / 回家拿走
+      <br><small>（这条是 W-50 教的：上周我按日历算出"剩 3 天"，实际只用上 1 天。）</small>
+    </p>
+  </section>
+
+  <div class="foot">
+    作品 v1 · 开工单 ｜ 2026.10.09 起 ｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">
+      依据：<code>learning-roadmap.md</code> 阶段 A · <code>改动路线.md</code> T-14（立项结项）· <code>每周目标.md</code> W41
+      ｜ 语料实测 2026-10-08（数字见「去量」那节的折叠区）
+      ｜ 配套：<a href="https://github.com/hanli1001/ask-my-notes" target="_blank" rel="noopener">ask-my-notes</a> ·
+      <a href="函数卡.html">函数卡</a> · <a href="复习台.html">复习台</a>
+    </span>
+  </div>
+</div>
+
+<script>
+/* 打勾状态记在本地 —— 刷新不丢；猜测框也一起存（先猜后讲，别刷新就没了） */
+(function () {
+  'use strict';
+  var KEY = 'lab.v1kick.20261009';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+
+  /* 打勾 */
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.task input'));
+  boxes.forEach(function (b, i) {
+    if (!b.id) b.id = 'k' + i;
+    b.checked = !!saved['box:' + b.id];
+    b.parentNode.classList.toggle('done', b.checked);
+    b.addEventListener('change', function () {
+      b.parentNode.classList.toggle('done', b.checked);
+      saved['box:' + b.id] = b.checked;
+      store(); paint();
+    });
+  });
+
+  /* 四个猜测框：id 由位置决定，稳 */
+  var areas = Array.prototype.slice.call(document.querySelectorAll('.guess textarea'));
+  areas.forEach(function (a, i) {
+    a.id = 'g' + i;
+    a.value = saved['ta:' + a.id] || '';
+    a.addEventListener('input', function () { saved['ta:' + a.id] = a.value; store(); paint(); });
+  });
+
+  function store() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
+  function paint() {
+    var el = document.getElementById('tick');
+    if (!el) return;
+    var nb = boxes.filter(function (b) { return b.checked; }).length;
+    var na = areas.filter(function (a) { return a.value.trim().length > 0; }).length;
+    el.textContent = '猜测写了 ' + na + ' / ' + areas.length +
+                     (boxes.length ? '　·　打勾 ' + nb + ' / ' + boxes.length : '');
+  }
+  var p = document.createElement('p');
+  p.className = 'tick';
+  p.id = 'tick';
+  var host = document.getElementById('guess');
+  if (host) host.appendChild(p);
+  paint();
+})();
+</script>
+</body>
+</html>
