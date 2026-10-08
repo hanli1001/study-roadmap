@@ -1,5 +1,5 @@
 {
- "total": 557,
+ "total": 561,
  "dangling": [
   "learning-roadmap-external-refs.md|roadmap.sh",
   "learning-roadmap.md|external-refs.md",
@@ -16,6 +16,7 @@
   "改动路线.md|../我的练习/api.py",
   "改动路线.md|/home/ubuntu/study-roadmap/api.py",
   "改动路线.md|AI-Agent学习路线图.html/.pdf",
+  "改动路线.md|READEME.md",
   "改动路线.md|_shot-_卡片模板.png",
   "改动路线.md|chapter1/context/agent.py",
   "改动路线.md|docker-compose.yml",
@@ -33,6 +34,7 @@
   "时间线账本.md|../我的练习/api.py",
   "时间线账本.md|/home/ubuntu/study-roadmap/api.py",
   "时间线账本.md|01-个人能力与信息.md",
+  "时间线账本.md|READEME.md",
   "时间线账本.md|_shot-SQL①/②/③.png",
   "时间线账本.md|_shot-agent-top/mid/bottom.png",
   "时间线账本.md|_shot-book-top/c5/print-a4.png",
@@ -52,6 +54,7 @@
   "时间线账本.md|交互演示/批改单-D8-20260928.pdf",
   "时间线账本.md|交互演示/批改单-D8-二轮-20261005.pdf",
   "时间线账本.md|打印资料/AI-Agent学习路线图.html/.pdf",
+  "每周目标.md|READEME.md",
   "物联网Demo-给导师-20260922.md|build_dataset.py",
   "物联网Demo-给导师-20260922.md|elderly_data.json",
   "物联网Demo-给导师-20260922.md|service_list.json",
