@@ -384,7 +384,7 @@ window.LAB_FN_CARDS = [
   "verify": null,
   "err": false,
   "extra": "",
-  "out": "today      | ym      | days\n-----------+---------+-----\n2026-09-28 | 2026-09 | 7   \n（1 行）",
+  "out": "today      | ym      | days\n-----------+---------+-----\n2026-10-09 | 2026-10 | 18  \n（1 行）",
   "ok": true
  },
  {
@@ -720,7 +720,7 @@ window.LAB_FN_CARDS = [
   "verify": null,
   "err": false,
   "extra": "",
-  "out": "PermissionError: [WinError 32] 另一个程序正在使用此文件，进程无法访问。: 'E:\\\\Temp\\\\tmpmik2j1z7\\\\k.db'\nclose 之后再删：成功",
+  "out": "PermissionError: [WinError 32] 另一个程序正在使用此文件，进程无法访问。: 'E:\\\\Temp\\\\tmpl1kafoma\\\\k.db'\nclose 之后再删：成功",
   "ok": true
  },
  {
@@ -948,6 +948,38 @@ window.LAB_FN_CARDS = [
   "ok": true
  },
  {
+  "id": "py.os_walk",
+  "lang": "py",
+  "cat": "标准库",
+  "stage": "现在",
+  "name": "os.walk（递归遍历目录树）",
+  "brief": "一次给一层，它自己往下递归；`dirs` 还能当场剪枝",
+  "code": "import os, tempfile, shutil\n\nd = tempfile.mkdtemp()\nos.makedirs(os.path.join(d, \"课程\", \"第1课\"), exist_ok=True)\nos.makedirs(os.path.join(d, \"_备份\"), exist_ok=True)\nfor rel in [\"说明.md\", \"课程/第1课/讲义.md\", \"课程/第1课/代码.py\", \"_备份/说明.md.bak\"]:\n    open(os.path.join(d, *rel.split(\"/\")), \"w\", encoding=\"utf-8\").write(\"x\")\n\nprint(\"=== 原样走一遍 ===\")\nfor root, dirs, files in os.walk(d):\n    dirs.sort()                       # 顺手排序，让输出每次都一样（这本身也是在改 dirs）\n    print(\"[\" + os.path.relpath(root, d) + \"]  dirs=\" + str(sorted(dirs))\n          + \"  files=\" + str(sorted(files)))\n\nprint()\nprint(\"=== 同一棵树，把 _备份 剪掉 ===\")\nfor root, dirs, files in os.walk(d):\n    dirs[:] = [x for x in dirs if x != \"_备份\"]     # ← 剪了它，整支不再往下走\n    for f in sorted(files):\n        print(\"  \", os.path.relpath(os.path.join(root, f), d))\n\nshutil.rmtree(d, ignore_errors=True)",
+  "where": "开工 v1 第①步要列整个工作区的文件；以后爬目录、批量改名、统计行数都用它",
+  "gotcha": "三条最容易错：① **`os.walk` 一次只给你一层** —— 递归是它自己做的，**你不要**再套一层循环去 walk 每个子目录 ② `root` / `dirs` / `files` 里的名字都是**相对的**：要 `os.path.join(root, f)` 才是完整路径，只拿 `f` 去 `open()` 会「文件不存在」 ③ 🔑 **`dirs` 是「还能改的」** —— `dirs[:] = [...]` 剪掉的子树**整支不会再走下去**，这是排除 `_ref` / `.git` / `_备份` 的正规做法（比「走完再 if 掉」快得多）；⚠️ 必须写 `dirs[:] =` 不能写 `dirs =`，后者只是换了个局部名字，walk 看不见",
+  "verify": null,
+  "err": false,
+  "extra": "",
+  "out": "=== 原样走一遍 ===\n[.]  dirs=['_备份', '课程']  files=['说明.md']\n[_备份]  dirs=[]  files=['说明.md.bak']\n[课程]  dirs=['第1课']  files=[]\n[课程\\第1课]  dirs=[]  files=['代码.py', '讲义.md']\n\n=== 同一棵树，把 _备份 剪掉 ===\n   说明.md\n   课程\\第1课\\代码.py\n   课程\\第1课\\讲义.md",
+  "ok": true
+ },
+ {
+  "id": "py.try_except",
+  "lang": "py",
+  "cat": "标准库",
+  "stage": "现在",
+  "name": "try / except（哪几行会出事，就圈哪几行）",
+  "brief": "出错时不让整个脚本死掉；但要**抓具体的异常类型**，别无脑 `except:`",
+  "code": "import os, tempfile, shutil\n\nd = tempfile.mkdtemp()\nopen(os.path.join(d, \"好文件.txt\"), \"w\", encoding=\"utf-8\").write(\"中文没问题\")\nwith open(os.path.join(d, \"二进制.bin\"), \"wb\") as f:\n    f.write(bytes([0xff, 0xfe, 0x00, 0x01, 0x02]))\n\nread_ok, skipped = [], []\nfor name in sorted(os.listdir(d)):\n    p = os.path.join(d, name)\n    try:\n        with open(p, encoding=\"utf-8\") as f:\n            text = f.read()\n        read_ok.append((name, len(text)))\n    except UnicodeDecodeError as e:      # 文件读到了，但它不是文本\n        skipped.append((name, type(e).__name__))\n    except OSError as e:                 # 连读都没读到：权限 / 路径 / 是个目录\n        skipped.append((name, type(e).__name__))\n\nprint(\"读成功 →\", read_ok)\nprint(\"跳过的 →\", skipped)\nprint()\nprint(\"不接住的话，就是这一行把整个脚本干掉的：\")\ntry:\n    open(os.path.join(d, \"二进制.bin\"), encoding=\"utf-8\").read()\nexcept UnicodeDecodeError as e:\n    print(\"  \", type(e).__name__, \"|\", e)\n\nshutil.rmtree(d, ignore_errors=True)",
+  "where": "批量读文件时躲开二进制 / 坏编码；调模型、读网络、开数据库同理",
+  "gotcha": "① 🔴 **别无脑写 `except:` 或 `except Exception:`** —— 那会把「你自己代码写错的 bug」一起吞掉，于是你以为是文件坏了、其实是变量名打错了。**只抓你真正预料到的那一种** ② `UnicodeDecodeError` 和 `OSError` 是**两回事**：前者＝文件读到了但**不是文本**，后者＝**连读都没读到**。要不要分开处理，看你在不在乎这个区别 ③ 只 `except` 不 print、不记账 ＝ **悄悄少了一批东西** —— 跳过的必须留下名字，否则你永远不知道自己漏了什么 ④ ⚠️ **崩掉还是跳过，没有标准答案**：文件少、想知道是谁坏了 → 让它崩；文件多、坏的只是少数 → 跳过并记一笔。按你的场景定，别背结论",
+  "verify": null,
+  "err": false,
+  "extra": "",
+  "out": "读成功 → [('好文件.txt', 5)]\n跳过的 → [('二进制.bin', 'UnicodeDecodeError')]\n\n不接住的话，就是这一行把整个脚本干掉的：\n   UnicodeDecodeError | 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte",
+  "ok": true
+ },
+ {
   "id": "py.pathlib",
   "lang": "py",
   "cat": "标准库",
@@ -1024,7 +1056,7 @@ window.LAB_FN_CARDS = [
   "verify": null,
   "err": false,
   "extra": "",
-  "out": "原样 → 2026-09-28 19:39:34.481962\n常用 → 2026-09-28 19:39:34\n文件名用 → 20260928-1939\n星期日历 → 2026-09-28 Monday",
+  "out": "原样 → 2026-10-09 16:18:57.664300\n常用 → 2026-10-09 16:18:57\n文件名用 → 20261009-1618\n星期日历 → 2026-10-09 Friday",
   "ok": true
  },
  {
@@ -1344,7 +1376,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "temperature=0  两次回答不同 = False  ['匠心筑梦']\ntemperature=1  两次回答不同 = True  ['信息科技基础与实践', '匠心智造']",
+  "out": "temperature=0  两次回答不同 = False  ['匠心筑梦']\ntemperature=1  两次回答不同 = True  ['匠心筑梦工坊', '数据与智能处理']",
   "ok": true
  },
  {
@@ -1456,7 +1488,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "正文 = 收到\n本次输出 token = 2 | 耗时 = 4.64 秒",
+  "out": "正文 = 收到\n本次输出 token = 2 | 耗时 = 4.2 秒",
   "ok": true
  },
  {
@@ -1488,7 +1520,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "  第 1 次失败：APITimeoutError\n正常调用 = 好\n打不通的地址会抛 = InternalServerError",
+  "out": "正常调用 = 好\n打不通的地址会抛 = APITimeoutError",
   "ok": true
  },
  {
@@ -1872,7 +1904,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "循环 23.2 ms   向量化 0.8 ms   快 28 倍\n结果相同 = True",
+  "out": "循环 19.6 ms   向量化 0.5 ms   快 43 倍\n结果相同 = True",
   "ok": true
  },
  {

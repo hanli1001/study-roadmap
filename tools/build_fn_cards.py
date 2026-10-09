@@ -597,6 +597,86 @@ shutil.rmtree(d, ignore_errors=True)""",
   where="批量处理一个文件夹里的文件",
   gotcha="`listdir` 给的是**文件名**不是完整路径 —— 要打开它得再 `join` 一次（这是最常见的「文件找不到」原因）")
 
+
+# ══════════════════════════════════════════════════════════════════════
+# 2026-10-08 补两张（学员开工 v1 第①步时卡在「怎么遍历目录 / 读不动的文件怎么办」）
+#   ⚠️ 这两张只讲**语法**（怎么用），不含任何「哪些文件算语料」的判断 ——
+#      那个判断是他的，教练不给（阶段 A 的规矩：你写我审，不给答案、不代写）
+# ══════════════════════════════════════════════════════════════════════
+C("py.os_walk", "py", "标准库", "现在", "os.walk（递归遍历目录树）",
+  "一次给一层，它自己往下递归；`dirs` 还能当场剪枝",
+  """import os, tempfile, shutil
+
+d = tempfile.mkdtemp()
+os.makedirs(os.path.join(d, "课程", "第1课"), exist_ok=True)
+os.makedirs(os.path.join(d, "_备份"), exist_ok=True)
+for rel in ["说明.md", "课程/第1课/讲义.md", "课程/第1课/代码.py", "_备份/说明.md.bak"]:
+    open(os.path.join(d, *rel.split("/")), "w", encoding="utf-8").write("x")
+
+print("=== 原样走一遍 ===")
+for root, dirs, files in os.walk(d):
+    dirs.sort()                       # 顺手排序，让输出每次都一样（这本身也是在改 dirs）
+    print("[" + os.path.relpath(root, d) + "]  dirs=" + str(sorted(dirs))
+          + "  files=" + str(sorted(files)))
+
+print()
+print("=== 同一棵树，把 _备份 剪掉 ===")
+for root, dirs, files in os.walk(d):
+    dirs[:] = [x for x in dirs if x != "_备份"]     # ← 剪了它，整支不再往下走
+    for f in sorted(files):
+        print("  ", os.path.relpath(os.path.join(root, f), d))
+
+shutil.rmtree(d, ignore_errors=True)""",
+  where="开工 v1 第①步要列整个工作区的文件；以后爬目录、批量改名、统计行数都用它",
+  gotcha="三条最容易错：① **`os.walk` 一次只给你一层** —— 递归是它自己做的，**你不要**再套一层循环去 walk 每个子目录"
+         " ② `root` / `dirs` / `files` 里的名字都是**相对的**：要 `os.path.join(root, f)` 才是完整路径，"
+         "只拿 `f` 去 `open()` 会「文件不存在」"
+         " ③ 🔑 **`dirs` 是「还能改的」** —— `dirs[:] = [...]` 剪掉的子树**整支不会再走下去**，"
+         "这是排除 `_ref` / `.git` / `_备份` 的正规做法（比「走完再 if 掉」快得多）；"
+         "⚠️ 必须写 `dirs[:] =` 不能写 `dirs =`，后者只是换了个局部名字，walk 看不见")
+
+C("py.try_except", "py", "标准库", "现在", "try / except（哪几行会出事，就圈哪几行）",
+  "出错时不让整个脚本死掉；但要**抓具体的异常类型**，别无脑 `except:`",
+  """import os, tempfile, shutil
+
+d = tempfile.mkdtemp()
+open(os.path.join(d, "好文件.txt"), "w", encoding="utf-8").write("中文没问题")
+with open(os.path.join(d, "二进制.bin"), "wb") as f:
+    f.write(bytes([0xff, 0xfe, 0x00, 0x01, 0x02]))
+
+read_ok, skipped = [], []
+for name in sorted(os.listdir(d)):
+    p = os.path.join(d, name)
+    try:
+        with open(p, encoding="utf-8") as f:
+            text = f.read()
+        read_ok.append((name, len(text)))
+    except UnicodeDecodeError as e:      # 文件读到了，但它不是文本
+        skipped.append((name, type(e).__name__))
+    except OSError as e:                 # 连读都没读到：权限 / 路径 / 是个目录
+        skipped.append((name, type(e).__name__))
+
+print("读成功 →", read_ok)
+print("跳过的 →", skipped)
+print()
+print("不接住的话，就是这一行把整个脚本干掉的：")
+try:
+    open(os.path.join(d, "二进制.bin"), encoding="utf-8").read()
+except UnicodeDecodeError as e:
+    print("  ", type(e).__name__, "|", e)
+
+shutil.rmtree(d, ignore_errors=True)""",
+  where="批量读文件时躲开二进制 / 坏编码；调模型、读网络、开数据库同理",
+  gotcha="① 🔴 **别无脑写 `except:` 或 `except Exception:`** —— 那会把「你自己代码写错的 bug」一起吞掉，"
+         "于是你以为是文件坏了、其实是变量名打错了。**只抓你真正预料到的那一种**"
+         " ② `UnicodeDecodeError` 和 `OSError` 是**两回事**：前者＝文件读到了但**不是文本**，"
+         "后者＝**连读都没读到**。要不要分开处理，看你在不在乎这个区别"
+         " ③ 只 `except` 不 print、不记账 ＝ **悄悄少了一批东西** —— 跳过的必须留下名字，"
+         "否则你永远不知道自己漏了什么"
+         " ④ ⚠️ **崩掉还是跳过，没有标准答案**：文件少、想知道是谁坏了 → 让它崩；"
+         "文件多、坏的只是少数 → 跳过并记一笔。按你的场景定，别背结论")
+
+
 C("py.pathlib", "py", "标准库", "以后", "pathlib.Path",
   "同一件事的现代写法：`/` 拼路径、`.suffix` 取后缀",
   """from pathlib import Path
