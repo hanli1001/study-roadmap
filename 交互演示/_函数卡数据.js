@@ -720,7 +720,7 @@ window.LAB_FN_CARDS = [
   "verify": null,
   "err": false,
   "extra": "",
-  "out": "PermissionError: [WinError 32] 另一个程序正在使用此文件，进程无法访问。: 'E:\\\\Temp\\\\tmpl1kafoma\\\\k.db'\nclose 之后再删：成功",
+  "out": "PermissionError: [WinError 32] 另一个程序正在使用此文件，进程无法访问。: 'E:\\\\Temp\\\\tmp6gdkyjgh\\\\k.db'\nclose 之后再删：成功",
   "ok": true
  },
  {
@@ -954,9 +954,9 @@ window.LAB_FN_CARDS = [
   "stage": "现在",
   "name": "os.walk（递归遍历目录树）",
   "brief": "一次给一层，它自己往下递归；`dirs` 还能当场剪枝",
-  "code": "import os, tempfile, shutil\n\nd = tempfile.mkdtemp()\nos.makedirs(os.path.join(d, \"课程\", \"第1课\"), exist_ok=True)\nos.makedirs(os.path.join(d, \"_备份\"), exist_ok=True)\nfor rel in [\"说明.md\", \"课程/第1课/讲义.md\", \"课程/第1课/代码.py\", \"_备份/说明.md.bak\"]:\n    open(os.path.join(d, *rel.split(\"/\")), \"w\", encoding=\"utf-8\").write(\"x\")\n\nprint(\"=== 原样走一遍 ===\")\nfor root, dirs, files in os.walk(d):\n    dirs.sort()                       # 顺手排序，让输出每次都一样（这本身也是在改 dirs）\n    print(\"[\" + os.path.relpath(root, d) + \"]  dirs=\" + str(sorted(dirs))\n          + \"  files=\" + str(sorted(files)))\n\nprint()\nprint(\"=== 同一棵树，把 _备份 剪掉 ===\")\nfor root, dirs, files in os.walk(d):\n    dirs[:] = [x for x in dirs if x != \"_备份\"]     # ← 剪了它，整支不再往下走\n    for f in sorted(files):\n        print(\"  \", os.path.relpath(os.path.join(root, f), d))\n\nshutil.rmtree(d, ignore_errors=True)",
+  "code": "import os, tempfile, shutil\n\n# ┌─────────────────────────────────────────────────────────────┐\n# │ 搭台子：下面 5 行只是\"造一个假目录\"给这个例子用             │\n# │ ⚠️ 你真写代码时【这几行整段删掉】—— 一行都别抄              │\n# │    （已实测有人抄进项目，在仓库里建出了 课程/ 和 _备份/）   │\n# └─────────────────────────────────────────────────────────────┘\nd = tempfile.mkdtemp()\nos.makedirs(os.path.join(d, \"课程\", \"第1课\"), exist_ok=True)\nos.makedirs(os.path.join(d, \"_备份\"), exist_ok=True)\nfor rel in [\"说明.md\", \"课程/第1课/讲义.md\", \"课程/第1课/代码.py\", \"_备份/说明.md.bak\"]:\n    open(os.path.join(d, *rel.split(\"/\")), \"w\", encoding=\"utf-8\").write(\"x\")\n# ────────────── 搭台子结束，下面才是 os.walk 本身 ──────────────\n\nprint(\"=== 原样走一遍 ===\")\nfor root, dirs, files in os.walk(d):\n    dirs.sort()                       # 顺手排序，让输出每次都一样（这本身也是在改 dirs）\n    print(\"[\" + os.path.relpath(root, d) + \"]  dirs=\" + str(sorted(dirs))\n          + \"  files=\" + str(sorted(files)))\n\nprint()\nprint(\"=== 同一棵树，把 _备份 剪掉 ===\")\nfor root, dirs, files in os.walk(d):\n    dirs[:] = [x for x in dirs if x != \"_备份\"]     # ← 剪了它，整支不再往下走\n    for f in sorted(files):\n        print(\"  \", os.path.relpath(os.path.join(root, f), d))\n\nshutil.rmtree(d, ignore_errors=True)",
   "where": "开工 v1 第①步要列整个工作区的文件；以后爬目录、批量改名、统计行数都用它",
-  "gotcha": "三条最容易错：① **`os.walk` 一次只给你一层** —— 递归是它自己做的，**你不要**再套一层循环去 walk 每个子目录 ② `root` / `dirs` / `files` 里的名字都是**相对的**：要 `os.path.join(root, f)` 才是完整路径，只拿 `f` 去 `open()` 会「文件不存在」 ③ 🔑 **`dirs` 是「还能改的」** —— `dirs[:] = [...]` 剪掉的子树**整支不会再走下去**，这是排除 `_ref` / `.git` / `_备份` 的正规做法（比「走完再 if 掉」快得多）；⚠️ 必须写 `dirs[:] =` 不能写 `dirs =`，后者只是换了个局部名字，walk 看不见",
+  "gotcha": "🔴 **卡里那几行 `tempfile.mkdtemp()` + `os.makedirs(...)` 是「搭台子」** —— 它们只是给这个例子**造一个假目录**，**真写代码时整段删掉，一行都别抄**。（2026-10-09 实测：有人把其中两行抄进了项目，`d` 换成自己的目录 → 在自己仓库里建出了 `rag/课程/` 和 `rag/_备份/` 两个空目录，而且**一个错都不报**。）另三条最容易错：① **`os.walk` 一次只给你一层** —— 递归是它自己做的，**你不要**再套一层循环去 walk 每个子目录 ② `root` / `dirs` / `files` 里的名字都是**相对的**：要 `os.path.join(root, f)` 才是完整路径，只拿 `f` 去 `open()` 会「文件不存在」 ③ 🔑 **`dirs` 是「还能改的」** —— `dirs[:] = [...]` 剪掉的子树**整支不会再走下去**，这是排除 `_ref` / `.git` / `_备份` 的正规做法（比「走完再 if 掉」快得多）；⚠️ 必须写 `dirs[:] =` 不能写 `dirs =`，后者只是换了个局部名字，walk 看不见",
   "verify": null,
   "err": false,
   "extra": "",
@@ -1056,7 +1056,7 @@ window.LAB_FN_CARDS = [
   "verify": null,
   "err": false,
   "extra": "",
-  "out": "原样 → 2026-10-09 16:18:57.664300\n常用 → 2026-10-09 16:18:57\n文件名用 → 20261009-1618\n星期日历 → 2026-10-09 Friday",
+  "out": "原样 → 2026-10-09 18:31:34.250306\n常用 → 2026-10-09 18:31:34\n文件名用 → 20261009-1831\n星期日历 → 2026-10-09 Friday",
   "ok": true
  },
  {
@@ -1376,7 +1376,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "temperature=0  两次回答不同 = False  ['匠心筑梦']\ntemperature=1  两次回答不同 = True  ['匠心筑梦工坊', '数据与智能处理']",
+  "out": "temperature=0  两次回答不同 = False  ['匠心筑梦']\ntemperature=1  两次回答不同 = True  ['云智未来课', '课之名：知识探索坊']",
   "ok": true
  },
  {
@@ -1488,7 +1488,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "正文 = 收到\n本次输出 token = 2 | 耗时 = 4.2 秒",
+  "out": "正文 = 收到\n本次输出 token = 2 | 耗时 = 6.28 秒",
   "ok": true
  },
  {
@@ -1520,7 +1520,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "正常调用 = 好\n打不通的地址会抛 = APITimeoutError",
+  "out": "正常调用 = 好\n打不通的地址会抛 = InternalServerError",
   "ok": true
  },
  {
@@ -1904,7 +1904,7 @@ window.LAB_FN_CARDS = [
   "extra": "",
   "err": false,
   "verify": null,
-  "out": "循环 19.6 ms   向量化 0.5 ms   快 43 倍\n结果相同 = True",
+  "out": "循环 19.1 ms   向量化 0.5 ms   快 38 倍\n结果相同 = True",
   "ok": true
  },
  {

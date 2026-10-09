@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>批改单 · 作品 v1 第①步（语料清单）· 2026.10.09</title>
+<link rel="stylesheet" href="_主题.css">
+<style>
+/* 只属于本页 */
+.task{ display:flex; align-items:flex-start; gap:9px; margin:9px 0 }
+.task input{ margin-top:3px; width:16px; height:16px; accent-color:var(--pen); flex:none }
+.task label{ flex:1 }
+.task.done label{ color:var(--ink-3); text-decoration:line-through }
+.tick{ font-size:12.5px; color:var(--ink-3); margin:2px 0 10px }
+pre{ background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+     padding:10px 13px; overflow-x:auto; font-size:13px; line-height:1.65 }
+.verdict{ display:inline-block; font-weight:700; padding:1px 8px; border-radius:3px; font-size:12.5px }
+.v-pass{ background:rgba(44,106,78,.13); color:var(--ok) }
+.v-half{ background:var(--marker); color:var(--ink) }
+.v-fail{ background:var(--red-soft); color:var(--red) }
+.big{ font-size:15px; font-weight:650 }
+@media print{
+  .tick{ display:none }
+  .task input{ -webkit-print-color-adjust:exact }
+  .sec{ break-inside:auto }
+  .task,.tw,pre,.out,.note,.redpen,.guess{ break-inside:avoid }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <header class="rec-head">
+    <h1>批改单 · 作品 v1 第①步（语料清单）</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="交件">ask-my-notes/rag/catch.py（13 行）</span>
+      <span class="f" data-k="判决"><b>2 过 / 3 未过</b></span>
+      <span class="f" data-k="方式">逐条真跑 —— 不看代码猜</span>
+    </div>
+    <p class="sub">
+      <b>你并没有说你交了作业</b> —— 是我在你讲的那个文件夹里看到的。既然写了，就按开工单上的承诺跑一遍。
+      下面的每个数字都是<b>真跑出来的</b>，其中最关键的一段（第三节）是<b>把你自己那份输出抓下来数的</b>。
+    </p>
+
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span>
+      <b>项目 v1</b><span class="sep">›</span>
+      <b>第①步</b>
+      <a href="v1开工单-20261009.html">开工单</a>
+      <a href="函数卡.html">函数卡</a>
+      <a href="https://github.com/hanli1001/ask-my-notes" target="_blank" rel="noopener">ask-my-notes</a>
+    </div>
+  </header>
+
+  <!-- ══ ① 判决表 ═══════════════════════════════════════ -->
+  <section class="sec" id="verdict">
+    <h2 data-n="判">一、判决表</h2>
+    <p>判据来自 <a href="v1开工单-20261009.html">开工单</a>「去量」那节，加两条基础项：</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:5%">#</th><th style="width:34%">要什么</th><th style="width:12%">判决</th><th>实测</th></tr></thead>
+        <tbody>
+          <tr><td class="num">0</td><td>脚本能跑起来</td><td><span class="verdict v-pass">通过</span></td>
+              <td><code>exit 0</code>，跑出 <b>3,772 行</b></td></tr>
+          <tr><td class="num">0b</td><td>用对 <code>os.walk</code></td><td><span class="verdict v-pass">通过</span></td>
+              <td><code>root / dirs / files</code> 三样都拿到了，递归真下去了（<b>1,257</b> 个目录）</td></tr>
+          <tr><td class="num">1</td><td>定出「哪些文件算语料」+ <b>为什么</b></td><td><span class="verdict v-fail">未过</span></td>
+              <td><b>一个都没排除</b> —— <code>.git</code> / <code>.idea</code> / <code>_ref</code> / <code>_备份</code> 全在里面</td></tr>
+          <tr><td class="num">2</td><td>每个文件多少字（最大 / 中位 / 合计）</td><td><span class="verdict v-fail">未过</span></td>
+              <td>脚本里<b>没有「打开文件」这一步</b> —— 只有文件名，没有内容</td></tr>
+          <tr><td class="num">3</td><td>存成 <code>rag/_语料清单.txt</code></td><td><span class="verdict v-fail">未过</span></td>
+              <td>只 <code>print</code> 到屏幕</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      <b>2 过 / 3 未过。</b>三条「未过」都在同一件事上 —— <b>这一步真正的活（定规则、量字数）还没开始</b>。
+      但第 0 条比它看起来重要：它是<b>第一次「你写的代码在你自己的项目里跑起来了」</b>，以前这一步都是我做的。
+    </p>
+  </section>
+
+  <!-- ══ ② 做对的 ═══════════════════════════════════════ -->
+  <section class="sec" id="good">
+    <h2 data-n="对">二、先说做对的（五条）</h2>
+    <ol>
+      <li>
+        <span class="big">🔑 项目位置放对了 —— 而且比我说的对。</span><br>
+        代码进 <code>E:\ask-my-notes</code>（项目本体），语料留在 <code>E:\项目学习</code>（只读输入）。
+        <b>我上一条说「文件放 <code>rag/</code> 下」是含混的</b> —— 我指的是 <code>E:\项目学习\rag\</code>，
+        你按自己的判断放进了项目里。<b>你这个分家是对的</b>，而且它顺手解决了我昨晚发现的那个问题：
+        代码要是写在语料目录里，<b>你每写一次代码，语料就变一次</b>，检索结果永远不可复现。
+      </li>
+      <li><b><code>os.walk</code> 用对了</b> —— 三样拆开、递归真下去了。这是昨天才加的那张卡。</li>
+      <li><b>它是真跑起来的</b> —— <code>exit 0</code>，不是「看着像能跑」。你现在的闭环是完整的：<b>新建文件 → 写 → 跑 → 看输出</b>。这条以前没有过。</li>
+      <li><b>建了 <code>.venv</code></b> —— 项目该有自己的环境，不该用全局 Python 跑。</li>
+      <li><b><code>exist_ok=True</code> 写对了</b> —— 那是 <code>os.makedirs</code> 卡里的东西，说明你查了卡而不是瞎试。</li>
+    </ol>
+  </section>
+
+  <!-- ══ ③ 98% 是别人的 ═════════════════════════════════ -->
+  <section class="sec" id="evidence">
+    <h2 data-n="证">三、你跑出来的东西，<b>98% 是别人的</b></h2>
+    <p>
+      这一段是这轮最要紧的。我把<b>你自己那份输出</b>抓下来数了一遍（不是估的）：
+    </p>
+    <div class="out">
+      <span class="cap">catch.py 的真实输出 · 2026-10-09 实测</span>
+<pre>总行数          3,772
+遍历到的目录    1,257
+文件条目       11,990</pre>
+    </div>
+    <p>那 11,990 个文件条目，按<b>顶层目录</b>分：</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:34%">顶层目录</th><th style="width:16%">条目数</th><th style="width:12%">占比</th><th>是什么</th></tr></thead>
+        <tbody>
+          <tr><td><code>_ref</code></td><td class="num"><b>11,104</b></td><td class="num"><b>92.6%</b></td><td>AI Agent <b>教材</b>（浅克隆 + 109 个实验的源码）</td></tr>
+          <tr><td><code>.git</code></td><td class="num">582</td><td class="num">4.9%</td><td>git 自己的内部对象与样本钩子</td></tr>
+          <tr><td><code>交互演示</code></td><td class="num">96</td><td class="num">0.8%</td><td>✅ 你自己的</td></tr>
+          <tr><td><code>_备份</code></td><td class="num">62</td><td class="num">0.5%</td><td>副本（和原件重复）</td></tr>
+          <tr><td>其余（我的练习 / tools / 课程 / 职业探索 …）</td><td class="num">~146</td><td class="num">~1.2%</td><td>✅ 你自己的</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="out">
+      <span class="cap">同一份输出，换个算法</span>
+<pre>⇒ 明显该排除的（_ref 教材 / .git / .idea / 缓存 / _备份）
+                        11,768 / 11,990 = 98.1%
+⇒ 来自「你自己的内容」的
+                           222 / 11,990 =  1.9%</pre>
+    </div>
+    <p>
+      按后缀看也一样：<code>.py</code> <b>6,122</b> 个、<code>.pyc</code> <b>1,865</b> 个、<code>.pyi</code> <b>345</b> 个
+      —— 那一大堆是<b>教材的示例代码和它编译出的缓存</b>；而 <code>.md</code> 只有 <b>69</b> 个。
+    </p>
+    <p class="redpen">
+      这就是「为什么必须先定规则」的全部答案 —— <b>不定规则，你的 RAG 会在别人的教材源码里搜答案</b>，
+      而且它会照样给你一段话、照样标来源，<b>一个错都不报</b>。<br>
+      📐 教练侧实测对照：过滤干净之后，你的语料是 <b>133 个文本文件 / 1,677,948 字</b>。
+      <b>11,990 ÷ 133 ≈ 90 倍</b> —— 你现在这版，比最终要用的多出 90 倍噪音。
+    </p>
+    <p class="note">
+      ⚠️ 注意：<b>「多」不是「全」</b>。过滤不是"删掉不重要的"，是"<b>决定什么东西有资格被搜到</b>"。
+      漏掉一个该进的（比如某份笔记），代价是<b>那个问题永远搜不到</b>；多进一个不该进的，
+      代价是<b>它偶尔冒出来当答案</b>。两种都很难发现 —— 所以这一步才要你写清楚理由。
+    </p>
+    <p class="redpen">
+      🔁 <b>而且这个数每次都在变</b>：我写完这一页再跑一遍，同一份脚本给出的是
+      <b>11,999 / 98.1%</b>（多出来的 9 个，是<b>我自己刚写进 <code>E:\项目学习</code> 的文件</b> —— 包括这张批改单和它的证据脚本）。<br>
+      ⇒ <b>这恰恰是「语料是一份规则，不是一个目录」的证据</b>：目录会自己长，规则不会。
+      你要是把 11,990 这个数写进代码，下周它就是个谎话。<br>
+      <small>证据脚本：<code>tools/_analyze_catch_output.py</code>（可重跑）；本次输出存档 <code>交互演示/_ev-批改-v1第1步.txt</code>。</small>
+    </p>
+  </section>
+
+  <!-- ══ ④ 不报错但错的 ═════════════════════════════════ -->
+  <section class="sec" id="silent">
+    <h2 data-n="静">四、不报错但错的（四条，没有一条会报错）</h2>
+
+    <h3>① 🔴 <code>.gitignore</code> 是一段 PowerShell —— 而且已经推到 GitHub 上了</h3>
+    <p>不信我的话，看 GitHub 上的真身（<code>gh api</code> 取下来的）：</p>
+    <div class="out">
+      <span class="cap">repos/hanli1001/ask-my-notes/contents/.gitignore · 79 B</span>
+<pre>@"
+.idea/
+__pycache__/
+*.pyc
+.venv/
+"@ | Set-Content .gitignore -Encoding ascii</pre>
+    </div>
+    <p>
+      那是一段<b>命令行</b>，被当成文字存进了文件。<br>
+      <b>它现在碰巧还能用</b> —— gitignore 是「一行一条规则」，中间那 4 行正好是合法规则
+      （实测 <code>git check-ignore</code>：<code>.venv</code>、<code>.idea</code> 确实被忽略了）。首尾两行是废规则。
+    </p>
+    <p class="redpen">
+      ⚠️ <b>危险的正是「它还能用」</b> —— 你不会发现它坏了，直到某天你往里加一条规则、加进去<b>不生效</b>，
+      然后花半小时怀疑 git。这就是本工作区反复出现的那一类病：<b>不报错的错</b>。
+    </p>
+
+    <h3>② 🔴 <code>rag/课程/</code> 和 <code>rag/_备份/</code> 是垃圾 —— <b>这条是我的错</b></h3>
+    <p>你抄了我卡里这两行：</p>
+    <pre>os.makedirs(os.path.join(BASE_DIR, "课程","第1课"), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR,"_备份"), exist_ok=True)</pre>
+    <p>
+      那两行在卡里是<b>「搭台子」</b> —— 只是给例子<b>造一个假目录</b>，不是 <code>os.walk</code> 的一部分。
+      你把 <code>d</code> 换成了自己的 <code>BASE_DIR</code>，于是<b>在自己仓库里建出了两个空目录</b>，还一个错都不报。
+    </p>
+    <p class="note">
+      ✅ <b>卡已经改了</b>：那 5 行现在被一个显眼的方框圈起来写着「你真写代码时【这几行整段删掉】—— 一行都别抄」，
+      并且把这件事写进了卡片的「常见坑」。<b>这是我的课件的缺陷，不是你的。</b>
+    </p>
+
+    <h3>③ <code>_embeddings-cache.json</code> 没被忽略</h3>
+    <p>
+      实测 <code>git check-ignore</code> <b>不认它</b>。那是 09-21 那次实验留下的向量缓存，<b>170,189 字</b>，
+      而且<b>能重跑出来</b>。你现在做一次 <code>git add -A</code>，它就会跟着上去。
+    </p>
+
+    <h3>④ <code>import tempfile</code> 没用上</h3>
+    <p>
+      无害，但它是个指纹：<b>那行是从卡里抄过来的，你没用上它</b>。留着也行，删了更干净 ——
+      下次交件前扫一眼自己 <code>import</code> 了什么，是个好习惯。
+    </p>
+  </section>
+
+  <!-- ══ ⑤ 考点 ═════════════════════════════════════════ -->
+  <section class="sec" id="design">
+    <h2 data-n="考">五、这一轮真正的考点（<b>只给判据，不给答案</b>）</h2>
+    <p class="big">「语料」是一个目录，还是一份规则？</p>
+    <p>
+      开工单让你先回答「哪些文件算语料」，你的脚本<b>跳过了这一步直接开走</b> —— 这是最常见的一种跳步，
+      因为写循环比做决定容易。判据三条，你自己往上套：
+    </p>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:34%">问自己</th><th>如果答「是」</th></tr></thead>
+        <tbody>
+          <tr><td>它是<b>知识</b>，还是<b>能重跑出来的东西</b>？</td><td>缓存 / 生成物 / <code>.pyc</code> → 不进语料（进了会重复、还会过期）</td></tr>
+          <tr><td>它是<b>原件</b>，还是<b>副本</b>？</td><td><code>_备份/</code>、<code>*.bak-*</code> → 只留一份，否则同一件事有两个答案</td></tr>
+          <tr><td>它是<b>你的</b>，还是<b>别人的</b>？</td><td><code>_ref/</code> 教材 → 你要搜的是<b>你自己写的笔记</b>，不是书</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="redpen">
+      反例我已经替你跑出来了：<b>不定规则 → 98% 是别人的</b>（第三节）。<br>
+      <b>但「排除哪些」的最终决定是你的</b> —— 我只给判据和反例。交回来时把<b>每一类的理由</b>一起给我。
+    </p>
+  </section>
+
+  <!-- ══ ⑥ 返工清单 ═════════════════════════════════════ -->
+  <section class="sec" id="redo">
+    <h2 data-n="改">六、返工清单（5 件，约 1 小时）</h2>
+
+    <h3>1 · 修 <code>.gitignore</code> · 3 分钟</h3>
+    <p>把 <code>E:\ask-my-notes\.gitignore</code> 整个内容换成这 7 行：</p>
+    <pre>.venv/
+__pycache__/
+*.pyc
+.idea/
+
+# 能重跑出来的东西，不进仓库
+rag/_embeddings-cache.json</pre>
+    <p>然后在终端里（<code>cd E:\ask-my-notes</code>）：</p>
+    <pre>git add .gitignore
+git commit -m "修 .gitignore：去掉误写进去的 PowerShell 那段"
+git push</pre>
+    <div class="task"><input type="checkbox" id="t1"><label for="t1">改完 <code>git show HEAD:.gitignore</code> 看一眼 —— <b>贴出来的必须是你写的那 7 行</b>，不是那段 PowerShell</label></div>
+
+    <h3>2 · 删两个垃圾目录 · 10 秒</h3>
+    <p>删掉 <code>E:\ask-my-notes\rag\课程\</code> 和 <code>E:\ask-my-notes\rag\_备份\</code>（空的）。</p>
+    <div class="task"><input type="checkbox" id="t2"><label for="t2">删完 <code>ls rag/</code> 只剩脚本和 <code>_run-*.txt</code></label></div>
+
+    <h3>3 · 给脚本加剪枝 · 20 分钟</h3>
+    <p>卡里教了 <code>dirs[:] = [...]</code>。<b>先只做这一件事</b>：把 <code>.git</code>、<code>.idea</code>、<code>_ref</code>、<code>_备份</code>、<code>__pycache__</code>、<code>.venv</code> 剪掉。</p>
+    <div class="task"><input type="checkbox" id="t3"><label for="t3">跑一遍，看行数<b>从 3,772 掉到多少</b> —— 这个数就是你今天的第一个进度</label></div>
+
+    <h3>4 · 加「只统计文本文件 + 字数」 · 25 分钟</h3>
+    <ul>
+      <li>用 <code>with open(p, encoding="utf-8")</code> 读，<code>len(text)</code> 数字数</li>
+      <li>读不动的 → <code>try / except</code> 接住，<b>并记下名字</b>（卡里那张就是讲这个的）</li>
+      <li>按后缀筛：哪些后缀你要，哪些不要 —— <b>这条也得有理由</b></li>
+    </ul>
+    <div class="task"><input type="checkbox" id="t4"><label for="t4">量出三个数：<b>最大的多大 / 中位数 / 加起来多少</b></label></div>
+
+    <h3>5 · 输出改成「汇总」+ 存文件 · 10 分钟</h3>
+    <p>
+      现在 3,772 行没法看。你要的是<b>一页能读完的结论</b>：一共几个文件、多少字、最大的几个是谁、
+      排除了什么、为什么。存法最省事：
+    </p>
+    <pre>python rag\你的脚本.py > rag\_语料清单.txt</pre>
+    <p class="note">⚠️ 第 4、5 步做完，你手上那份东西就已经是 v1 流水线的<b>第①块</b>了 —— 它不是练习，是项目里的第一个真模块。</p>
+
+    <p class="tick" id="tick"></p>
+  </section>
+
+  <!-- ══ ⑦ 交回来 ═══════════════════════════════════════ -->
+  <section class="sec" id="hand">
+    <h2 data-n="交">七、交回来给我什么</h2>
+    <ol>
+      <li><b>改好的脚本</b> + 跑出来的 <code>rag/_语料清单.txt</code></li>
+      <li><b>一句话规则</b>：哪些算语料 —— <b>每一类的理由</b>，不是只有名单</li>
+      <li><b>「读不动的文件：崩掉还是跳过」</b> 的答案 + 理由</li>
+      <li>第 3 步那个数：<b>行数从 3,772 掉到了多少</b></li>
+    </ol>
+    <p class="redpen">
+      📮 另外两件，<b>跟批改无关，但我必须知道</b>：<br>
+      <b>① <code>catch.py</code> 是你自己写的，还是 Claude Code 帮你写的？</b>
+      —— 这不影响分数，但<b>完全影响我下一步给什么</b>。你自己写的 → 我出变式题；
+      它写的 → 我们得先把那 13 行一行一行讲一遍（不然就重演 DoroAi 那次：仓库里有代码，你讲不出故事）。<br>
+      <b>② W41 这周你实际投入了几小时</b>（周一排 W42 要用；W41 到周日还剩 2 天）
+    </p>
+  </section>
+
+  <div class="foot">
+    批改单 · 作品 v1 第①步 ｜ 2026.10.09（周五）｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">
+      证据：<code>rag/catch.py</code> 真跑（<code>exit 0</code> / 3,772 行）· 输出分布由脚本数出来（11,990 条 / 98.1% 该排除）·
+      <code>gh api</code> 取 GitHub 上 <code>.gitignore</code> 真身 · <code>git check-ignore</code> 实测忽略规则
+      ｜ 依据：<code>交互演示/v1开工单-20261009.html</code> §去量 · <code>改动路线.md</code> T-31 / T-30
+    </span>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'lab.redo.v1b1.20261009';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.task input'));
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.id];
+    b.parentNode.classList.toggle('done', b.checked);
+    b.addEventListener('change', function () {
+      b.parentNode.classList.toggle('done', b.checked);
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      paint();
+    });
+  });
+  function paint() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    document.getElementById('tick').textContent =
+      n + ' / ' + boxes.length + ' 打完' + (n === boxes.length ? ' —— 这份返工清单清了 ✅' : '');
+  }
+  paint();
+})();
+</script>
+</body>
+</html>

@@ -18,6 +18,7 @@ SHOTS = ROOT / "交互演示"
 PAGES = {
     "批改单-D8-20260928.html":      dict(secs=10, boxes=11, key="lab.redo.D8.20260928", shot="_shot-grade",  minlen=5000),
     "批改单-D8-二轮-20261005.html": dict(secs=8,  boxes=2,  key="lab.redo.D8.round2",  shot="_shot-grade2", minlen=3500),
+    "批改单-v1第1步-20261009.html": dict(secs=7,  boxes=4,  key="lab.redo.v1b1.20261009", shot="_shot-grade3", minlen=4000),
 }
 
 results = []
