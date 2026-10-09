@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>变式题 · v1 第①步（os.walk）· 2026.10.09</title>
+<link rel="stylesheet" href="_主题.css">
+<style>
+/* 只属于本页 */
+.guess{ background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+        padding:11px 14px; margin:11px 0 }
+.guess .q{ font-weight:600; margin:0 0 7px }
+.guess textarea{ width:100%; min-height:48px; box-sizing:border-box; margin-top:6px;
+        font:inherit; font-size:13.5px; padding:7px 9px; resize:vertical;
+        background:rgba(255,255,255,.6); border:1px solid var(--rule-2); border-radius:4px;
+        color:var(--ink) }
+details{ margin:9px 0; background:rgba(255,255,255,.35); border:1px dashed var(--rule-2);
+         border-radius:5px; padding:7px 12px }
+details summary{ cursor:pointer; font-size:13.5px; color:var(--pen); font-weight:600 }
+details[open] summary{ margin-bottom:6px }
+details p{ margin:5px 0; font-size:13.5px; color:var(--ink-2) }
+.task{ display:flex; align-items:flex-start; gap:9px; margin:9px 0 }
+.task input{ margin-top:3px; width:16px; height:16px; accent-color:var(--pen); flex:none }
+.task label{ flex:1 }
+.task.done label{ color:var(--ink-3); text-decoration:line-through }
+.tick{ font-size:12.5px; color:var(--ink-3); margin:2px 0 10px }
+pre{ background:var(--paper-2); border:1px solid var(--rule); border-radius:4px;
+     padding:10px 13px; overflow-x:auto; font-size:13px; line-height:1.65 }
+.qno{ display:inline-block; background:var(--pen); color:#fff; font-size:12px; font-weight:700;
+      padding:1px 8px; border-radius:3px; margin-right:7px; vertical-align:1px }
+@media print{
+  .tick{ display:none }
+  .task input{ -webkit-print-color-adjust:exact }
+  .sec{ break-inside:auto }
+  .task,.tw,pre,.out,.note,.redpen,.guess,details{ break-inside:avoid }
+  details{ border-style:solid } details > *{ display:block !important }
+  details textarea{ display:none }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <span class="punch" style="top:58px"></span>
+  <span class="punch" style="top:46%"></span>
+  <span class="punch" style="bottom:70px"></span>
+
+  <header class="rec-head">
+    <h1>变式题 · v1 第①步（<code>os.walk</code>）</h1>
+    <div class="rec-fields">
+      <span class="f" data-k="给谁">你（交件后出，批改单的第二步）</span>
+      <span class="f" data-k="几道">6 道题 + 3 道自问</span>
+      <span class="f" data-k="总量">约 40 分钟（大多在跑代码）</span>
+    </div>
+    <p class="sub">
+      你在批改单上选了「<b>自己仿照样例写的</b>」⇒ 按约定<b>出变式题</b>（不是把 13 行重讲一遍）。<br>
+      变式题的意思：<b>同一件事，换一个数据、换一个条件</b> —— 看你的理解是不是只挂在那个例子上。
+    </p>
+
+    <div class="crumb">
+      <span>你在这里</span><span class="sep">›</span>
+      <b>阶段 A</b><span class="sep">›</span>
+      <b>项目 v1</b><span class="sep">›</span>
+      <b>第①步 · 变式题</b>
+      <a href="批改单-v1第1步-20261009.html">批改单</a>
+      <a href="v1开工单-20261009.html">开工单</a>
+      <a href="函数卡.html">函数卡</a>
+    </div>
+  </header>
+
+  <!-- ══ 0 先审 GPT 那份回答 ═══════════════════════════ -->
+  <section class="sec" id="audit">
+    <h2 data-n="审">〇、先说你发我的那份 GPT 回答</h2>
+    <p>
+      你把它整段发我，说明你觉得它讲得好。我逐段读完了。先给结论：
+      <b class="big">它基本没有事实错误 —— 这点要说清楚，它不是"在骗你"。</b>
+    </p>
+    <div class="tw">
+      <table>
+        <thead><tr><th style="width:30%">它讲了什么</th><th>判决</th></tr></thead>
+        <tbody>
+          <tr><td><code>root / dirs / files</code> 三个名字各是什么</td><td>✅ 对，比喻（巡逻机器人）也对</td></tr>
+          <tr><td><b><code>dirs</code> 里只是名字、不是完整路径</b></td><td>✅ 对 —— 这是最容易错的一条，它抓到了</td></tr>
+          <tr><td><code>os.path.join(root, f)</code> 拼完整路径</td><td>✅ 对</td></tr>
+          <tr><td>递归它自己做，<b>不用你再套一层</b></td><td>✅ 对</td></tr>
+          <tr><td><code>endswith(".py")</code> 筛后缀</td><td>✅ 对</td></tr>
+          <tr><td><code>mkdtemp()</code> 不会自动删 ／ 要 <code>shutil.rmtree</code> ／ <code>TemporaryDirectory</code> 更省事</td><td>✅ 全对</td></tr>
+          <tr><td><code>join</code> 不建目录 ／ <code>makedirs</code> 建多级 ／ <code>exist_ok</code> 防第二次报错</td><td>✅ 全对</td></tr>
+          <tr><td><code>__file__</code> → <code>resolve()</code> → <code>parent</code> 逐步拆</td><td>✅ 全对</td></tr>
+          <tr><td><code>bytes([0xff, …])</code> / <code>"wb"</code> / 不能往里写字符串</td><td>✅ 全对</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>但它漏了、和框错了三件事 —— 这三件比上面全部加起来重要</h3>
+
+    <p class="redpen">
+      🔴 <b>漏了：<code>dirs</code> 是「还能改的」。</b><br>
+      它用整整 10 节讲 <code>os.walk</code>，<b>从头到尾没有一个字</b>提到这件事。
+      而你要干的活（排除 <code>_ref</code> / <code>.git</code> / <code>_备份</code>）<b>只有这一条路才干净</b> —— 见 §二。
+    </p>
+    <p class="redpen">
+      🔴 <b>框错了：它在「4 个文件」的例子上教会了你这个 API。</b><br>
+      它的示例目录是 <code>main.py</code> / <code>readme.txt</code> / <code>Python基础/第1课.py</code> / <code>Java基础/Hello.java</code>
+      —— <b>4 个文件</b>。<br>
+      在 4 个文件上，「遍历整棵树」是个<b>好工具</b>；在<b>你那棵树</b>上它是<b>灾难</b>。
+      <b>API 一个字没变，变的是数据。</b>—— 而你那棵树有多大，<b>它不知道，我也还没让你数过</b>（§一是第一件）。
+      <br><small>（这个数我故意没写在这儿 —— §一 就是让你先猜。）</small>
+    </p>
+    <p class="redpen">
+      🔴 <b>框错了：它把「没问题」包装成「一个容易搞错的地方」。</b><br>
+      它第 5 节标题是〈一个容易搞错的地方：冒号〉，花了整节讲……结论是
+      <b>「你原来的写法是对的」</b>，只是「如果多写一个逗号会报错」——<b>你没多写那个逗号</b>。<br>
+      这一节的<b>信息量是 0</b>，但读起来像「我帮你排掉了一个坑」。<b>这种"填空式段落"是 LLM 答案里最常见的噪音。</b>
+    </p>
+
+    <p class="note">
+      🔑 <b>一句话判据（以后每次问完 GPT 都用它过一遍）：</b><br>
+      <b>「读起来完整」≠「对你这道题完整」。</b>
+      它会把你问的<b>通用知识</b>讲得非常完整、非常顺，而<b>你的具体情况</b>它是空白的 ——
+      而它<b>不会说「这部分我不知道」</b>，它会用「注意：实际可能不同」「通常是」这类话轻轻带过。<br>
+      ⇒ <b>所以正确的用法是：拿它当词典，别拿它当教练。</b>
+      词典告诉你一个词是什么意思；它不会告诉你<b>你这道题该用哪个词</b>。
+    </p>
+    <p class="note">
+      📌 <b>还有一件事值得你自己看一眼</b>：<code>dirs</code> 那条<b>就在你昨天该打开的那张卡里</b>
+      （<code>函数卡.html</code> 搜 <code>os.walk</code>，卡片「常见坑」第 ③ 条，还带一个 🔑）。
+      你昨天没打开它，去问了 GPT —— <b>而 GPT 恰好把这条漏了</b>。<br>
+      ⇒ <b>卡是为你这道题写的；GPT 是为所有人写的。</b>两个都要用，但顺序反过来会多花时间。
+    </p>
+  </section>
+
+  <!-- ══ 1 ═══════════════════════════════════════════════ -->
+  <section class="sec" id="q1">
+    <h2 data-n="一"><span class="qno">题一</span>先猜，再跑</h2>
+    <pre>import os
+
+n = 0
+for root, dirs, files in os.walk(r"E:\项目学习"):
+    n += len(files)
+
+print(n)</pre>
+    <div class="guess">
+      <p class="q">先写下你的猜测 —— 这棵树下一共有多少个文件？（不许先跑）</p>
+      <textarea placeholder="我猜大约 ______ 个"></textarea>
+    </div>
+    <div class="task"><input type="checkbox" id="k1"><label for="k1">猜完了，<b>现在才允许跑</b> —— 跑出来的数除以你猜的数，差几倍？</label></div>
+    <details>
+      <summary>跑完再展开（教练侧独立实测）</summary>
+      <p>同一个循环，2026-10-09 实测：<b>目录 1,257 个 · 文件条目 12,014 个</b>。</p>
+      <p>
+        ⚠️ 这个数<b>每次都会变</b>——因为你（和我）每天都在往这个工作区里写新文件。
+        我第一次数是 11,990，写完批改单再数是 11,999，现在是 12,014。<b>这本身就是第①步的题眼</b>（见 §六）。
+      </p>
+    </details>
+    <p class="note">
+      这道题不是考算术。<b>它是让你自己撞一次「我的直觉和真实数据差多少」</b> ——
+      你昨天那份代码就是<b>没有先猜、也没有先量</b>，直接遍历了整棵树、打印了 3,772 行。
+    </p>
+  </section>
+
+  <!-- ══ 2 ═══════════════════════════════════════════════ -->
+  <section class="sec" id="q2">
+    <h2 data-n="二"><span class="qno">题二</span>不许用 <code>if</code>，怎么让循环不走进 <code>_ref</code>？</h2>
+    <p>
+      硬条件：<b>你的循环体里不许出现 <code>if</code></b>（也不许用 <code>continue</code>）。
+      也就是说，不能"走进去、发现是 <code>_ref</code>、再跳过"。
+    </p>
+    <p class="note">
+      💡 提示就一句：GPT 自己说的 ——「<code>dirs</code> 是<b>当前文件夹里面的子文件夹名称列表</b>」。<br>
+      <b>那……列表能不能改？</b>如果你改了它，<code>os.walk</code> 下一步会怎么做？
+    </p>
+    <div class="guess">
+      <p class="q">写下你的做法（一行就够）：</p>
+      <textarea placeholder="在 for 里面加一行：______________________"></textarea>
+    </div>
+    <div class="task"><input type="checkbox" id="k2"><label for="k2">写进脚本、跑通、<b>自己确认 <code>_ref</code> 真的没被走进去</b></label></div>
+    <details>
+      <summary>卡住 / 做完之后展开</summary>
+      <p>就是这一行（<b>放在 <code>for</code> 循环体的第一行</b>）：</p>
+      <pre>dirs[:] = [d for d in dirs if d not in (".git", "_ref", "_备份", "__pycache__", ".idea")]</pre>
+      <p>
+        三个必须说清的点：<br>
+        ① <b>它为什么能生效</b>：<code>os.walk</code> 每走一层，会把「接下来要进哪些子目录」交给你；
+        你把这个列表<b>就地改小</b>，它下一轮就<b>不会</b>进被剪掉的那几支 —— 是<b>整支跳过</b>，不是"进去再出来"。<br>
+        ② <b>为什么必须写 <code>dirs[:] =</code> 不能写 <code>dirs =</code></b>：后者只是给这个局部名字换了个新列表，
+        <code>os.walk</code> 手里那份<b>一个字没变</b>，所以<b>完全不起作用、也不报错</b>。（这是本题最阴的地方。）<br>
+        ③ 这条就在 <code>函数卡.html</code> 搜 <code>os.walk</code> 那张卡的「常见坑」第 ③ 条 —— 去对照一下。
+      </p>
+    </details>
+    <p class="redpen">
+      ⚠️ 做完这一题，你回头再看你交的那 13 行：<b>你本来会用 <code>if</code> 一个个筛文件名</b> ——
+      那样 <code>_ref</code> 底下<b>那一大堆</b>还是会被<b>走一遍</b>，只是不打印。
+      「跳过」和「筛掉」<b>成本差着两个数量级</b>。
+    </p>
+  </section>
+
+  <!-- ══ 3 ═══════════════════════════════════════════════ -->
+  <section class="sec" id="q3">
+    <h2 data-n="三"><span class="qno">题三</span>读代码，先预测，再跑</h2>
+    <pre>import os
+
+for root, dirs, files in os.walk(r"E:\项目学习"):
+    dirs[:] = [d for d in dirs if d not in (".git", "_ref", "_备份", "__pycache__", ".idea")]
+    print(root)</pre>
+    <div class="guess">
+      <p class="q">这个 <code>print(root)</code> 会打印几行？<b>（先猜，别跑）</b></p>
+      <textarea placeholder="我猜会打印 ______ 行，因为 ______"></textarea>
+    </div>
+    <div class="task"><input type="checkbox" id="k3"><label for="k3">跑一遍，看你猜的和真实差多少</label></div>
+    <details>
+      <summary>对答案（教练侧独立实测，2026-10-09）</summary>
+      <div class="out">
+        <span class="cap">同一棵树，三种走法</span>
+<pre>走法 A  你交的那版（什么都不剪）
+        目录 1,257    文件条目 12,014
+
+走法 B  只加那一行 dirs[:] = [...]
+        目录    15    文件条目    227     ← 98.1% 被剪掉
+
+走法 C  B + 只统计「能按 utf-8 读出来」的
+        能当语料的文本文件  144
+        总字数          1,762,106
+        最大的一个       170,189 字   rag\_embeddings-cache.json</pre>
+      </div>
+      <p>
+        ⇒ <b>一行代码，12,014 → 227。</b>这就是「跳过」和「筛掉」的差距 ——
+        你多花的那点时间，全花在<b>走别人的教材源码</b>上了。
+      </p>
+      <p>
+        ⇒ 而 A → C 是 <b>12,014 → 144，差 83 倍</b>。
+        <b>这 144 才是你 README 里说的"我的学习笔记"。</b>
+      </p>
+      <p class="redpen">
+        🔁 <b>你跑出来的数会比上面这几个略大一点</b> —— 因为<b>我又往这个工作区里写了几页东西</b>
+        （这张变式题、它的验收脚本、证据文件……全都是新文件）。<br>
+        我 2026-10-09 当天连数了三次：<b>12,014 → 12,021</b>，读不动的 <b>83 → 86</b>。<br>
+        ⇒ <b>但比例几乎不动：98.1% 被剪掉、能读的只占六成出头。</b>
+        <b>你要看的是比例，不是那个绝对数</b> —— 绝对数下周就是假的（这正是 §六 那题的答案）。
+      </p>
+    </details>
+  </section>
+
+  <!-- ══ 4 ═══════════════════════════════════════════════ -->
+  <section class="sec" id="q4">
+    <h2 data-n="四"><span class="qno">题四</span>GPT 留了一道题，你没答</h2>
+    <p>它那份回答的第 6 节末尾留了这道（你发我的记录里，<b>这道没有答案</b>）：</p>
+    <pre>E:\项目学习
+├── a.py
+├── b.txt
+└── 课程
+    ├── 第1课.py
+    └── 第2课.py
+
+for root, dirs, files in os.walk(r"E:\项目学习"):
+    print(files)
+
+问：print(files) 最终会打印几次？
+A. 1 次          B. 2 次
+C. 由遍历到的目录数量决定，这里通常是 2 次
+D. 3 次</pre>
+    <div class="guess">
+      <p class="q">选一个，并写出<b>为什么</b>（理由比选项重要）：</p>
+      <textarea placeholder="我选 ___，因为 ______"></textarea>
+    </div>
+    <div class="task"><input type="checkbox" id="k4"><label for="k4"><b>然后把那棵树真建出来跑一遍</b>（在 <code>E:\Temp</code> 下建，别往项目里建）—— 验证你的答案</label></div>
+    <details>
+      <summary>对答案</summary>
+      <p>
+        <b>C</b>。循环体执行了几次，<code>print</code> 就执行几次；<b>而循环次数 = <code>os.walk</code> 交出来的目录个数</b>，
+        不是文件个数、也不是写了几行 <code>print</code>。<br>
+        这棵树有 2 个目录（<code>E:\项目学习</code> 和 <code>E:\项目学习\课程</code>）⇒ <b>2 次</b>。
+      </p>
+      <p>⚠️ 注意选项 A 和 D 各自错在哪 —— 想清楚这两条，比记住「C」有用得多。</p>
+    </details>
+  </section>
+
+  <!-- ══ 5 ═══════════════════════════════════════════════ -->
+  <section class="sec" id="q5">
+    <h2 data-n="五"><span class="qno">题五</span>走法 C 里，227 个文件只有 144 个能读 —— 那 83 个是什么？</h2>
+    <p>
+      这题就是你在开工单上被问的那个「<b>读不动的文件：崩掉还是跳过？</b>」——
+      现在它不再是假设题了，<b>它有具体数字了</b>。
+    </p>
+    <div class="guess">
+      <p class="q">① 先猜：那 83 个读不动的，主要是什么文件？</p>
+      <textarea placeholder="我猜主要是 ______ 文件"></textarea>
+      <p class="q" style="margin-top:9px">② 你的脚本遇到它们，应该<b>崩掉</b>还是<b>跳过</b>？<b>给出理由。</b></p>
+      <textarea placeholder="我选 ______，因为 ______"></textarea>
+    </div>
+    <div class="task"><input type="checkbox" id="k5"><label for="k5">写几行代码<b>把那 83 个真列出来</b>（不要猜，要看）</label></div>
+    <details>
+      <summary>对答案（教练侧实测）</summary>
+      <div class="out">
+        <span class="cap">走法 B 的 227 个文件里，读不动的 83 个</span>
+<pre>.png    UnicodeDecodeError    81
+.db     UnicodeDecodeError     2
+                        合计 83</pre>
+      </div>
+      <p><b>就是图片和数据库</b> —— 两类都不是"知识文本"，是"别的东西"。</p>
+      <p class="redpen">
+        🔁 同样：你跑的时候大概会看到 <b>86 个左右</b>（我又多写了几页，多了几张截图）。
+        <b>比例不变：两百多个里，能当文本读的只有六成出头。</b>
+      </p>
+      <p class="redpen">
+        🔑 <b>但这道题真正要你看见的是另一件事：</b><br>
+        你有 81 张 png。<b>正确做法不是"打开它 → 失败 → 跳过"，而是"根本别去打开它"。</b><br>
+        ⇒ <b><code>try / except</code> 管的是「意外」；后缀规则管的是「已知不该读的」。</b>
+        两个都要，但<b>别拿前者当后者用</b> —— 82 个文件全走一遍"读失败"的异常，
+        不但慢，而且会把真正的意外（比如一个该读却编码坏了的笔记）<b>淹在噪音里</b>。
+      </p>
+    </details>
+  </section>
+
+  <!-- ══ 6 ═══════════════════════════════════════════════ -->
+  <section class="sec" id="q6">
+    <h2 data-n="六"><span class="qno">题六</span>同一个 API，为什么在它的例子里是好工具、在你这里是灾难？</h2>
+    <p>
+      GPT 的示例目录：<b>4 个文件</b>，全是你自己写的。<br>
+      你的目录：<b>你在 §一 亲手数出来的那个数</b> —— 而其中绝大部分不是你的东西。<br>
+      代码<b>一个字都没变</b>。
+    </p>
+    <div class="guess">
+      <p class="q">用<b>一到两句话</b>回答。这题<b>没有标准答案</b> —— 我要看的是你怎么想。</p>
+      <textarea placeholder="因为 ______"></textarea>
+    </div>
+    <p class="note">
+      💡 这题不给答案。但给你三个可以往上靠的角度，随便挑：<br>
+      ① <b>「语料」是一个目录，还是一份规则？</b>（批改单 §五 的题眼）<br>
+      ② GPT 不知道你的数据 → 它给的是<b>通用正确</b>；那"对你的具体正确"由谁负责？<br>
+      ③ 如果你把 <b>§一 数出来的那个数直接写死进代码</b>，下周一它还成立吗？（想想那个数为什么会变）
+    </p>
+  </section>
+
+  <!-- ══ 7 ═══════════════════════════════════════════════ -->
+  <section class="sec" id="self">
+    <h2 data-n="自">七、关于你自己那 13 行 —— 三个自问</h2>
+    <p>
+      你说「<b>自己仿照样例写的，且已经明白大致意思</b>」。我不想只凭这句话下判断，
+      所以拿你文件里的<b>三处痕迹</b>来问。<b>答不上来不是丢人，是定位。</b>
+    </p>
+
+    <h3>Q1 · 第 2 行 <code>import tempfile</code></h3>
+    <p>实测：这个文件里 <b><code>tempfile</code> 一次都没被用到</b>。那你当初<b>为什么 import 它</b>？</p>
+    <div class="guess"><textarea placeholder="我当时以为 ______"></textarea></div>
+
+    <h3>Q2 · 第 7、8 行的两行 <code>os.makedirs(...)</code></h3>
+    <p>它们在<b>你这个脚本里</b>起什么作用？跟 <code>os.walk</code> 有关系吗？</p>
+    <div class="guess"><textarea placeholder="它们的作用是 ______"></textarea></div>
+
+    <h3>Q3 · 🔑 最重要的一题</h3>
+    <p>
+      把这 13 行<b>逐行标一下</b>：哪些是「<b>我自己想出来的</b>」，哪些是「<b>抄来的</b>」（从我的样例 / 从 GPT）。
+      抄的不算错 —— 但你得知道自己抄了什么。
+    </p>
+    <div class="guess"><textarea placeholder="第 __ 行是抄的；第 __ 行是我自己想的" style="min-height:80px"></textarea></div>
+
+    <p class="redpen">
+      <b>为什么要问 Q3：</b>你手上已经有一个这样的仓库了 —— <code>DoroAi</code>，2,100 行，
+      <b>能跑、能演示，但你讲不出它的设计</b>（2026-10-05 你自己确认的）。<br>
+      那次的教训不是"不该用 AI"，而是：<b>用完之后，你得知道哪部分是你的。</b>
+      这 13 行现在只有 13 行，<b>是问这个问题最便宜的时候</b>；等到 2,100 行就来不及了。
+    </p>
+    <div class="task"><input type="checkbox" id="k6"><label for="k6">三个自问都写下来了（写不出也要写"我想不起来"—— 那也是信息）</label></div>
+  </section>
+
+  <!-- ══ 8 交回来 ═══════════════════════════════════════ -->
+  <section class="sec" id="hand">
+    <h2 data-n="交">八、交回来给我什么</h2>
+    <ol>
+      <li><b>六道题的答案</b>（题六写一两句就行；题二把那一行代码贴上来）</li>
+      <li><b>三个自问</b>（Q1 / Q2 / Q3 —— 想不起来就写「想不起来」）</li>
+      <li>跑出来的数：<b>题一你猜了几，实际几</b></li>
+    </ol>
+    <p class="note">
+      做完这页，你就已经<b>顺手把批改单返工清单的第 3 步做完了</b>（加剪枝）——
+      两件事本来就是一件。
+    </p>
+    <p class="redpen">
+      📮 <b>还欠我一个数：W41（10.05–10.11）这周实际投入了几小时。</b>
+      周一排 W42 要用它校准（<b>不是拿来问责</b>）—— 这已经是我第三次问了，它比"做完了没"更重要。
+    </p>
+    <p class="tick" id="tick"></p>
+  </section>
+
+  <div class="foot">
+    变式题 · v1 第①步（os.walk）｜ 2026.10.09（周五）｜ 世界：米黄方格纸 · 实验记录本
+    <span class="sig">
+      实测：三种走法对比、读不动的文件分类（<b>数字一律在各题的折叠区里</b>）—— 均为教练侧独立跑出、脚本可重跑
+      ｜ 依据：<code>交互演示/批改单-v1第1步-20261009.html</code> §七 · <code>改动路线.md</code> T-30
+    </span>
+  </div>
+</div>
+
+<script>
+/* 猜测框 + 打勾：都存本地，刷新不丢 */
+(function () {
+  'use strict';
+  var KEY = 'lab.vary.v1b1.20261009';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.task input'));
+  boxes.forEach(function (b, i) {
+    if (!b.id) b.id = 'k' + i;
+    b.checked = !!saved['box:' + b.id];
+    b.parentNode.classList.toggle('done', b.checked);
+    b.addEventListener('change', function () {
+      b.parentNode.classList.toggle('done', b.checked);
+      saved['box:' + b.id] = b.checked; store(); paint();
+    });
+  });
+
+  var areas = Array.prototype.slice.call(document.querySelectorAll('.guess textarea'));
+  areas.forEach(function (a, i) {
+    a.id = 'g' + i;
+    a.value = saved['ta:' + a.id] || '';
+    a.addEventListener('input', function () { saved['ta:' + a.id] = a.value; store(); paint(); });
+  });
+
+  function store() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
+  function paint() {
+    var el = document.getElementById('tick');
+    if (!el) return;
+    var na = areas.filter(function (a) { return a.value.trim().length > 0; }).length;
+    var nb = boxes.filter(function (b) { return b.checked; }).length;
+    el.textContent = '写下的答案 ' + na + ' / ' + areas.length +
+                     '　·　打勾 ' + nb + ' / ' + boxes.length;
+  }
+  paint();
+})();
+</script>
+</body>
+</html>
