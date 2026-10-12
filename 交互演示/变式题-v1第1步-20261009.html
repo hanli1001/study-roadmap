@@ -379,6 +379,16 @@ D. 3 次</pre>
       📮 <b>还欠我一个数：W41（10.05–10.11）这周实际投入了几小时。</b>
       周一排 W42 要用它校准（<b>不是拿来问责</b>）—— 这已经是我第三次问了，它比"做完了没"更重要。
     </p>
+
+    <h3>📤 把答案导出成一段文字（发给我用）</h3>
+    <p class="note">
+      ⚠️ <b>这页的答案只存在你自己的浏览器里</b>（localStorage），<b>我看不到</b> ——
+      这是我设计上的漏洞，不是你操作错了。点下面这个按钮：它会把你写过的所有答案拼成一段文字并<b>自动选中</b>，
+      <b>Ctrl+C 复制，直接贴给我</b>就行。
+    </p>
+    <p><button id="exp" type="button" class="primary">把答案导出成一段文字</button></p>
+    <pre id="expOut" hidden></pre>
+
     <p class="tick" id="tick"></p>
   </section>
 
@@ -426,6 +436,67 @@ D. 3 次</pre>
     el.textContent = '写下的答案 ' + na + ' / ' + areas.length +
                      '　·　打勾 ' + nb + ' / ' + boxes.length;
   }
+
+  /* ── 导出：把「题干 + 我写的答案」按顺序拼成一段文字，并自动选中 ──
+     为什么要有它：答案只存在他自己的浏览器里（localStorage），教练读不到 ——
+     页面自己得给一条出口，否则「完成了」这三个字没有任何可批改的东西。 */
+  var btn = document.getElementById('exp');
+  if (btn) btn.addEventListener('click', function () {
+    /* 题干从哪来：优先块内的 .q；没有就往上找最近的 h2/h3
+       （§七 那三块的自问写在 <h3> 里、不在块内 —— 第一版导出成了「（没写题干）」，
+        教练拿到三条一模一样的「（没写题干）」等于没拿到）*/
+    function nearestHeading(el) {
+      var node = el;
+      while (node) {
+        var sib = node.previousElementSibling;
+        while (sib) {
+          if (/^H[23]$/.test(sib.tagName)) {
+            return sib.textContent.replace(/\s+/g, ' ').trim();
+          }
+          sib = sib.previousElementSibling;
+        }
+        node = node.parentElement;
+        if (node && node.tagName === 'SECTION') {
+          var h = node.querySelector('h2');
+          if (h) return h.textContent.replace(/\s+/g, ' ').trim();
+        }
+      }
+      return null;
+    }
+
+    var out = [];
+    document.querySelectorAll('.guess').forEach(function (g) {
+      var label = null;
+      Array.prototype.forEach.call(g.childNodes, function (n) {
+        if (n.nodeType !== 1) return;
+        if (n.classList && n.classList.contains('q')) {
+          label = n.textContent.replace(/\s+/g, ' ').trim();
+        } else if (n.tagName === 'TEXTAREA') {
+          out.push('【' + (label || nearestHeading(g) || '（没写题干）') + '】');
+          out.push(n.value.trim() || '（空 —— 没答）');
+          out.push('');
+          label = null;
+        }
+      });
+    });
+    out.push('—— 打勾情况 ——');
+    boxes.forEach(function (b) {
+      var t = (b.parentNode.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 46);
+      out.push((b.checked ? '☑ ' : '☐ ') + t);
+    });
+    var pre = document.getElementById('expOut');
+    pre.hidden = false;
+    pre.textContent = out.join('\n');
+    try {
+      var r = document.createRange();
+      r.selectNodeContents(pre);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      pre.scrollIntoView({ block: 'center' });
+    } catch (e) {}
+  });
+
   paint();
 })();
 </script>

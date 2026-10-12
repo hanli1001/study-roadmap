@@ -116,6 +116,24 @@ def main() -> int:
         check("进度计数正确", "1 / 10" in t1 and "1 / 6" in t1 and "1 / 10" in t2,
               f"{t1.strip()} | {t2.strip()}")
 
+        # —— 导出按钮：页面必须给教练留一条出口 ——
+        #    （答案只在他的 localStorage 里，我读不到；没有这个按钮，
+        #     「我完成了」这三个字就没有任何可批改的东西 —— 这是本页第一版的真漏洞）
+        page.click("#exp")
+        page.wait_for_timeout(250)
+        exp = page.evaluate("() => { const p = document.getElementById('expOut');"
+                            " return {hidden: p.hasAttribute('hidden'), txt: p.textContent}; }")
+        check("导出按钮能产出文字", (not exp["hidden"]) and len(exp["txt"]) > 60,
+              f"{len(exp['txt'])} 字 · hidden={exp['hidden']}")
+        check("导出的文字里带着刚写的答案", "8000" in exp["txt"], "包含「8000」")
+        check("导出的文字里带着题干（否则不知道哪句答哪题）",
+              "先写下你的猜测" in exp["txt"], "含题干")
+        check("导出里不该出现「没写题干」（§七 那三块的自问题干在 <h3> 里）",
+              "没写题干" not in exp["txt"],
+              f"没写题干 × {exp['txt'].count('没写题干')}")
+        check("10 道题的题干都导出了",
+              exp["txt"].count("【") == 10, f"【 × {exp['txt'].count('【')}")
+
         # —— 两种宽度 ——
         for w in (1440, 390):
             page.set_viewport_size({"width": w, "height": 900})
@@ -138,11 +156,23 @@ def main() -> int:
                           " window.scrollTo(0, 0); }")
             page.wait_for_timeout(300)
             page.screenshot(path=str(SHOT_DIR / "_shot-vary-top.png"))
-            page.screenshot(path=str(SHOT_DIR / "_shot-vary-full.png"), full_page=True)
             page.set_viewport_size({"width": 390, "height": 900})
             page.evaluate("() => window.scrollTo(0, 0)")
             page.wait_for_timeout(250)
             page.screenshot(path=str(SHOT_DIR / "_shot-vary-mobile.png"))
+            page.set_viewport_size({"width": 1440, "height": 1000})
+            page.wait_for_timeout(200)
+
+            # 整页图单独用 0.5 缩放拍 —— 这页折起来还有 7000+ px 高，
+            # 全尺寸那张超过读图工具的 8192px 上限，根本没法人工复核。
+            half = browser.new_page(viewport={"width": 1440, "height": 1000},
+                                    device_scale_factor=0.5)
+            half.goto(url)
+            half.wait_for_timeout(900)
+            half.evaluate("() => { document.querySelectorAll('details').forEach(x => x.open = true);"
+                          " window.scrollTo(0, 0); }")
+            half.wait_for_timeout(400)
+            half.screenshot(path=str(SHOT_DIR / "_shot-vary-full.png"), full_page=True)
             print("\n截图 → " + str(SHOT_DIR))
 
         browser.close()
