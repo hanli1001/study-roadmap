@@ -1,5 +1,5 @@
 {
- "total": 620,
+ "total": 619,
  "dangling": [
   "2026-W41.md|READEME.md",
   "2026-W41.md|_语料清单.txt",
@@ -58,7 +58,8 @@
   "时间线账本.md|交互演示/批改单-D8-20260928.pdf",
   "时间线账本.md|交互演示/批改单-D8-二轮-20261005.pdf",
   "时间线账本.md|打印资料/AI-Agent学习路线图.html/.pdf",
-  "每周目标.md|READEME.md",
+  "每周目标.md|_语料清单.txt",
+  "每周目标.md|rag/_语料清单.txt",
   "物联网Demo-给导师-20260922.md|build_dataset.py",
   "物联网Demo-给导师-20260922.md|elderly_data.json",
   "物联网Demo-给导师-20260922.md|service_list.json",
